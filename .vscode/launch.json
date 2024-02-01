@@ -1,0 +1,67 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Trios_automation_debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/TRIOS_automation.py",
+            "args": [
+                "--debug"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "print controls",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/print_controls.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "test settings",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test_settings.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "test run protocol",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test_run_protocol.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "test set geometry",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test_set_geometry.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "test start datalogger",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test_start_datalogger.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

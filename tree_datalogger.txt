@@ -1,0 +1,56 @@
+Control Identifiers:
+
+Dialog - 'ARG2AuxiliarySample v1.0.3'    (L104, T104, R523, B392)
+['ARG2AuxiliarySample v1.0.3Dialog', 'Dialog', 'ARG2AuxiliarySample v1.0.3']
+child_window(title="ARG2AuxiliarySample v1.0.3", control_type="Window")
+   | 
+   | Edit - ''    (L432, T351, R473, B370)
+   | ['Edit', 'Edit0', 'Edit1']
+   | child_window(auto_id="1", control_type="Edit")
+   | 
+   | Edit - ''    (L432, T223, R473, B242)
+   | ['Edit2']
+   | child_window(auto_id="2", control_type="Edit")
+   | 
+   | Button - 'Stop'    (L280, T303, R337, B336)
+   | ['Stop', 'StopButton', 'Button', 'Button0', 'Button1']
+   | child_window(title="Stop", auto_id="3", control_type="Button")
+   | 
+   | Button - 'Exit'    (L424, T303, R481, B336)
+   | ['Exit', 'Button2', 'ExitButton']
+   | child_window(title="Exit", auto_id="4", control_type="Button")
+   | 
+   | Button - 'Start'    (L144, T303, R201, B336)
+   | ['Start', 'Button3', 'StartButton']
+   | child_window(title="Start", auto_id="5", control_type="Button")
+   | 
+   | Button - 'Connect'    (L424, T143, R481, B176)
+   | ['ConnectButton', 'Button4', 'Connect']
+   | child_window(title="Connect", auto_id="6", control_type="Button")
+   | 
+   | Edit - ''    (L200, T151, R393, B170)
+   | ['Edit3']
+   | child_window(auto_id="7", control_type="Edit")
+   | 
+   | TitleBar - ''    (L128, T107, R515, B135)
+   | ['TitleBar']
+   |    | 
+   |    | Menu - 'Systemmenü'    (L112, T112, R134, B134)
+   |    | ['Menu', 'Systemmenü', 'SystemmenüMenu', 'Systemmenü0', 'Systemmenü1']
+   |    | child_window(title="Systemmenü", auto_id="MenuBar", control_type="MenuBar")
+   |    |    | 
+   |    |    | MenuItem - 'Systemmenü'    (L112, T112, R134, B134)
+   |    |    | ['SystemmenüMenuItem', 'MenuItem', 'Systemmenü2']
+   |    |    | child_window(title="Systemmenü", control_type="MenuItem")
+   |    | 
+   |    | Button - 'Minimieren'    (L376, T105, R423, B135)
+   |    | ['Button5', 'MinimierenButton', 'Minimieren']
+   |    | child_window(title="Minimieren", control_type="Button")
+   |    | 
+   |    | Button - 'Maximieren'    (L423, T105, R469, B135)
+   |    | ['Button6', 'MaximierenButton', 'Maximieren']
+   |    | child_window(title="Maximieren", control_type="Button")
+   |    | 
+   |    | Button - 'Schließen'    (L469, T105, R516, B135)
+   |    | ['Schließen', 'Button7', 'SchließenButton']
+   |    | child_window(title="Schließen", control_type="Button")

@@ -1,0 +1,328 @@
+Control Identifiers:
+
+Dialog - 'TA Instruments TRIOS'    (L572, T284, R1348, B876)
+['TA Instruments TRIOSDialog', 'TA Instruments TRIOS', 'Dialog']
+child_window(title="TA Instruments TRIOS", auto_id="MasterOptionsDialog", control_type="Window")
+   | 
+   | Pane - ''    (L580, T315, R1340, B868)
+   | ['Gap zero modePane', 'Pane', 'Gap zero modePane0', 'Gap zero modePane1', 'Pane0', 'Pane1']
+   | child_window(auto_id="tableLayoutPanel1", control_type="Pane")
+   |    | 
+   |    | Pane - ''    (L580, T315, R1340, B832)
+   |    | ['Gap zero modePane2', 'Pane2']
+   |    | child_window(auto_id="flowLayoutPanel2", control_type="Pane")
+   |    |    | 
+   |    |    | ListBox - ''    (L583, T318, R710, B829)
+   |    |    | ['ListBox']
+   |    |    | child_window(auto_id="listOfOptionForms", control_type="List")
+   |    |    |    | 
+   |    |    |    | ListItem - 'Application'    (L585, T320, R708, B345)
+   |    |    |    | ['ListItem', 'Application', 'ApplicationListItem', 'ListItem0', 'ListItem1']
+   |    |    |    | child_window(title="Application", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - 'Discovery HR'    (L585, T345, R708, B370)
+   |    |    |    | ['Discovery HRListItem', 'ListItem2', 'Discovery HR']
+   |    |    |    | child_window(title="Discovery HR", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Information'    (L585, T370, R708, B395)
+   |    |    |    | ['   InformationListItem', 'ListItem3', '   Information']
+   |    |    |    | child_window(title="   Information", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Gap'    (L585, T395, R708, B420)
+   |    |    |    | ['ListItem4', '   GapListItem', '   Gap']
+   |    |    |    | child_window(title="   Gap", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Temperature'    (L585, T420, R708, B445)
+   |    |    |    | ['   TemperatureListItem', 'ListItem5', '   Temperature']
+   |    |    |    | child_window(title="   Temperature", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Conditioning'    (L585, T445, R708, B470)
+   |    |    |    | ['ListItem6', '   Conditioning', '   ConditioningListItem']
+   |    |    |    | child_window(title="   Conditioning", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Flow'    (L585, T470, R708, B495)
+   |    |    |    | ['   FlowListItem', 'ListItem7', '   Flow']
+   |    |    |    | child_window(title="   Flow", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Oscillation'    (L585, T495, R708, B520)
+   |    |    |    | ['   Oscillation', 'ListItem8', '   OscillationListItem']
+   |    |    |    | child_window(title="   Oscillation", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   All steps'    (L585, T520, R708, B545)
+   |    |    |    | ['   All steps', 'ListItem9', '   All stepsListItem']
+   |    |    |    | child_window(title="   All steps", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Material properties'    (L585, T545, R708, B570)
+   |    |    |    | ['ListItem10', '   Material properties', '   Material propertiesListItem']
+   |    |    |    | child_window(title="   Material properties", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Manual oscillation'    (L585, T570, R708, B595)
+   |    |    |    | ['   Manual oscillation', 'ListItem11', '   Manual oscillationListItem']
+   |    |    |    | child_window(title="   Manual oscillation", control_type="ListItem")
+   |    |    |    | 
+   |    |    |    | ListItem - '   Interfacial Pump'    (L585, T595, R708, B620)
+   |    |    |    | ['ListItem12', '   Interfacial Pump', '   Interfacial PumpListItem']
+   |    |    |    | child_window(title="   Interfacial Pump", control_type="ListItem")
+   |    |    | 
+   |    |    | Pane - ''    (L716, T318, R1337, B829)
+   |    |    | ['Gap zero modePane3', 'Pane3']
+   |    |    | child_window(auto_id="panelContent", control_type="Pane")
+   |    |    |    | 
+   |    |    |    | Pane - 'Discovery HR Gap Options'    (L727, T389, R1318, B804)
+   |    |    |    | ['Discovery HR Gap OptionsPane', 'Discovery HR Gap Options', 'Pane4', 'Discovery HR Gap OptionsPane0', 'Discovery HR Gap OptionsPane1', 'Discovery HR Gap Options0', 'Discovery HR Gap Options1']
+   |    |    |    | child_window(title="Discovery HR Gap Options", auto_id="panelDynamicContent", control_type="Pane")
+   |    |    |    |    | 
+   |    |    |    |    | Pane - 'Location'    (L727, T389, R1318, B804)
+   |    |    |    |    | ['Location', 'Pane5', 'LocationPane', 'Location0', 'Location1', 'LocationPane0', 'LocationPane1']
+   |    |    |    |    | child_window(title="Location", auto_id="optionsPanel", control_type="Pane")
+   |    |    |    |    |    | 
+   |    |    |    |    |    | Pane - 'Location'    (L727, T389, R1318, B804)
+   |    |    |    |    |    | ['Location2', 'Pane6', 'LocationPane2']
+   |    |    |    |    |    | child_window(title="Location", auto_id="mainLayoutPanel", control_type="Pane")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'N'    (L764, T473, R1004, B500)
+   |    |    |    |    |    |    | ['NPane', 'N', 'Pane7', 'N0', 'N1', 'NPane0', 'NPane1']
+   |    |    |    |    |    |    | child_window(title="N", auto_id="tableLayoutPanel2", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | ComboBox - 'Closure profile'    (L856, T476, R995, B497)
+   |    |    |    |    |    |    |    | ['Closure profile', 'Closure profileComboBox', 'ComboBox', 'Closure profile0', 'Closure profile1', 'ComboBox0', 'ComboBox1']
+   |    |    |    |    |    |    |    | child_window(title="Closure profile", auto_id="Link_SampleCompressionMode_E", control_type="ComboBox")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Closure profile'    (L3, T3, R119, B18)
+   |    |    |    |    |    |    |    |    | ['Closure profile2', 'Closure profileStatic', 'Static', 'Closure profileStatic0', 'Closure profileStatic1', 'Static0', 'Static1']
+   |    |    |    |    |    |    |    |    | child_window(title="Closure profile", control_type="Text")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Button - '÷ffnen'    (L979, T477, R994, B496)
+   |    |    |    |    |    |    |    |    | ['Button', '÷ffnen', '÷ffnenButton', 'Button0', 'Button1', '÷ffnen0', '÷ffnen1', '÷ffnenButton0', '÷ffnenButton1']
+   |    |    |    |    |    |    |    |    | child_window(title="÷ffnen", control_type="Button")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Closure profile'    (L767, T478, R844, B495)
+   |    |    |    |    |    |    |    | ['Closure profile3', 'Closure profileStatic2', 'Static2']
+   |    |    |    |    |    |    |    | child_window(title="Closure profile", auto_id="label3", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'Location'    (L764, T415, R1117, B439)
+   |    |    |    |    |    |    | ['Location3', 'Pane8', 'LocationPane3']
+   |    |    |    |    |    |    | child_window(title="Location", auto_id="gapZeroModeTableLayoutPanel", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'N'    (L1102, T419, R1114, B436)
+   |    |    |    |    |    |    |    | ['NStatic', 'N2', 'Static3']
+   |    |    |    |    |    |    |    | child_window(title="N", auto_id="Link_GapZeroNormalForce_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | RadioButton - 'Axial force'    (L941, T418, R1016, B436)
+   |    |    |    |    |    |    |    | ['RadioButton', 'Axial forceRadioButton', 'Axial force', 'RadioButton0', 'RadioButton1']
+   |    |    |    |    |    |    |    | child_window(title="Axial force", auto_id="Link_GapZeroSettingMode_1", control_type="RadioButton")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | RadioButton - 'Deceleration'    (L846, T418, R932, B436)
+   |    |    |    |    |    |    |    | ['DecelerationRadioButton', 'RadioButton2', 'Deceleration']
+   |    |    |    |    |    |    |    | child_window(title="Deceleration", auto_id="Link_GapZeroSettingMode_2", control_type="RadioButton")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | RadioButton - 'Standard'    (L769, T418, R837, B436)
+   |    |    |    |    |    |    |    | ['RadioButton3', 'Standard', 'StandardRadioButton']
+   |    |    |    |    |    |    |    | child_window(title="Standard", auto_id="Link_GapZeroSettingMode_0", control_type="RadioButton")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - ''    (L1033, T417, R1083, B437)
+   |    |    |    |    |    |    |    | ['Discovery HR Gap OptionsEdit', 'Edit', 'Edit0', 'Edit1']
+   |    |    |    |    |    |    |    | child_window(auto_id="Link_GapZeroNormalForce_E", control_type="Edit")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'µm/s'    (L764, T580, R1052, B658)
+   |    |    |    |    |    |    | ['µm/sPane', 'µm/s', 'Pane9', 'µm/s0', 'µm/s1', 'µm/sPane0', 'µm/sPane1']
+   |    |    |    |    |    |    | child_window(title="µm/s", auto_id="velocitiesTableLayoutPanel", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'µm/s'    (L955, T637, R984, B654)
+   |    |    |    |    |    |    |    | ['µm/sStatic', 'µm/s2', 'Static4', 'µm/sStatic0', 'µm/sStatic1']
+   |    |    |    |    |    |    |    | child_window(title="µm/s", auto_id="Link_GeneralGotogapSetVelocity_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'µm/s'    (L955, T585, R984, B602)
+   |    |    |    |    |    |    |    | ['µm/sStatic2', 'µm/s3', 'Static5']
+   |    |    |    |    |    |    |    | child_window(title="µm/s", auto_id="Link_GapSetNearVelocity_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'µm/s'    (L955, T611, R984, B628)
+   |    |    |    |    |    |    |    | ['µm/sStatic3', 'µm/s4', 'Static6']
+   |    |    |    |    |    |    |    | child_window(title="µm/s", auto_id="Link_GapSetFarVelocity_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Fine velocity'    (L767, T585, R834, B602)
+   |    |    |    |    |    |    |    | ['Fine velocityStatic', 'Static7', 'Fine velocity']
+   |    |    |    |    |    |    |    | child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_D", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - 'Other velocity'    (L855, T635, R939, B655)
+   |    |    |    |    |    |    |    | ['Other velocityEdit', 'Fine velocityEdit', 'Edit2', 'Fine velocityEdit0', 'Fine velocityEdit1']
+   |    |    |    |    |    |    |    | child_window(title="Other velocity", auto_id="Link_GeneralGotoGapSetVelocity_E", control_type="Edit")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Coarse velocity'    (L767, T611, R849, B628)
+   |    |    |    |    |    |    |    | ['Coarse velocity', 'Static8', 'Coarse velocityStatic']
+   |    |    |    |    |    |    |    | child_window(title="Coarse velocity", auto_id="Link_GapSetFarVelocity_D", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - 'Coarse velocity'    (L855, T609, R939, B629)
+   |    |    |    |    |    |    |    | ['Edit3', 'Coarse velocityEdit']
+   |    |    |    |    |    |    |    | child_window(title="Coarse velocity", auto_id="Link_GapSetFarVelocity_E", control_type="Edit")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Other velocity'    (L767, T637, R840, B654)
+   |    |    |    |    |    |    |    | ['Other velocity', 'Other velocityStatic', 'Static9']
+   |    |    |    |    |    |    |    | child_window(title="Other velocity", auto_id="Link_GeneralGotoGapSetVelocity_D", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - 'Fine velocity'    (L855, T583, R939, B603)
+   |    |    |    |    |    |    |    | ['Fine velocityEdit2', 'Edit4']
+   |    |    |    |    |    |    |    | child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'N'    (L764, T508, R1048, B551)
+   |    |    |    |    |    |    | ['NPane2', 'N3', 'Pane10']
+   |    |    |    |    |    |    | child_window(title="N", auto_id="distanceTableLayoutPanel", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - 'Velocity'    (L859, T531, R943, B551)
+   |    |    |    |    |    |    |    | ['Closure distanceEdit', 'Edit5', 'Closure distanceEdit0', 'Closure distanceEdit1']
+   |    |    |    |    |    |    |    | child_window(title="Velocity", auto_id="Link_CompressionVelocity_E", control_type="Edit")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Closure distance'    (L767, T510, R856, B527)
+   |    |    |    |    |    |    |    | ['Closure distance', 'Closure distanceStatic', 'Static10']
+   |    |    |    |    |    |    |    | child_window(title="Closure distance", auto_id="Link_CompressionDistance_D", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Edit - 'Closure distance'    (L859, T508, R943, B528)
+   |    |    |    |    |    |    |    | ['Closure distanceEdit2', 'Edit6']
+   |    |    |    |    |    |    |    | child_window(title="Closure distance", auto_id="Link_CompressionDistance_E", control_type="Edit")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'µm'    (L959, T510, R979, B527)
+   |    |    |    |    |    |    |    | ['µm', 'µmStatic', 'Static11', 'µm0', 'µm1', 'µmStatic0', 'µmStatic1']
+   |    |    |    |    |    |    |    | child_window(title="µm", auto_id="Link_CompressionDistance_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'µm/s'    (L959, T533, R988, B550)
+   |    |    |    |    |    |    |    | ['µm/sStatic4', 'µm/s5', 'Static12']
+   |    |    |    |    |    |    |    | child_window(title="µm/s", auto_id="Link_CompressionVelocity_U", control_type="Text")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Static - 'Velocity'    (L767, T533, R811, B550)
+   |    |    |    |    |    |    |    | ['VelocityStatic', 'Velocity', 'Static13']
+   |    |    |    |    |    |    |    | child_window(title="Velocity", auto_id="Link_CompressionVelocity_D", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'µm/s'    (L763, T686, R1219, B798)
+   |    |    |    |    |    |    | ['µm/sPane2', 'µm/s6', 'Pane11']
+   |    |    |    |    |    |    | child_window(title="µm/s", auto_id="gapPanel", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - ''    (L768, T719, R1052, B795)
+   |    |    |    |    |    |    |    | ['Gap handling at start of testPane', 'Pane12']
+   |    |    |    |    |    |    |    | child_window(auto_id="tableLayoutPanel1", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Tolerance'    (L771, T723, R826, B740)
+   |    |    |    |    |    |    |    |    | ['ToleranceStatic', 'Static14', 'Tolerance']
+   |    |    |    |    |    |    |    |    | child_window(title="Tolerance", auto_id="label5", control_type="Text")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Edit - 'Tolerance'    (L832, T722, R909, B742)
+   |    |    |    |    |    |    |    |    | ['ToleranceEdit', 'Edit7']
+   |    |    |    |    |    |    |    |    | child_window(title="Tolerance", auto_id="Link_ARGapWaitTolerance_E", control_type="Edit")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'µm'    (L925, T723, R945, B740)
+   |    |    |    |    |    |    |    |    | ['µm2', 'µmStatic2', 'Static15']
+   |    |    |    |    |    |    |    |    | child_window(title="µm", auto_id="Link_ARGapWaitTolerance_U", control_type="Text")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | CheckBox - 'Override wait for gap'    (L771, T774, R899, B792)
+   |    |    |    |    |    |    |    |    | ['CheckBox', 'Override wait for gapCheckBox', 'Override wait for gap']
+   |    |    |    |    |    |    |    |    | child_window(title="Override wait for gap", auto_id="Link_AROverrideWaitForGap_E", control_type="CheckBox")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Duration'    (L771, T749, R818, B766)
+   |    |    |    |    |    |    |    |    | ['DurationStatic', 'Duration', 'Static16']
+   |    |    |    |    |    |    |    |    | child_window(title="Duration", auto_id="label2", control_type="Text")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'hh:mm:ss'    (L925, T749, R978, B766)
+   |    |    |    |    |    |    |    |    | ['hh:mm:ssStatic', 'hh:mm:ss', 'Static17']
+   |    |    |    |    |    |    |    |    | child_window(title="hh:mm:ss", auto_id="Link_ARGapWaitDuration_U", control_type="Text")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Edit - 'Duration'    (L832, T748, R909, B768)
+   |    |    |    |    |    |    |    |    | ['DurationEdit', 'Edit8']
+   |    |    |    |    |    |    |    |    | child_window(title="Duration", auto_id="Link_ARGapWaitDuration_E", control_type="Edit")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - 'µm/s'    (L768, T692, R1216, B719)
+   |    |    |    |    |    |    |    | ['µm/sPane3', 'µm/s7', 'Pane13']
+   |    |    |    |    |    |    |    | child_window(title="µm/s", auto_id="layoutPanelGapHandling", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | ComboBox - 'Gap handling at start of test'    (L920, T695, R1213, B716)
+   |    |    |    |    |    |    |    |    | ['Gap handling at start of testComboBox', 'ComboBox2', 'Gap handling at start of test', 'Gap handling at start of test0', 'Gap handling at start of test1']
+   |    |    |    |    |    |    |    |    | child_window(title="Gap handling at start of test", auto_id="Link_ARGapHandling_L", control_type="ComboBox")
+   |    |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    |    | Static - 'Gap handling at start of test'    (L3, T3, R273, B18)
+   |    |    |    |    |    |    |    |    |    | ['Gap handling at start of testStatic', 'Gap handling at start of test2', 'Static18', 'Gap handling at start of testStatic0', 'Gap handling at start of testStatic1']
+   |    |    |    |    |    |    |    |    |    | child_window(title="Gap handling at start of test", control_type="Text")
+   |    |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    |    | Button - '÷ffnen'    (L1197, T696, R1212, B715)
+   |    |    |    |    |    |    |    |    |    | ['Button2', '÷ffnen2', '÷ffnenButton2']
+   |    |    |    |    |    |    |    |    |    | child_window(title="÷ffnen", control_type="Button")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Gap handling at start of test'    (L771, T697, R914, B714)
+   |    |    |    |    |    |    |    |    | ['Gap handling at start of testStatic2', 'Gap handling at start of test3', 'Static19']
+   |    |    |    |    |    |    |    |    | child_window(title="Gap handling at start of test", auto_id="label1", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'µm/s'    (L730, T663, R1473, B690)
+   |    |    |    |    |    |    | ['µm/sPane4', 'µm/s8', 'Pane14']
+   |    |    |    |    |    |    | child_window(title="µm/s", auto_id="gapBorderBox", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - ''    (L730, T663, R1473, B687)
+   |    |    |    |    |    |    |    | ['Experiment startPane', 'Pane15']
+   |    |    |    |    |    |    |    | child_window(auto_id="panel1", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Experiment start'    (L733, T666, R831, B687)
+   |    |    |    |    |    |    |    |    | ['Experiment start', 'Experiment startStatic', 'Static20']
+   |    |    |    |    |    |    |    |    | child_window(title="Experiment start", auto_id="label1", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'Location'    (L730, T389, R1476, B416)
+   |    |    |    |    |    |    | ['Location4', 'Pane16', 'LocationPane4']
+   |    |    |    |    |    |    | child_window(title="Location", auto_id="gapZeroModeBorderBox", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - ''    (L730, T389, R1476, B413)
+   |    |    |    |    |    |    |    | ['Gap zero modePane4', 'Pane17']
+   |    |    |    |    |    |    |    | child_window(auto_id="panel1", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Gap zero mode'    (L733, T392, R822, B413)
+   |    |    |    |    |    |    |    |    | ['Gap zero modeStatic', 'Gap zero mode', 'Static21']
+   |    |    |    |    |    |    |    |    | child_window(title="Gap zero mode", auto_id="label1", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'N'    (L730, T447, R1476, B474)
+   |    |    |    |    |    |    | ['NPane3', 'N4', 'Pane18']
+   |    |    |    |    |    |    | child_window(title="N", auto_id="sampleCompressionBorderBox", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - ''    (L730, T447, R1476, B471)
+   |    |    |    |    |    |    |    | ['Gap closurePane', 'Pane19']
+   |    |    |    |    |    |    |    | child_window(auto_id="panel1", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Gap closure'    (L733, T450, R803, B471)
+   |    |    |    |    |    |    |    |    | ['Gap closureStatic', 'Gap closure', 'Static22']
+   |    |    |    |    |    |    |    |    | child_window(title="Gap closure", auto_id="label1", control_type="Text")
+   |    |    |    |    |    |    | 
+   |    |    |    |    |    |    | Pane - 'µm/s'    (L730, T557, R1476, B584)
+   |    |    |    |    |    |    | ['µm/sPane5', 'µm/s9', 'Pane20']
+   |    |    |    |    |    |    | child_window(title="µm/s", auto_id="velocitiesBorderBox", control_type="Pane")
+   |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    | Pane - ''    (L730, T557, R1476, B581)
+   |    |    |    |    |    |    |    | ['Head controlPane', 'Pane21']
+   |    |    |    |    |    |    |    | child_window(auto_id="panel1", control_type="Pane")
+   |    |    |    |    |    |    |    |    | 
+   |    |    |    |    |    |    |    |    | Static - 'Head control'    (L733, T560, R810, B581)
+   |    |    |    |    |    |    |    |    | ['Head control', 'Head controlStatic', 'Static23']
+   |    |    |    |    |    |    |    |    | child_window(title="Head control", auto_id="label1", control_type="Text")
+   |    |    |    | 
+   |    |    |    | Pane - ''    (L717, T320, R1329, B381)
+   |    |    |    | ['Discovery HR Gap OptionsPane2', 'Pane22']
+   |    |    |    | child_window(auto_id="panelHeader", control_type="Pane")
+   |    |    |    |    | 
+   |    |    |    |    | Pane - ''    (L734, T335, R774, B375)
+   |    |    |    |    | ['Pane23']
+   |    |    |    |    | child_window(auto_id="pictureHeader", control_type="Pane")
+   |    |    |    |    | 
+   |    |    |    |    | Static - 'Discovery HR Gap Options'    (L780, T347, R961, B372)
+   |    |    |    |    | ['Discovery HR Gap Options2', 'Discovery HR Gap OptionsStatic', 'Static24']
+   |    |    |    |    | child_window(title="Discovery HR Gap Options", auto_id="labelHeader", control_type="Text")
+   |    | 
+   |    | Pane - ''    (L1178, T835, R1337, B865)
+   |    | ['Discovery HR Gap OptionsPane3', 'hh:mm:ssPane', 'Pane24']
+   |    | child_window(auto_id="flowLayoutPanel1", control_type="Pane")
+   |    |    | 
+   |    |    | Button - 'OK'    (L1181, T838, R1256, B862)
+   |    |    | ['Button3', 'OK', 'OKButton']
+   |    |    | child_window(title="OK", auto_id="okButton", control_type="Button")
+   |    |    | 
+   |    |    | Button - 'Cancel'    (L1262, T838, R1337, B862)
+   |    |    | ['Button4', 'Cancel', 'CancelButton']
+   |    |    | child_window(title="Cancel", auto_id="cancelButton", control_type="Button")
+   | 
+   | TitleBar - ''    (L580, T287, R1340, B315)
+   | ['TitleBar']
+   |    | 
+   |    | Button - 'Schlieﬂen'    (L1307, T285, R1341, B315)
+   |    | ['Button5', 'Schlieﬂen', 'SchlieﬂenButton']
+   |    | child_window(title="Schlieﬂen", control_type="Button")
