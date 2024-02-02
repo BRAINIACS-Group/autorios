@@ -19,7 +19,7 @@ from collections import namedtuple
 from enum import Enum
 
 #3rd party modules
-from pywinauto import application,findwindows, mouse
+from pywinauto import application, mouse
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
 import pywinauto.timings
@@ -42,11 +42,10 @@ from .application import TRIOS
 
 logger = logging.getLogger(__name__)
 
-
 @click.command()
 @click.option('--start/--no-start',default=False)
 @click.option('--debug/--no-debug',default=False)
-def main(start:bool,debug:bool):
+def cli(start:bool,debug:bool):
     if debug:
         experiment_info = ExperimentInfo(
             sample_name='test',
@@ -65,7 +64,3 @@ def main(start:bool,debug:bool):
 
     trios_app = TRIOS.connect(start_if_not_open=start)
     trios_app.run(experiment_info,protocols)
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    main()

@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 #local imports
-from utility import write_float_to_input
+from .utility import write_float_to_input
 
 class Protocol(ABC):
     ''''''

@@ -28,9 +28,9 @@ import pyautogui
 import click
 
 #local imports
-from experiment_info import get_experiment_info, ExperimentInfo
-from protocol import Protocol_HBE_A,Protocol_HBE_B
-from application import TRIOS,DataLogger
+from .experiment_info import get_experiment_info, ExperimentInfo
+from .protocol import Protocol_HBE_A,Protocol_HBE_B
+from .application import TRIOS,DataLogger
 
 logger = logging.getLogger(__name__)
 

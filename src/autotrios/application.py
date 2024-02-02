@@ -23,9 +23,9 @@ import pywinauto.timings
 import pyautogui
 
 #local imports
-from utility import write_to_input,write_float_to_input,is_button
-from experiment_info import ExperimentInfo
-from protocol import Protocol
+from .utility import write_to_input,write_float_to_input,is_button
+from .experiment_info import ExperimentInfo
+from .protocol import Protocol
 
 logger = logging.getLogger(__name__)
 
