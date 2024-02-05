@@ -35,7 +35,6 @@ def get_experiment_info():
     '''
     #TODO: write extra routine to get sample name from pattern
     #TODO: combine all dialogs in a single window
-    filedialog.askdirectory()
     
     sample_name = simpledialog.askstring("Input", "Enter sample name:")
     if sample_name is None:

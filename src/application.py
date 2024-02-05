@@ -457,7 +457,7 @@ class TRIOS(MyApplication):
 
         #if any(p.start_datalogger for p in protocols):
         self.attach_datalogger()
-        self.datalogger.set_path(experiment_info.save_path_datalogger / experiment_info.sample_name)
+        self.datalogger.set_path(experiment_info.save_path_datalogger)
 
         for prot in protocols:
             self._run_protocol(prot,specimen)
