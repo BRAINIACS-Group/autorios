@@ -17,6 +17,7 @@ import tempfile
 from abc import ABC
 from collections import namedtuple
 from enum import Enum
+from tkinter import filedialog
 
 #3rd party modules
 from pywinauto import application,findwindows, mouse
@@ -41,7 +42,6 @@ from application import TRIOS
 #use r before strings to prevent escaping characters
 
 logger = logging.getLogger(__name__)
-
 
 @click.command()
 @click.option('--start/--no-start',default=False)
