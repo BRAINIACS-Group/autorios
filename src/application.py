@@ -16,7 +16,7 @@ from enum import Enum
 import logging
 
 #3rd party modules
-from pywinauto import application,findwindows, mouse, keyboard,Desktop
+from pywinauto import application,findwindows, mouse, keyboard,Desktop, base_wrapper
 from pywinauto.application import Application,ProcessNotFoundError
 from pywinauto.keyboard import send_keys
 import pywinauto.timings
@@ -157,6 +157,7 @@ class TRIOS(MyApplication):
         #@jan: something is missing to enter the filename?
         sample_edit = self.window_main\
             .child_window(auto_id="Link_Name_E", control_type="Edit")
+        
         write_to_input(sample_edit,
             experiment_info.sample_name)
     
