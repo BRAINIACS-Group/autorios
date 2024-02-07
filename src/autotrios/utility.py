@@ -21,7 +21,7 @@ def write_to_input(element,input_str:str,press_tab:bool=False):
     Returns:
     Raises:
     '''
-
+    
     element.click_input()
     type_str = '^a'+input_str
     if press_tab: type_str += "{TAB}"

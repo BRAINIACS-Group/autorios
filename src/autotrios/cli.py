@@ -17,6 +17,7 @@ import tempfile
 from abc import ABC
 from collections import namedtuple
 from enum import Enum
+from tkinter import filedialog
 
 #3rd party modules
 from pywinauto import application, mouse
@@ -58,8 +59,8 @@ def cli(start:bool,debug:bool):
         experiment_info = get_experiment_info()
 
     protocols = [
-        Protocol_HBE_A(),
-        Protocol_HBE_B(),
+        Protocol_HBE_A_red(),
+        Protocol_HBE_B_red(),
     ]
 
     trios_app = TRIOS.connect(start_if_not_open=start)

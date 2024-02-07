@@ -34,6 +34,16 @@
             "justMyCode": true
         },
         {
+            "name": "Trios_automation",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/TRIOS_automation.py",
+            "args": [
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "print controls",
             "type": "python",
             "request": "launch",
