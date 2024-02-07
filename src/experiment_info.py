@@ -50,7 +50,7 @@ def get_experiment_info():
         raise ValueError('error getting dir name')
     save_directory = Path(save_directory)
     if not save_directory.is_dir():
-        raise FileNotFoundError(f'coud not find {save_directory}')
+        raise FileNotFoundError(f'could not find {save_directory}')
 
     save_dir_trios = save_directory / "trios"
     if not save_dir_trios.is_dir():

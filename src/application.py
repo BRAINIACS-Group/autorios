@@ -151,13 +151,18 @@ class TRIOS(MyApplication):
 
         sample_dropdown_button = self._get_experiment_tab_buttons("Sample: .*")[0]
         sample_dropdown_button.draw_outline()
-        sample_dropdown_button.click_input()
+        #sample_dropdown_button.click_input()
 
         # This is an example version of how we can enter the file path to be saved
         #@jan: something is missing to enter the filename?
         sample_edit = self.window_main\
             .child_window(auto_id="Link_Name_E", control_type="Edit")
-        
+        try:
+            base_wrapper.BaseWrapper.verify_visible(sample_edit)
+            logger.info('sample dropdown already expanded')
+        except:
+            sample_dropdown_button.click_input()
+            logger.info('sample dropdown expanded')
         write_to_input(sample_edit,
             experiment_info.sample_name)
     
