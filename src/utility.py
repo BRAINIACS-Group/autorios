@@ -3,7 +3,6 @@
 import logging
 
 #3rd party imports
-from pywinauto import base_wrapper
 from pywinauto.keyboard import send_keys
 import pyautogui
 
