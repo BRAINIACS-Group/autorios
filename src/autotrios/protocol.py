@@ -60,7 +60,7 @@ class Protocol_HBE_B(Protocol):
     PATH = Path("C:\\Users\\iwtm663\\Documents\\trios_automation\\"
         "protocols\\HBE_Protokoll2b")
     start_datalogger_after_sweep = False
-    settings={'velocity':40}
+    settings={'velocity':100}
 
     def get_steps(self,specimen:NamedTuple):
 
