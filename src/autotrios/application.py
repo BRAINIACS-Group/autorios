@@ -347,11 +347,10 @@ class TRIOS(MyApplication):
 
         logger.info('finished typing {}')
 
-    def _run_protocol(self,protocol:Protocol,specimen:NamedTuple):
+    def _run_protocol(self,protocol:Protocol,specimen:NamedTuple,next_protocol:Protocol=None):
         ''''''
         self.window_main.set_focus()
-        self._load_protocol(protocol)
-
+        
         self.set_settings(protocol.settings)
 
         self.window_main.set_focus()
@@ -359,8 +358,6 @@ class TRIOS(MyApplication):
         #Open the protocol section and type parameters
         #self.window_main.Button10.draw_outline()
         #self.window_main.Button10.click_input()
-
-        self._type_protocol_values(protocol,specimen)
 
         # To start the experiment
         experiment_tab =self.window_main.child_window(title="Experiment", control_type="TabItem")
@@ -383,6 +380,9 @@ class TRIOS(MyApplication):
             else:
                 self.datalogger.start_recording()
             self.window_main.set_focus()
+
+        if next_protocol is not None:
+            self._type_protocol_values(protocol,specimen)
 
         status = self.get_status()
         while status == "running":
@@ -465,8 +465,15 @@ class TRIOS(MyApplication):
         self.attach_datalogger()
         self.datalogger.set_path(experiment_info.save_path_datalogger)
 
-        for prot in protocols:
-            self._run_protocol(prot,specimen)
+        self.window_main.set_focus()
+        self._load_protocol(protocols[0])
+        self._type_protocol_values(protocols[0],specimen)
+
+        for prot,p in enumerate(protocols):
+            next_protocol = None
+            if p < len(protocols) -1:
+                next_protocol = protocols[p+1]
+            self._run_protocol(prot,specimen,next_protocol=next_protocol)
             self._focus_experiment_tab()
 
         #stop and kill the datalogger
