@@ -165,7 +165,3 @@ def show_question_messagebox(question:str,title = "I have a doubt"):
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     retval = msg.exec_() 
     return msg
-
-if __name__ == "__main__" : 
-    exp = get_experiment_info()
-    print(exp.protocol_path)
