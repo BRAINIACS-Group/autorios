@@ -10,7 +10,7 @@ import yaml
 
 #local imports
 from .utility import write_float_to_input
-from pyqtgui import ExperimentInfo
+from .pyqtgui import ExperimentInfo
 
 info = ExperimentInfo
 p_data = info.protocol_data

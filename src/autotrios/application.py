@@ -26,7 +26,7 @@ import pyautogui
 from .utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
 from .protocol import Protocol
-from pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
+from .pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
 
 logger = logging.getLogger(__name__)
 

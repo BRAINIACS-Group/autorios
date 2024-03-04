@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
 
 logger = logging.getLogger('trios_auto')
 #taraswin: change the path
-protocols_path = Path(r"C:\Users\gotti\Desktop\autotrios\src\autotrios\protocols")
+protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
 
 
 @dataclass
@@ -165,3 +165,7 @@ def show_question_messagebox(question:str,title = "I have a doubt"):
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     retval = msg.exec_() 
     return msg
+
+if __name__ == "__main__" : 
+    exp = get_experiment_info()
+    print(exp.protocol_path)
