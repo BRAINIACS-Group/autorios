@@ -28,9 +28,10 @@ import pyautogui
 import click
 
 #local imports
-from .experiment_info import get_experiment_info, ExperimentInfo
+#from .experiment_info import get_experiment_info, ExperimentInfo
+from pyqtgui import get_experiment_info, ExperimentInfo
 from .protocol import Protocol_HBE_A,Protocol_HBE_B
-from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
+#from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
 from .application import TRIOS
 
 #@jan: try to follow the google python style guide:

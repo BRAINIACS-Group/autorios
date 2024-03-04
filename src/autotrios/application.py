@@ -7,7 +7,7 @@ import sys
 import re
 import logging
 from dataclasses import dataclass
-from tkinter import simpledialog, messagebox
+#from tkinter import simpledialog, messagebox
 from pathlib import Path
 import tempfile
 from abc import ABC
@@ -24,8 +24,9 @@ import pyautogui
 
 #local imports
 from .utility import write_to_input,write_float_to_input,is_button
-from .experiment_info import ExperimentInfo
+#from .experiment_info import ExperimentInfo
 from .protocol import Protocol
+from pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
 
 logger = logging.getLogger(__name__)
 
@@ -123,9 +124,11 @@ class TRIOS(MyApplication):
 
         # For calibration and zero gap, technically the script shouldn't continue untill
         #the OK button is pressed
-        messagebox.showinfo("Advice", r"Please calibrate and zero gap before continuing\n"
-            r"press OK when done")
+        #messagebox.showinfo("Advice", r"Please calibrate and zero gap before continuing\n"
+        #    r"press OK when done")
         #self.window_main.set_focus()
+        show_warning_messagebox(message=r"Please calibrate and zero gap before"
+                        r" continuing\nPress OK when done",title="Advice")
         self._calibrated = True
 
     def find_zero_gap(self):
@@ -136,9 +139,11 @@ class TRIOS(MyApplication):
         '''
         # For calibration and zero gap, technically the script shouldn't continue untill
         #the OK button is pressed
-        messagebox.showinfo("Advice", r"Please zero gap before continuing\n"
-            r"press OK when done")
+        #messagebox.showinfo("Advice", r"Please zero gap before continuing\n"
+        #    r"press OK when done")
         #self.window_main.set_focus()
+        show_warning_messagebox(message=r"Please zero gap before continuing\n"
+            r"Press OK when done",title = "Advice")
         self._zero_gap_set = True
 
     def _input_experiment_names(self,experiment_info:ExperimentInfo):
@@ -309,7 +314,7 @@ class TRIOS(MyApplication):
 
             fine_velocity_edit = settings_window.child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
             fine_velocity_edit.wait('exists',1)
-            write_float_to_input(fine_velocity_edit,settings['velocity'])
+            write_float_to_input(fine_velocity_edit,settings['fine_velocity'])
 
         ok_button = settings_window.child_window(title="OK", auto_id="okButton", control_type="Button")
         ok_button.click_input()
@@ -449,9 +454,13 @@ class TRIOS(MyApplication):
 
         self._input_experiment_names(experiment_info)
        
-        messagebox.showinfo("Sample Attachment",
-            "Please press Ok when you have succesfully attached the specimen"
-            " and lowered the specimen holders to their initial position")
+        #messagebox.showinfo("Sample Attachment",
+        #    "Please press Ok when you have succesfully attached the specimen"
+        #    " and lowered the specimen holders to their initial position")
+        show_warning_messagebox(message=f"Please press Ok when you have"\
+                        f"succesfully attached the specimen and lowered the"\
+                        f" specimen holders to their initial position",\
+                              title="Sample Attachment")
 
         #@jan: now run the protocol etc.
         height = self._get_gap_value()
@@ -530,10 +539,12 @@ class DataLogger(MyApplication):
         path = path.with_suffix('.txt')
         if path.is_file():
             logger.warning(f'file {path} already exists')
-            response = messagebox.askquestion('Overwrite',
-                f'File {path} already exists. Do you want to overwrite it?',icon='warning')
-            if response != "yes": raise FileExistsError(f'file {path} already exists!')
+            #response = messagebox.askquestion('Overwrite',
+            #    f'File {path} already exists. Do you want to overwrite it?',icon='warning')
+            #if response != "yes": raise FileExistsError(f'file {path} already exists!')
             #delete the file
+            ans = show_question_messagebox(question=f'File {path} already exists."\
+                                " Do you want to overwrite it?')
             path.unlink()
 
         logger.info(f"datalogger setting path {str(path)}")

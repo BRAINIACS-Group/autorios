@@ -45,7 +45,7 @@ def get_experiment_info():
         raise ValueError('wrong input for operator name')
     #protocol = simpledialog.askstring("Input", "Enter protocol code \na or b or c(freq):")# protocol to be uploaded
 
-    save_directory = filedialogs.open_folder_dialog()
+    save_directory = filedialogs.open_folder_dialog() 
     if not save_directory:
         raise ValueError('error getting dir name')
     save_directory = Path(save_directory)

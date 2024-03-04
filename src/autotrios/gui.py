@@ -12,7 +12,7 @@
 
 #STL imports
 import tkinter as tk
-from tkinter import simpledialog, ttk, messagebox
+from tkinter import simpledialog, ttk, messagebox, filedialog
 import logging
 import pathlib
 from dataclasses import dataclass
@@ -34,6 +34,7 @@ def get_experiment_info():
     root = tk.Tk()
     root.withdraw()
     info = GetExpInfo(root, "Experiment Information")
+    directory = filedialog.askdirectory()
     logger.debug('read experiment information')
     return ExperimentInfo(info.sample_name,info.operator_name,info.protocol)
 
@@ -94,4 +95,6 @@ class GetExpInfo(simpledialog.Dialog):
         return 0
 
 if __name__ == "__main__":
-    get_experiment_info()
+    exp = get_experiment_info()
+    #exp = ExperimentInfo
+    print(exp.protocol)
