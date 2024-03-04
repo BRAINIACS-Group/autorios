@@ -15,6 +15,10 @@ from collections import namedtuple
 from enum import Enum
 import logging
 
+import sys
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+sys.coinit_flags = 2
 #3rd party modules
 from pywinauto import application,findwindows, mouse, keyboard,Desktop, base_wrapper
 from pywinauto.application import Application,ProcessNotFoundError
@@ -23,10 +27,10 @@ import pywinauto.timings
 import pyautogui
 
 #local imports
-from .utility import write_to_input,write_float_to_input,is_button
+from utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
-from .protocol import Protocol
-from .pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
+from protocol import Protocol
+from pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
 
 logger = logging.getLogger(__name__)
 

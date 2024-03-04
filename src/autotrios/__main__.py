@@ -4,7 +4,7 @@
 import logging
 
 #local imports
-from .cli import cli
+from cli import cli
 
 logging.basicConfig(level=logging.DEBUG)
 cli()

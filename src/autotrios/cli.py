@@ -19,6 +19,10 @@ from collections import namedtuple
 from enum import Enum
 from tkinter import filedialog
 
+import sys
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+sys.coinit_flags = 2
 #3rd party modules
 from pywinauto import application, mouse
 from pywinauto.application import Application
@@ -29,10 +33,10 @@ import click
 
 #local imports
 #from .experiment_info import get_experiment_info, ExperimentInfo
-from .pyqtgui import get_experiment_info, ExperimentInfo
-from .protocol import Protocol_HBE_A,Protocol_HBE_B
+from pyqtgui import get_experiment_info, ExperimentInfo
+from protocol import Protocol_HBE_A,Protocol_HBE_B
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
-from .application import TRIOS
+from application import TRIOS
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html

@@ -1,21 +1,22 @@
 ---
-frequecny_sweep : True
-protocol1 :
-  protocol_name : HBE_Protokoll_with_frequency_2a_red
-  settings : 
-    velocity : 40
-    fine_velocity : 40
-  tension_factor : 1
-  compression_factor : 0.99
-  steps :
-    - ["1: Oscillation Frequency","wait_for_temperature",null]
-    - ["2: Conditioning Sample Loading","gap", height_compression]
-protocol2 :
-  protocol_name : HBE_Protokoll2b_red
-  settings : 
-    velocity : 100
-    fine_velocity : 100
-  tension_factor : 1
-  compression_factor : 0.99
-  steps :
-    - ["1: Conditioning Sample Loading","gap", height_compression]
+data : 
+  frequecny_sweep : True
+  protocol1 :
+    protocol_name : HBE_Protokoll_with_frequency_2a_red
+    settings : 
+      velocity : 40
+      fine_velocity : 40
+    tension_factor : 1
+    compression_factor : 0.99
+    steps :
+      - ["1: Oscillation Frequency","wait_for_temperature",null]
+      - ["2: Conditioning Sample Loading","gap", height_compression]
+  protocol2 :
+    protocol_name : HBE_Protokoll2b_red
+    settings : 
+      velocity : 100
+      fine_velocity : 100
+    tension_factor : 1
+    compression_factor : 0.99
+    steps :
+      - ["1: Conditioning Sample Loading","gap", height_compression]
