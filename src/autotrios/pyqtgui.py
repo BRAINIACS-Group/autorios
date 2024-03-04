@@ -39,11 +39,8 @@ def get_experiment_info():
         show_info_messagebox(message=protocol_data["message"],title="Create protocol file")
         return quit()
     else:
-        return ExperimentInfo(info.sample_name_edit.text(),\
-                            info.operator_name_edit.text(),\
-                            yaml_path,info.save_dir_trios,\
-                            info.save_dir_datalogger, protocol_data
-                            )
+        return ExperimentInfo(info.sample_name_edit.text(),info.operator_name_edit.text(),\
+                              yaml_path,info.save_dir_trios,info.save_dir_datalogger,protocol_data)
     
 def get_protocol_files():
     files =[]
@@ -141,6 +138,7 @@ class GetExpInfo(QDialog):
             show_warning_messagebox(message=datawarning,title="Check Data")
 
 def show_info_messagebox(message : str,title = "Information") -> None: 
+    
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
     msg.setText(message)
