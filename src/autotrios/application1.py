@@ -442,7 +442,7 @@ class TRIOS(MyApplication):
         self.window_main.child_window(title="Procedure", control_type="ToolBar").child_window(title="Setup", control_type="Button").click()
 
 
-    def run(self,experiment_info:ExperimentInfo,protocols:List):
+    def run(self,experiment_info:ExperimentInfo,protocols:List,p_class:Protocol):
         '''Run experiment
         Args:
             experiment_info: ExperimentInfo object defining the experiment
@@ -483,7 +483,7 @@ class TRIOS(MyApplication):
         self.datalogger.set_path(experiment_info.save_path_datalogger)
 
         for prot in protocols:
-            self._run_protocol(prot,specimen)
+            self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen)
             self._focus_experiment_tab()
 
         #stop and kill the datalogger

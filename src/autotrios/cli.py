@@ -70,6 +70,5 @@ def cli(start:bool,debug:bool):
     ]'''
     data_from_protocol = Protocol(experiment_info)
     protocols = list(data_from_protocol.p_data.keys())
-    print(data_from_protocol.p_data)
     trios_app = TRIOS.connect(start_if_not_open=start)
-    trios_app.run(experiment_info,protocols)
+    trios_app.run(experiment_info,protocols,data_from_protocol)
