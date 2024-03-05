@@ -34,4 +34,4 @@ protocol2 :
   steps :
     - ["1: Conditioning Sample Loading","gap", height_compression]
     - ["3: Conditioning Sample Loading","gap", height_tension]
-frequency_sweep : True
+#frequency_sweep : True

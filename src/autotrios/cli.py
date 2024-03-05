@@ -34,9 +34,10 @@ import click
 #local imports
 #from .experiment_info import get_experiment_info, ExperimentInfo
 from pyqtgui import get_experiment_info, ExperimentInfo
-from protocol import Protocol_HBE_A,Protocol_HBE_B
+#from protocol import Protocol_HBE_A,Protocol_HBE_B
+from protocol1 import Protocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
-from application import TRIOS
+from application1 import TRIOS
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -63,10 +64,14 @@ def cli(start:bool,debug:bool):
     else:
         experiment_info = get_experiment_info()
 
-    protocols = [
+    '''protocols = [
         Protocol_HBE_A(),
         Protocol_HBE_B(),
-    ]
-
-    trios_app = TRIOS.connect(start_if_not_open=start)
+    ]'''
+    data_from_protocol = Protocol()
+    protocols = list(data_from_protocol.p_data.keys())
+    try:
+        trios_app = TRIOS.connect(start_if_not_open=start)
+    except:
+        logger.info("not able to connect")
     trios_app.run(experiment_info,protocols)

@@ -12,14 +12,14 @@ import yaml
 from utility import write_float_to_input
 from pyqtgui import ExperimentInfo , get_experiment_info
 
-info = get_experiment_info()
-data = info.protocol_data
+#info = get_experiment_info()
+#data = info.protocol_data
 #taraswin : not sure how to use the abstract base class
 class Protocol(ABC):
     ''''''
     PATH:Path = None
     settings:dict = {}
-    p_data = data
+    p_data:dict = {}
     start_datalogger_after_sweep = False
 
     @staticmethod
@@ -89,48 +89,5 @@ class Protocol_HBE_B(Protocol):
             ("3: Conditioning Sample Loading","gap", height_tension),
         ]'''
         steps = Protocol.p_data["protocol2"]['steps']
-
-        return steps
-    
-class Protocol_HBE_A_red(Protocol):
-    ''''''
-    PATH = Path("C:\\Users\\iwtm663\\Documents\\trios_automation\\"
-        "protocols\\HBE_Protokoll_with_frequency_2a_red")
-    start_datalogger_after_sweep = True
-    settings={'velocity':40}
-
-    def get_steps(self,specimen:NamedTuple):
-
-        height_compression = 0.99 * specimen.height
-        #height_tension     = 1.15 * specimen.height
-
-        if not height_compression > 0: raise ValueError
-        #if not height_tension     > 0: raise ValueError
-
-        steps = [
-            ("1: Oscillation Frequency","wait_for_temperature",None),
-            ("2: Conditioning Sample Loading","gap", height_compression),
-        ]
-
-        return steps
-
-class Protocol_HBE_B_red(Protocol):
-    ''''''
-    PATH = Path("C:\\Users\\iwtm663\\Documents\\trios_automation\\"
-        "protocols\\HBE_Protokoll2b_red")
-    start_datalogger_after_sweep = False
-    settings={'velocity':100}
-
-    def get_steps(self,specimen:NamedTuple):
-
-        height_compression = 0.99 * specimen.height
-        #height_tension     = 1.15 * specimen.height
-
-        if not height_compression > 0: raise ValueError
-        #if not height_tension     > 0: raise ValueError
-
-        steps = [
-            ("1: Conditioning Sample Loading","gap", height_compression),
-        ]
 
         return steps

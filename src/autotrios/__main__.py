@@ -12,3 +12,4 @@ from cli import cli
 logging.basicConfig(level=logging.DEBUG)
 app = QApplication([])
 cli()
+app.exec_()

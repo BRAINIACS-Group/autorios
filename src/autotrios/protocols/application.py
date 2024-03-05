@@ -29,7 +29,7 @@ import pyautogui
 #local imports
 from utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
-from protocol import Protocol
+from protocol1 import Protocol
 from pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
 
 logger = logging.getLogger(__name__)
