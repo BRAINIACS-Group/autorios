@@ -12,8 +12,8 @@ from utility import write_float_to_input
 from pyqtgui import ExperimentInfo
 
 class Protocol:
-    def __init__(self) -> None:
-        self.p_data : dict = ExperimentInfo.protocol_data
+    def __init__(self,exp:ExperimentInfo) -> None:
+        self.p_data : dict = exp.protocol_data
         self.base_path = Path(r'C:\\Users\\iwtm663\\Documents\\trios_automation\\'
             'protocols')
     def get_path(self,protocol):
@@ -23,8 +23,8 @@ class Protocol:
         settings = self.p_data[protocol]['settings']
         return settings
     def get_steps(self,protocol,specimen:NamedTuple):
-        height_compression = Protocol.p_data[protocol]['compression_factor'] * specimen.height
-        height_tension     = Protocol.p_data[protocol]['tension_factor'] * specimen.height
+        height_compression = self.p_data[protocol]['compression_factor'] * specimen.height
+        height_tension     = self.p_data[protocol]['tension_factor'] * specimen.height
 
         if not height_compression > 0: raise ValueError
         if not height_tension     > 0: raise ValueError

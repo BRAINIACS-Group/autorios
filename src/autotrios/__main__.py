@@ -10,6 +10,4 @@ from PyQt5.QtWidgets import QApplication
 from cli import cli
 
 logging.basicConfig(level=logging.DEBUG)
-app = QApplication([])
 cli()
-app.exec_()

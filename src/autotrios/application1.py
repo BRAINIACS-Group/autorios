@@ -25,6 +25,7 @@ from pywinauto.application import Application,ProcessNotFoundError
 from pywinauto.keyboard import send_keys
 import pywinauto.timings
 import pyautogui
+from PyQt5.QtWidgets import QApplication
 
 #local imports
 from utility import write_to_input,write_float_to_input,is_button
@@ -131,8 +132,9 @@ class TRIOS(MyApplication):
         #messagebox.showinfo("Advice", r"Please calibrate and zero gap before continuing\n"
         #    r"press OK when done")
         #self.window_main.set_focus()
-        show_warning_messagebox(message=r"Please calibrate and zero gap before"
-                        r" continuing\nPress OK when done",title="Advice")
+        app = QApplication([])
+        show_warning_messagebox(message=f"Please calibrate and zero gap before"
+                        f" continuing.\nPress OK when done",title="Advice")
         self._calibrated = True
 
     def find_zero_gap(self):
@@ -146,8 +148,9 @@ class TRIOS(MyApplication):
         #messagebox.showinfo("Advice", r"Please zero gap before continuing\n"
         #    r"press OK when done")
         #self.window_main.set_focus()
-        show_warning_messagebox(message=r"Please zero gap before continuing\n"
-            r"Press OK when done",title = "Advice")
+        app = QApplication([])
+        show_warning_messagebox(message=f"Please zero gap before continuing\n"
+            f"Press OK when done",title = "Advice")
         self._zero_gap_set = True
 
     def _input_experiment_names(self,experiment_info:ExperimentInfo):
@@ -461,6 +464,7 @@ class TRIOS(MyApplication):
         #messagebox.showinfo("Sample Attachment",
         #    "Please press Ok when you have succesfully attached the specimen"
         #    " and lowered the specimen holders to their initial position")
+        app = QApplication([])
         show_warning_messagebox(message=f"Please press Ok when you have"\
                         f"succesfully attached the specimen and lowered the"\
                         f" specimen holders to their initial position",\
@@ -540,6 +544,7 @@ class DataLogger(MyApplication):
             #    f'File {path} already exists. Do you want to overwrite it?',icon='warning')
             #if response != "yes": raise FileExistsError(f'file {path} already exists!')
             #delete the file
+            app = QApplication([])
             ans = show_question_messagebox(question=f'File {path} already exists."\
                                 " Do you want to overwrite it?')
             path.unlink()
