@@ -342,7 +342,10 @@ class TRIOS(MyApplication):
                 step_gap_control.draw_outline("red")
                 gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
                 gap_edit.draw_outline()
-                write_float_to_input(gap_edit,value)
+                if value == "height_compression":
+                    write_float_to_input(gap_edit,protocol.height_compression)
+                elif value == "height_tension":
+                    write_float_to_input(gap_edit,protocol.height_tension)
             elif input_type == "wait_for_temperature":
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")
@@ -385,7 +388,7 @@ class TRIOS(MyApplication):
 
         #TODO: make this more flexible (when to start the datalogger)
         if not self.datalogger.is_recording:
-            if protocol.start_datalogger_after_sweep:
+            if protocol.set_freq_sweep(p_name):
                 self._wait_for_point_countdown()
                 self._wait_for_time_pane()
                 self.datalogger.start_recording()
@@ -483,6 +486,8 @@ class TRIOS(MyApplication):
         self.datalogger.set_path(experiment_info.save_path_datalogger)
 
         for prot in protocols:
+            self._load_protocol(protocol=p_class,p_name=prot)
+            self._type_protocol_values(protocol=p_class,p_name=prot,specimen=specimen)
             self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen)
             self._focus_experiment_tab()
 

@@ -10,6 +10,7 @@
 
 ---
 protocol1 :
+  frequency_sweep : True
   protocol_name : HBE_Protokoll_with_frequency_2a
   settings :
     velocity : 40
@@ -17,14 +18,25 @@ protocol1 :
   tension_factor : 1.15
   compression_factor : 0.85
   steps:
-    - ["1: Oscillation Frequency","wait_for_temperature",None]
+#    - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", height_compression]
     - ["3: Conditioning Sample Loading","gap", height_tension]
     - ["4: Conditioning Sample Loading","gap", height_compression]
     - ["5: Conditioning Sample Loading","gap", height_tension]
     - ["6: Conditioning Sample Loading","gap", height_compression]
     - ["7: Conditioning Sample Loading","gap", height_tension]
+#  height_compression : &hc1
+#  height_tension : &ht1
+#  steps:
+#    - ["1: Oscillation Frequency","wait_for_temperature",none]
+#    - ["2: Conditioning Sample Loading","gap", *hc1]
+#    - ["3: Conditioning Sample Loading","gap", *ht1]
+ #   - ["4: Conditioning Sample Loading","gap", *hc1]
+#    - ["5: Conditioning Sample Loading","gap", *ht1]
+ #   - ["6: Conditioning Sample Loading","gap", *hc1]
+ #   - ["7: Conditioning Sample Loading","gap", *ht1]
 protocol2 :
+  frequency_sweep : True
   protocol_name : HBE_Protokoll2b
   settings :
     velocity : 100
@@ -34,4 +46,8 @@ protocol2 :
   steps :
     - ["1: Conditioning Sample Loading","gap", height_compression]
     - ["3: Conditioning Sample Loading","gap", height_tension]
-#frequency_sweep : True
+#  height_compression : &hc2
+#  height_tension : &ht2
+#  steps :
+#    - ["1: Conditioning Sample Loading","gap", *hc2]
+ #   - ["3: Conditioning Sample Loading","gap", *ht2]
