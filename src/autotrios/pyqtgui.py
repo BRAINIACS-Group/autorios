@@ -14,9 +14,9 @@ from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
 logger = logging.getLogger('trios_auto')
 #taraswin: change the path
 #HR3
-protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
+#protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
 #HR30
-#protocols_path = Path(r"C:\Users\labadmin\Documents\autotriosHR3\autotrios\src\autotrios\protocols")
+protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\autotrios\src\autotrios\protocols")
 
 
 @dataclass

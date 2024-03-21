@@ -14,6 +14,7 @@ from abc import ABC
 from collections import namedtuple
 from enum import Enum
 import logging
+from comtypes import COMError
 
 import sys
 import warnings
@@ -65,7 +66,7 @@ class MyApplication(ABC):
         return cls(app)
 
     @classmethod
-    def connect(cls,start_if_not_open:bool=True,backend="uia"):
+    def connect(cls,start_if_not_open:bool=True,backend="uia" or "win32"):
         '''Attach to a running TRIOS instance
         Args:
         Returns:
@@ -193,7 +194,8 @@ class TRIOS(MyApplication):
         #self.window_main.Control_panel.draw_outline()
         logger.info('reading control panel')
         val_dict = {}
-        for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").children():
+        #DHR3
+        '''for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").children():
             #child.draw_outline()
             texts = child.texts()
             if len(texts) < 3: continue
@@ -202,8 +204,29 @@ class TRIOS(MyApplication):
                 val_dict[name] = float(value.replace(',','.'))
             except ValueError:
                 val_dict[name] = None
+        return val_dict'''
+        
+        #HR30
+        retries = 50
+        trial = 0
+        while trial < retries:
+            try:
+                for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").iter_children():
+                    #child.draw_outline()
+                    texts = child.texts()
+                    if len(texts) < 3: continue
+                    name,value,unit = texts[:3]
+                    try:
+                        val_dict[name] = float(value.replace(',','.'))
+                    except ValueError:
+                        val_dict[name] = None
+                return val_dict
 
-        return val_dict
+            except COMError as ce:
+                target_error =  ce.args
+                if target_error[1] == 'Ein Ereignis konnte keinen Abonnenten aufrufen.':
+                    trial +=1
+
 
     def _get_gap_value(self):
         '''get the gap value from the controls window'''
@@ -340,7 +363,10 @@ class TRIOS(MyApplication):
             if input_type == "gap":
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
-                gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
+                #HR3
+                #gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
+                #HR30
+                gap_edit = step_gap_control.children()[3].children()[1]
                 gap_edit.draw_outline()
                 if value == "height_compression":
                     write_float_to_input(gap_edit,protocol.height_compression)

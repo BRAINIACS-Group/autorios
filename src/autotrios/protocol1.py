@@ -15,8 +15,11 @@ class Protocol:
     def __init__(self,exp:ExperimentInfo) -> None:
         self.pyaml_path = exp.protocol_path
         self.p_data : dict = exp.protocol_data
-        self.base_path = Path(r'C:\\Users\\iwtm663\\Documents\\trios_automation\\'
-            'protocols')
+        #HR3
+        #self.base_path = Path(r'C:\\Users\\iwtm663\\Documents\\trios_automation\\'
+        #    'protocols')
+        #HR30
+        self.base_path = Path(r'C:\Users\iwtm663\Documents\autotrios\protocols')
         self.height_compression = 0
         self.height_tension = 0
     def get_path(self,protocol_name):
