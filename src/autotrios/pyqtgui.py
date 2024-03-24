@@ -28,10 +28,11 @@ class ExperimentInfo():
     save_path_trios: Path
     save_path_datalogger: Path
     protocol_data : dict
+    exp_status : bool
 def get_experiment_info():
     app = QApplication([])
     info = GetExpInfo()
-    info.setWindowTitle("Experiment Information")
+    info.setWindowTitle("Starting a new Experiment or you are done?")
     info.setFixedSize(600,400)
     info.exec_()
     info.check()
@@ -43,7 +44,8 @@ def get_experiment_info():
         return quit()
     else:
         return ExperimentInfo(info.sample_name_edit.text(),info.operator_name_edit.text(),\
-                              yaml_path,info.save_dir_trios,info.save_dir_datalogger,protocol_data)
+                              yaml_path,info.save_dir_trios,info.save_dir_datalogger,\
+                                protocol_data, info.experiment)
     
 def get_protocol_files():
     files =[]
@@ -65,7 +67,7 @@ class GetExpInfo(QDialog):
         self.directory_label = QLabel("")
         self.save_dir_trios = ""
         self.save_dir_datalogger = ""
-
+        self.experiment : bool
         self.initUI()
 
     def initUI(self):
@@ -96,12 +98,13 @@ class GetExpInfo(QDialog):
         layout.addWidget(self.directory_label)
 
         button_box = QHBoxLayout()
-        ok_button = QPushButton("OK")
-        cancel_button = QPushButton("Cancel")
-        ok_button.clicked.connect(self.accept)
-        cancel_button.clicked.connect(self.reject)
-        button_box.addWidget(ok_button)
-        button_box.addWidget(cancel_button)
+        start_button = QPushButton("START")
+        stop_button = QPushButton("STOP")
+        self.experiment = start_button.clicked.connect(self.accept)
+        #stop_button.clicked.connect(self.reject)
+        stop_button.clicked.connect(quit)
+        button_box.addWidget(start_button)
+        button_box.addWidget(stop_button)
         layout.addLayout(button_box)
         self.setLayout(layout)
 

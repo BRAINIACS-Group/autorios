@@ -68,7 +68,10 @@ def cli(start:bool,debug:bool):
         Protocol_HBE_A(),
         Protocol_HBE_B(),
     ]'''
-    data_from_protocol = Protocol(experiment_info)
-    protocols = list(data_from_protocol.p_data.keys())
-    trios_app = TRIOS.connect(start_if_not_open=start)
-    trios_app.run(experiment_info,protocols,data_from_protocol)
+    exeprimet_status = experiment_info.exp_status
+    while exeprimet_status:
+        logger.info("starting the exepriment")
+        data_from_protocol = Protocol(experiment_info)
+        protocols = list(data_from_protocol.p_data.keys())
+        trios_app = TRIOS.connect(start_if_not_open=start)
+        trios_app.run(experiment_info,protocols,data_from_protocol)
