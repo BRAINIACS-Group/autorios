@@ -16,7 +16,7 @@ logger = logging.getLogger('trios_auto')
 #HR3
 #protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
 #HR30
-protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\autotrios\src\autotrios\protocols")
+protocols_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
 
 
 @dataclass
