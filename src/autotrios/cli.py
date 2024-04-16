@@ -72,7 +72,7 @@ def cli(start:bool,debug:bool):
 
 
     settings_file = Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
-    global_settings = GlobalSetting.from_file(settings_file)
+    global_settings = GlobalSettings.from_file(settings_file)
 
     experiment_status = experiment_info.exp_status
     while experiment_status:

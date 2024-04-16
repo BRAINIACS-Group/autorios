@@ -262,8 +262,9 @@ class TRIOS(MyApplication):
        
         open_procedure_file_button = self._get_experiment_tab_buttons("Procedure: .*")[1]
         open_procedure_file_button.click_input()
-
+        logger.info("waiting for procedure file dialog")
         Desktop(backend='win32')["Open procedure file"].wait('exists',5)
+        logger.info("typing procedure file path")
         keyboard.send_keys('^a'+str(protocol.get_path(p_name))+"{ENTER}") # type the address of procedure file 2a
         
 
@@ -457,9 +458,10 @@ class TRIOS(MyApplication):
         self.datalogger = DataLogger.connect(start_if_not_open=True)
 
     def detach_datalogger(self):
-        self.datalogger.stop_recording()
-        self.datalogger.exit()
-        self.datalogger = None
+        if self.datalogger is not None:
+            self.datalogger.stop_recording()
+            self.datalogger.exit()
+            self.datalogger = None
 
 
     def _set_geometry(self,specimen):
@@ -533,8 +535,11 @@ class TRIOS(MyApplication):
             self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen)
             self._focus_experiment_tab()
             if self._datalogger_restart:
-                self.datalogger.stop_recording()
-                save_path_datalogger_inc = experiment_info.save_path_datalogger.with_suffix(f'_{n+1}.txt')
+                self.detach_datalogger()
+                time.sleep(.1)
+                self.attach_datalogger()
+                save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
+                    experiment_info.save_path_datalogger.stem+f'_{n+1}')
                 self.datalogger.set_path(save_path_datalogger_inc)
 
         #stop and kill the datalogger

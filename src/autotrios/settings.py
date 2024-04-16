@@ -10,7 +10,7 @@ import yaml
 
 
 @dataclass
-class GlobalSetting:
+class GlobalSettings:
     datalogger_restart:bool = False
 
     @staticmethod
@@ -23,4 +23,4 @@ class GlobalSetting:
         with open(settings_file) as fh:
             data = yaml.load(fh,yaml.SafeLoader)
         
-        return GlobalSetting(**data)
+        return GlobalSettings(**data)
