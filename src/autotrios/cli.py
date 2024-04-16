@@ -38,6 +38,7 @@ from pyqtgui import get_experiment_info, ExperimentInfo
 from protocol1 import Protocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
 from application1 import TRIOS
+from settings import GlobalSettings
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -68,12 +69,20 @@ def cli(start:bool,debug:bool):
         Protocol_HBE_A(),
         Protocol_HBE_B(),
     ]'''
+
+
+    settings_file = Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
+    global_settings = GlobalSetting.from_file(settings_file)
+
     experiment_status = experiment_info.exp_status
     while experiment_status:
-        logger.info("starting the exepriment")
+        logger.info("starting the exepriment")        
         data_from_protocol = Protocol(experiment_info)
         protocols = list(data_from_protocol.p_data.keys())
-        trios_app = TRIOS.connect(start_if_not_open=start)
+        trios_app = TRIOS.connect(start_if_not_open=start,
+            datalogger_restart=global_settings.datalogger_restart)
         trios_app.run(experiment_info,protocols,data_from_protocol)
+        
         experiment_info = get_experiment_info()
+        
         experiment_status = experiment_info.exp_status

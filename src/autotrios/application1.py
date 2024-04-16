@@ -66,7 +66,7 @@ class MyApplication(ABC):
         return cls(app)
 
     @classmethod
-    def connect(cls,start_if_not_open:bool=True,backend="uia" or "win32"):
+    def connect(cls,start_if_not_open:bool=True,backend="uia" or "win32",**kwargs):
         '''Attach to a running TRIOS instance
         Args:
         Returns:
@@ -85,14 +85,17 @@ class MyApplication(ABC):
         logger.info("connected to %s",cls.PATH)
         #@jan: Do we need this? maybe there is some event to wait for...
   
-        return cls(app)
+        return cls(app,**kwargs)
 
 class TRIOS(MyApplication):    
     WINDOW_NAME =  "TA Instruments Trios" #"5333-0538 : TA Instruments Trios v5.0.0.44608"
     PATH  = Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\Trios.exe")
 
-    def __init__(self, app: Application) -> None:
+    def __init__(self, app: Application,datalogger_restart:bool=False) -> None:
         super().__init__(app)
+
+        self._datalogger_restart = datalogger_restart
+
         self._calibrated = False
         self._zero_gap_set = False
 
@@ -117,8 +120,10 @@ class TRIOS(MyApplication):
         return obj
     
     @classmethod
-    def connect(cls, start_if_not_open: bool = True):
-        return super().connect(start_if_not_open)
+    def connect(cls, start_if_not_open: bool = True,**kwargs):
+        '''connect to running instance of TRIOS
+        '''
+        return super().connect(start_if_not_open,**kwargs)
 
     def calibrate(self):
         '''Represent calibration process, for now asks user to press Ok when he
@@ -195,16 +200,16 @@ class TRIOS(MyApplication):
         logger.info('reading control panel')
         val_dict = {}
         #DHR3
-        '''for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").children():
-            #child.draw_outline()
-            texts = child.texts()
-            if len(texts) < 3: continue
-            name,value,unit = texts[:3]
-            try:
-                val_dict[name] = float(value.replace(',','.'))
-            except ValueError:
-                val_dict[name] = None
-        return val_dict'''
+        # for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").children():
+        #     #child.draw_outline()
+        #     texts = child.texts()
+        #     if len(texts) < 3: continue
+        #     name,value,unit = texts[:3]
+        #     try:
+        #         val_dict[name] = float(value.replace(',','.'))
+        #     except ValueError:
+        #         val_dict[name] = None
+        # return val_dict
         
         #HR30
         retries = 50
@@ -226,7 +231,7 @@ class TRIOS(MyApplication):
                 target_error =  ce.args
                 if target_error[1] == 'Ein Ereignis konnte keinen Abonnenten aufrufen.':
                     trial +=1
-
+        raise RuntimeError(f'COMError still persists after more than {retries} retries')
 
     def _get_gap_value(self):
         '''get the gap value from the controls window'''
@@ -234,7 +239,7 @@ class TRIOS(MyApplication):
         #@jan: this could be written more general to get different values from
         #the dialog but it should suffice for now
 
-        control_values = self._read_control_panel()       
+        control_values = self._read_control_panel()
         gap = control_values['Gap']
         if gap is None:
             raise ValueError('Gap not found, did you run zero gap?')
@@ -297,6 +302,9 @@ class TRIOS(MyApplication):
             raise pywinauto.timings.TimeoutError('timeout finding time pane') from te    
      
     def get_status(self)->str:
+        '''
+        '''
+        
         status_window = self.window_main.child_window(auto_id="labelMainStatus", control_type="Text")
         status_window.wait('exists',60)
         text_str = status_window.texts()[0].lower()
@@ -308,8 +316,10 @@ class TRIOS(MyApplication):
 
 
     def set_settings(self,settings:Dict):
-        ''''''
-                #updating the velocity
+        '''
+        '''
+        
+        #updating the velocity
         self.window_main.set_focus()
         instrument_tab =self.window_main.child_window(title="Instrument", control_type="TabItem")
         instrument_tab.draw_outline()
@@ -351,6 +361,8 @@ class TRIOS(MyApplication):
         logging.info('finished setting settings')
 
     def _type_protocol_values(self,protocol:Protocol,p_name,specimen:NamedTuple):
+        '''
+        '''
 
         for name,input_type,value in protocol.get_steps(p_name,specimen):
             step_ctrl = self.window_main.child_window(title=name, auto_id="LabelDisabledText", control_type="Text") 
@@ -389,7 +401,9 @@ class TRIOS(MyApplication):
         logger.info('finished typing {}')
 
     def _run_protocol(self,protocol:Protocol,p_name,specimen:NamedTuple,next_protocol:Protocol=None):
-        ''''''
+        '''
+        '''
+        
         self.window_main.set_focus()
         
         self.set_settings(protocol.get_velocity(p_name))
@@ -433,6 +447,8 @@ class TRIOS(MyApplication):
         if status != "idle":
             raise ValueError(f"got status {status} but expected idle")
         
+        
+
         logger.info(f"finished running protocol {protocol}")
             
 
@@ -511,11 +527,15 @@ class TRIOS(MyApplication):
         self.attach_datalogger()
         self.datalogger.set_path(experiment_info.save_path_datalogger)
 
-        for prot in protocols:
+        for n,prot in enumerate(protocols):
             self._load_protocol(protocol=p_class,p_name=prot)
             self._type_protocol_values(protocol=p_class,p_name=prot,specimen=specimen)
             self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen)
             self._focus_experiment_tab()
+            if self._datalogger_restart:
+                self.datalogger.stop_recording()
+                save_path_datalogger_inc = experiment_info.save_path_datalogger.with_suffix(f'_{n+1}.txt')
+                self.datalogger.set_path(save_path_datalogger_inc)
 
         #stop and kill the datalogger
         if self.datalogger is not None:
@@ -534,22 +554,39 @@ class DataLogger(MyApplication):
     def __init__(self, app: Application) -> None:
         super().__init__(app)
         self._rheometer_connected = False
-        self.is_recording = False
+        self._is_recording = False
     
+    @property
+    def is_recording(self)->bool:
+        '''
+        '''
+        return self._is_recording
+
     def set_sampling_mode(self,mode:int)->None:
         '''
         '''
         sampling_mode_edit = self.window_main.child_window(auto_id="1", control_type="Edit")
         sampling_mode_edit.set_edit_text(str(mode))
 
+    def stop_recording(self)->None:
+        '''
+        '''
+        logger.info("datalogger stop recording")
+        self.window_main.set_focus()
+        self.window_main.Stop.draw_outline()
+        self.window_main.Stop.click_input()
+        self._is_recording = False
+
     def start_recording(self):
+        '''
+        '''
         logger.info("datalogger starts recording")
         self.window_main.set_focus()
         if not self._rheometer_connected:
             self.connect_rheometer()
         self.window_main.Start.draw_outline()
         self.window_main.Start.click_input()
-        self.is_recording = True
+        self._is_recording = True
     
 
     def connect_rheometer(self):
@@ -586,14 +623,7 @@ class DataLogger(MyApplication):
         Desktop(backend='uia')["Save As"].wait('exists')
         keyboard.send_keys(str(path)+"{ENTER}")
 
-    def stop_recording(self)->None:
-        '''
-        '''
-        logger.info("datalogger stop recording")
-        self.window_main.set_focus()
-        self.window_main.Stop.draw_outline()
-        self.window_main.Stop.click_input()
-        self.is_recording = False
+    
     
 
     def exit(self)->None:
