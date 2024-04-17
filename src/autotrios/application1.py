@@ -15,6 +15,7 @@ from collections import namedtuple
 from enum import Enum
 import logging
 from comtypes import COMError
+import datetime
 
 import sys
 import warnings
@@ -94,6 +95,7 @@ class TRIOS(MyApplication):
     def __init__(self, app: Application,datalogger_restart:bool=False) -> None:
         super().__init__(app)
 
+        self.datalogger = None
         self._datalogger_restart = datalogger_restart
 
         self._calibrated = False
@@ -401,13 +403,21 @@ class TRIOS(MyApplication):
 
         logger.info('finished typing {}')
 
-    def _run_protocol(self,protocol:Protocol,p_name,specimen:NamedTuple,next_protocol:Protocol=None):
+    def _run_protocol(self,protocol:Protocol,p_name,specimen:NamedTuple,datalogger_save_path:Path,next_protocol:Protocol=None):
         '''
         '''
         
         self.window_main.set_focus()
         
         self.set_settings(protocol.get_velocity(p_name))
+
+        if self._datalogger_restart:
+            self.detach_datalogger()
+            time.sleep(.1)
+
+        if self.datalogger is None: 
+            self.attach_datalogger()
+            self.datalogger.set_path(datalogger_save_path)
 
         self.window_main.set_focus()
 
@@ -437,8 +447,8 @@ class TRIOS(MyApplication):
                 self.datalogger.start_recording()
             self.window_main.set_focus()
 
-        if next_protocol is not None:
-            self._type_protocol_values(protocol,specimen)
+        #if next_protocol is not None:
+        #    self._type_protocol_values(protocol,specimen)
 
         status = self.get_status()
         while status == "running":
@@ -526,21 +536,17 @@ class TRIOS(MyApplication):
         self._set_geometry(specimen)
 
         #if any(p.start_datalogger for p in protocols):
-        self.attach_datalogger()
-        self.datalogger.set_path(experiment_info.save_path_datalogger)
+        #self.attach_datalogger()
+        #self.datalogger.set_path(experiment_info.save_path_datalogger)
 
         for n,prot in enumerate(protocols):
             self._load_protocol(protocol=p_class,p_name=prot)
             self._type_protocol_values(protocol=p_class,p_name=prot,specimen=specimen)
-            self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen)
+            save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
+            experiment_info.save_path_datalogger.stem+f'_{n+1}')
+            self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen,datalogger_save_path=save_path_datalogger_inc)
             self._focus_experiment_tab()
-            if self._datalogger_restart:
-                self.detach_datalogger()
-                time.sleep(.1)
-                self.attach_datalogger()
-                save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
-                    experiment_info.save_path_datalogger.stem+f'_{n+1}')
-                self.datalogger.set_path(save_path_datalogger_inc)
+            
 
         #stop and kill the datalogger
         if self.datalogger is not None:
@@ -576,20 +582,20 @@ class DataLogger(MyApplication):
     def stop_recording(self)->None:
         '''
         '''
-        logger.info("datalogger stop recording")
         self.window_main.set_focus()
         self.window_main.Stop.draw_outline()
+        logger.info("datalogger stop recording at %s",str(datetime.datetime.now()))
         self.window_main.Stop.click_input()
         self._is_recording = False
 
     def start_recording(self):
         '''
         '''
-        logger.info("datalogger starts recording")
         self.window_main.set_focus()
         if not self._rheometer_connected:
             self.connect_rheometer()
         self.window_main.Start.draw_outline()
+        logger.info("datalogger starts recording at %s",str(datetime.datetime.now()))
         self.window_main.Start.click_input()
         self._is_recording = True
     
