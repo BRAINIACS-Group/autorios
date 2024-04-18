@@ -4,12 +4,14 @@ import logging
 from pathlib import Path
 from dataclasses import dataclass
 import os
+from typing import List
 
-#3rd imports
+#3rd party imports
 import yaml
 from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
       QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFileDialog,\
           QMainWindow, QWidget, QMessageBox, QDialogButtonBox
+from .protocol import Protocol
 
 logger = logging.getLogger('trios_auto')
 #taraswin: change the path
@@ -25,13 +27,13 @@ class ExperimentInfo():
     
     sample_name: str
     operator_name: str
-    protocol_path: Path
+    protocols: List[Protocol]
     save_path_trios: Path
     save_path_datalogger: Path
     protocol_data : dict
     exp_status : bool
 
-def get_experiment_info():
+def get_experiment_info(protocols_path:Path)->ExperimentInfo:
     '''
     '''
     
@@ -41,12 +43,14 @@ def get_experiment_info():
     info.setFixedSize(600,400)
     info.exec_()
     info.check()
+
     yaml_path = protocols_path / (info.protocol_combo.currentText() + '.yml')
+
     with open(yaml_path, 'r') as file:
         protocol_data = yaml.safe_load(file)
     if info.protocol_combo.currentText() == "other" :
         show_info_messagebox(message=protocol_data["message"],title="Create protocol file")
-        return quit()
+        return None
     else:
         return ExperimentInfo(info.sample_name_edit.text(),info.operator_name_edit.text(),\
                               yaml_path,info.save_dir_trios,info.save_dir_datalogger,\
