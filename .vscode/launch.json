@@ -23,37 +23,28 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
-	{
-            "name": "Trios_automation",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/TRIOS_automation.py",
-            "args": [
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
         {
-            "name": "Trios_automation",
-            "type": "python",
+            "name": "autotrios_main",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/TRIOS_automation.py",
+            "program": "${workspaceFolder}/src/print_controls.py",
             "args": [
+                "--debug"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
             "name": "print controls",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/print_controls.py",
+            "program": "${workspaceFolder}/src/autotrios/__main__.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
         {
             "name": "test settings",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/test_settings.py",
             "console": "integratedTerminal",
@@ -61,7 +52,7 @@
         },
         {
             "name": "test run protocol",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/test_run_protocol.py",
             "console": "integratedTerminal",
@@ -69,7 +60,7 @@
         },
         {
             "name": "test set geometry",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/test_set_geometry.py",
             "console": "integratedTerminal",
@@ -77,7 +68,7 @@
         },
         {
             "name": "test start datalogger",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/test_start_datalogger.py",
             "console": "integratedTerminal",

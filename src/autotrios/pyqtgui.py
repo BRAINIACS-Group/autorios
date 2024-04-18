@@ -16,12 +16,13 @@ logger = logging.getLogger('trios_auto')
 #HR3
 #protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
 #HR30
-protocols_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
+protocol_config_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
 
 
 @dataclass
 class ExperimentInfo():
     '''Stores all information for one experiment'''
+    
     sample_name: str
     operator_name: str
     protocol_path: Path
@@ -29,10 +30,14 @@ class ExperimentInfo():
     save_path_datalogger: Path
     protocol_data : dict
     exp_status : bool
+
 def get_experiment_info():
+    '''
+    '''
+    
     app = QApplication([])
     info = GetExpInfo()
-    info.setWindowTitle("Starting a new Experiment or you are done?")
+    info.setWindowTitle("Starting a new Experiment or are you done?")
     info.setFixedSize(600,400)
     info.exec_()
     info.check()
@@ -48,6 +53,9 @@ def get_experiment_info():
                                 protocol_data, info.experiment)
     
 def get_protocol_files():
+    '''
+    '''
+
     files =[]
     for name in os.listdir(path=protocols_path):
         #taraswin: what if someone bymistake saved with wrong file extension
@@ -58,7 +66,12 @@ def get_protocol_files():
     return files
 
 class GetExpInfo(QDialog):
+    '''GUI dialogue to get experimental info from user'''
+    
     def __init__(self):
+        '''
+        '''
+        
         super().__init__()
 
         self.sample_name_edit = QLineEdit()
@@ -71,6 +84,9 @@ class GetExpInfo(QDialog):
         self.initUI()
 
     def initUI(self):
+        '''
+        '''
+        
         QBtn = QDialogButtonBox.SaveAll | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
@@ -109,11 +125,17 @@ class GetExpInfo(QDialog):
         self.setLayout(layout)
 
     def openDirectoryDialog(self):
+        '''
+        '''
+        
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.directory_label.setText(directory)
 
     def check(self):
+        '''
+        '''
+        
         save_directory = self.directory_label.text()
         if not save_directory:
             raise ValueError('error getting dir name')
@@ -143,7 +165,10 @@ class GetExpInfo(QDialog):
             datawarning = "Information entered is invalid.\nPlease check"
             show_warning_messagebox(message=datawarning,title="Check Data")
 
-def show_info_messagebox(message : str,title = "Information") -> None: 
+def show_info_messagebox(message : str, title:str = "Information") -> int: 
+    '''
+    
+    '''
     
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
@@ -151,21 +176,28 @@ def show_info_messagebox(message : str,title = "Information") -> None:
     msg.setWindowTitle(title) 
     msg.setStandardButtons(QMessageBox.Ok)
     retval = msg.exec_() 
+    return retval
   
-  
-def show_warning_messagebox(message:str,title = "Warning") -> None: 
+def show_warning_messagebox(message:str, title:str = "Warning") -> int: 
+    '''
+    '''
+    
     msg = QMessageBox() 
     msg.setIcon(QMessageBox.Warning) 
     msg.setText(message) 
     msg.setWindowTitle(title) 
     msg.setStandardButtons(QMessageBox.Ok) 
     retval = msg.exec_()
+    return retval
 
-def show_question_messagebox(question:str,title = "I have a doubt"):
+def show_question_messagebox(question:str, title:str = "I have a question") -> int:
+    '''
+    '''
+
     msg = QMessageBox() 
     msg.setIcon(QMessageBox.Question) 
     msg.setText(question) 
     msg.setWindowTitle(title)
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     retval = msg.exec_() 
-    return msg
+    return retval

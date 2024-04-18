@@ -8,8 +8,8 @@ from pathlib import Path
 import yaml
 
 #local imports
-from utility import write_float_to_input
-from pyqtgui import ExperimentInfo
+from .utility import write_float_to_input
+from .pyqtgui import ExperimentInfo
 
 class Protocol:
     def __init__(self,exp:ExperimentInfo) -> None:

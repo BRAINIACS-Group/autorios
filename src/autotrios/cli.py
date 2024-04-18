@@ -7,38 +7,26 @@
 #STL modules
 from __future__ import annotations
 from typing import List,NamedTuple,Dict,Any
-import time
 import sys
-import re
 import logging
-from dataclasses import dataclass
 from pathlib import Path
-import tempfile
-from abc import ABC
-from collections import namedtuple
-from enum import Enum
-from tkinter import filedialog
 
 import sys
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
+
 #3rd party modules
-from pywinauto import application, mouse
-from pywinauto.application import Application
-from pywinauto.keyboard import send_keys
-import pywinauto.timings
-import pyautogui
 import click
 
 #local imports
 #from .experiment_info import get_experiment_info, ExperimentInfo
-from pyqtgui import get_experiment_info, ExperimentInfo
+from .pyqtgui import get_experiment_info, ExperimentInfo
 #from protocol import Protocol_HBE_A,Protocol_HBE_B
-from protocol1 import Protocol
+from .protocol1 import Protocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
-from application1 import TRIOS
-from settings import GlobalSettings
+from .application1 import TRIOS
+from .settings import GlobalSettings
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -50,10 +38,15 @@ from settings import GlobalSettings
 
 logger = logging.getLogger(__name__)
 
+SETTINGS_FILE_PATH = Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
+
 @click.command()
 @click.option('--start/--no-start',default=False)
 @click.option('--debug/--no-debug',default=False)
-def cli(start:bool,debug:bool):
+def cli(start:bool,debug:bool,settings_file_path:str):
+
+    global_settings = GlobalSettings.from_file(SETTINGS_FILE_PATH)
+
     if debug:
         experiment_info = ExperimentInfo(
             sample_name='test',
@@ -65,14 +58,12 @@ def cli(start:bool,debug:bool):
     else:
         experiment_info = get_experiment_info()
 
-    '''protocols = [
-        Protocol_HBE_A(),
-        Protocol_HBE_B(),
-    ]'''
+    # '''protocols = [
+    #     Protocol_HBE_A(),
+    #     Protocol_HBE_B(),
+    # ]'''
 
-
-    settings_file = Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
-    global_settings = GlobalSettings.from_file(settings_file)
+    
 
     experiment_status = experiment_info.exp_status
     while experiment_status:
