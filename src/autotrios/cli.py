@@ -15,6 +15,7 @@ import sys
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
+from datetime import date,datetime
 
 #3rd party modules
 import click
@@ -23,7 +24,7 @@ import click
 #from .experiment_info import get_experiment_info, ExperimentInfo
 from .pyqtgui import get_experiment_info, ExperimentInfo
 #from protocol import Protocol_HBE_A,Protocol_HBE_B
-from .protocol import Protocol
+from .protocol import MetaProtocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
 from .application import TRIOS
 from .settings import GlobalSettings
@@ -43,7 +44,7 @@ SETTINGS_FILE_PATH = Path(__file__).resolve().parents[2] / 'settings' / 'setting
 @click.command()
 @click.option('--start/--no-start',default=False)
 @click.option('--debug/--no-debug',default=False)
-@click.option('--settings_file',default='')
+@click.option('--settings_file_path',default='')
 def cli(start:bool,debug:bool,settings_file_path:str):
     '''comand line interface entry point
     Args:
@@ -56,24 +57,30 @@ def cli(start:bool,debug:bool,settings_file_path:str):
 
     while True:
         if debug:
+            test_folder = Path(r'C:\Users\iwtm663\Documents\autotrios\testing')
+            if not test_folder.is_dir():
+                raise FileNotFoundError(f'can not find {test_folder}')
+            date_str =  date.today().strftime('%y%m%d')
+            time_str = datetime.now().strftime('%H%M%S')
+            out_folder = test_folder / date_str / time_str
+            if not out_folder.is_dir():
+                out_folder.mkdir(parents=True)
+
             experiment_info = ExperimentInfo(
-                sample_name='test',
+                sample_name=f'test{time_str}',
                 operator_name='tester',
-                save_path_trios=Path(r'C:\Users\iwtm663\Documents\trios_automation\test\out\trios'),
-                save_path_datalogger=Path(r'C:\Users\iwtm663\Documents\trios_automation\test\out\datalogger'),
+                meta_protocol=MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq.yml'),
+                save_path_trios=out_folder/'trios',
+                save_path_datalogger=out_folder/'datalogger'
                 )
         
         else:
             experiment_info = get_experiment_info(global_settings.protocol_config_path)
-
-        experiment_status = experiment_info.exp_status
-    
-        logger.info("starting the exepriment")        
-        data_from_protocol = Protocol(experiment_info)
-        #protocols = list(data_from_protocol.p_data.keys())
-        
+       
+        logger.info('connecting to TRIOS')
         trios_app = TRIOS.connect(start_if_not_open=start,
             datalogger_restart=global_settings.datalogger_restart)
+        logger.info("starting the exepriment")      
         trios_app.run(experiment_info)
         
         if debug:

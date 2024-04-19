@@ -14,6 +14,10 @@ class GlobalSettings:
   protocol_config_path:Path
   datalogger_restart:bool = False
   
+  def __post_init__(self):
+     if isinstance(self.protocol_config_path,str):
+        self.protocol_config_path = Path(self.protocol_config_path)
+
   @staticmethod
   def from_file(settings_file:Union[str,Path])->GlobalSettings:
     '''
@@ -26,6 +30,7 @@ class GlobalSettings:
         settings_file = Path(settings_file)
     if not settings_file.is_file():
         raise FileNotFoundError(f'could not find settings file at {settings_file}')
+    
     with open(settings_file,encoding='utf-8') as fh:
         data = yaml.load(fh,yaml.SafeLoader)
     

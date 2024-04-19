@@ -18,7 +18,7 @@ protocols :
 #protocol1
 - #file path to Trios procedure file, either relative to this file
   #or absolute 
-  procedure_file_path : procedure_files/HBE_Protokoll_with_frequency_2a
+  procedure_file_path : procedure_files/HBE_Protokoll_with_frequency_2a_red
   # this will cause the datalogger to be started after the frequency has
   # fininshed, works currently only when this is the first step
   has_frequency_sweep : True
@@ -30,7 +30,7 @@ protocols :
 
  
   steps:
-#    - ["1: Oscillation Frequency","wait_for_temperature",None]
+    - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
     - ["3: Conditioning Sample Loading","gap", *height_tension]
     - ["4: Conditioning Sample Loading","gap", *height_compression]
@@ -49,7 +49,7 @@ protocols :
  #   - ["7: Conditioning Sample Loading","gap", *ht1]
 
 #protocol2
-- procedure_file_path : procedure_files/HBE_Protokoll_with_frequency_2a
+- procedure_file_path : procedure_files/HBE_Protokoll2b_red
   settings :
     velocity : 100
     fine_velocity : 100

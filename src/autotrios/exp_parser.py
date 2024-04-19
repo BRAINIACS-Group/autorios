@@ -25,6 +25,8 @@ def _eval_(node):
     match node:
         case ast.Constant(value) if isinstance(value, int):
             return value  # integer
+        case ast.Constant(value) if isinstance(value, float):
+            return value  # integer
         case ast.BinOp(left, op, right):
             return _OPERATORS[type(op)](_eval_(left), _eval_(right))
         case ast.UnaryOp(op, operand):  # e.g., -1

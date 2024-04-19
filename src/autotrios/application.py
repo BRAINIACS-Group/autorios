@@ -34,7 +34,7 @@ from .utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
 from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
 from .pyqtgui import show_warning_messagebox,show_question_messagebox
-from experiment_info import ExperimentInfo
+from .experiment_info import ExperimentInfo
 from .device_settings import DeviceSettings
 from .specimen import Specimen
 
@@ -218,7 +218,7 @@ class TRIOS(MyApplication):
         
         #HR30
         retries = 50
-        for trial in retries:
+        for trial in range(retries):
             try:
                 for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").iter_children():
                     #child.draw_outline()
@@ -267,7 +267,7 @@ class TRIOS(MyApplication):
         logger.info("waiting for procedure file dialog")
         Desktop(backend='win32')["Open procedure file"].wait('exists',5)
         logger.info("typing procedure file path")
-        keyboard.send_keys('^a'+str(filepath)+"{ENTER}") # type the address of procedure file 2a
+        keyboard.send_keys('^a'+str(filepath.with_suffix(''))+"{ENTER}") # type the address of procedure file 2a
         
     def _wait_for_point_countdown(self,timeout:int=300)->None:
         '''
@@ -340,7 +340,7 @@ class TRIOS(MyApplication):
         gap_button.draw_outline()
         gap_button.click_input()
 
-        if DeviceSettings.VELOCITY in settings.keys():
+        if 'velocity' in settings.keys():
             #select dropdown
             closure_profile_dropdown = settings_window.child_window(title="Closure profile", auto_id="Link_SampleCompressionMode_E", control_type="ComboBox")
             closure_profile_dropdown.draw_outline()
@@ -351,7 +351,7 @@ class TRIOS(MyApplication):
             velocity_edit = settings_window.child_window(title="Velocity", auto_id="Link_CompressionVelocity_E", control_type="Edit")
             write_float_to_input(velocity_edit,settings['velocity'])
 
-        if DeviceSettings.FINE_VELOCITY in settings.keys():
+        if 'fine_velocity' in settings.keys():
             logging.info('setting fine velocity to %g um/s',settings["velocity"])
             fine_velocity_edit = settings_window.child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
             fine_velocity_edit.wait('exists',1)
@@ -376,7 +376,7 @@ class TRIOS(MyApplication):
             step_dropdown.draw_outline("blue")
             step_dropdown.click_input()
 
-            if step.type == STEP_TYPE.GAP:
+            if step.type_ == STEP_TYPE.GAP:
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
                 #HR3
@@ -384,11 +384,11 @@ class TRIOS(MyApplication):
                 #HR30
                 gap_edit = step_gap_control.children()[3].children()[1]
                 gap_edit.draw_outline()
-                gap_value = step.eval(specimen)
+                gap_value = step.eval(specimen=specimen)
                 logger.debug('write gap value %f',gap_value)
                 write_float_to_input(gap_edit,gap_value)
             
-            elif step.type == STEP_TYPE.WAIT_FOR_TEMPERATURE:
+            elif step.type_ == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")
                 temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
@@ -461,7 +461,7 @@ class TRIOS(MyApplication):
         
         logger.info("finished running protocol %s",repr(protocol))
             
-    def run(self,experiment_info:ExperimentInfo,protocols:List[Protocol]):
+    def run(self,experiment_info:ExperimentInfo):
         '''Run experiment
         Args:
             experiment_info: ExperimentInfo object defining the experiment
@@ -501,7 +501,7 @@ class TRIOS(MyApplication):
         #self.attach_datalogger()
         #self.datalogger.set_path(experiment_info.save_path_datalogger)
 
-        for n,protocol in enumerate(protocols):
+        for n,protocol in enumerate(experiment_info.meta_protocol.protocols):
             self._load_procedure_file(protocol.procedure_file_path)
             self._type_protocol_values(protocol,specimen)
             #TODO: find a nicer way to pass the updated datalogger save path

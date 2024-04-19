@@ -30,7 +30,7 @@ def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
     info.setWindowTitle("Starting a new Experiment or are you done?")
     info.setFixedSize(600,400)
     retval = info.exec_()
-    if retval != 0:
+    if retval != 1:
         raise RuntimeError('error getting input from dialogue')
     info.check()
 
@@ -46,7 +46,9 @@ def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
 def get_protocol_files(protocol_config_dir:Path):
     '''
     '''
-    return protocol_config_dir.glob('*.yml')
+    path_list = protocol_config_dir.glob('*.yml')
+    file_stems = [p.stem for p in path_list]
+    return file_stems
 
 class GetExpInfo(QDialog):
     '''GUI dialogue to get experimental info from user'''
@@ -84,9 +86,9 @@ class GetExpInfo(QDialog):
         layout.addWidget(QLabel("Operator Name:"))
         layout.addWidget(self.operator_name_edit)
 
-        files = get_protocol_files(self._protocol_config_dir)
+        file_names = get_protocol_files(self._protocol_config_dir)
         layout.addWidget(QLabel("Select Protocol:"))
-        self.protocol_combo.addItems(files)
+        self.protocol_combo.addItems(file_names)
         layout.addWidget(self.protocol_combo)
 
         directory_layout = QHBoxLayout()

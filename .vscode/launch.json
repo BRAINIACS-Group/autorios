@@ -13,7 +13,7 @@
             "justMyCode": true
         },
         {
-            "name": "autotrios_cli_debug",
+            "name": "autotrios_debug",
             "type": "debugpy",
             "request": "launch",
             "module": "autotrios",
@@ -27,10 +27,7 @@
             "name": "autotrios_main",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/print_controls.py",
-            "args": [
-                "--debug"
-            ],
+            "module": "autotrios",
             "console": "integratedTerminal",
             "justMyCode": true
         },

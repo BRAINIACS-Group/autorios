@@ -1,7 +1,7 @@
 #STL imports
 from __future__ import annotations
 from abc import ABC
-from typing import NamedTuple, Dict
+from typing import NamedTuple, Dict,Any
 from collections import namedtuple
 from pathlib import Path
 from dataclasses import dataclass
@@ -13,13 +13,11 @@ import yaml
 
 #local imports
 from .exp_parser import eval_expr
+from .device_settings import DeviceSettings
 
 class STEP_TYPE(Enum):
     GAP = auto()
     WAIT_FOR_TEMPERATURE = auto()
-
-    def __getitem__(self, name:str):
-       return super().__getitem__(name.upper())
 
 @dataclass
 class Step:
@@ -29,8 +27,8 @@ class Step:
 
   def __post_init__(self) -> None:
     '''sanitize and tpye conversions'''
-    if isinstance(type_,str):
-      type_ = STEP_TYPE(type_)
+    if isinstance(self.type_,str):
+      self.type_ = STEP_TYPE[self.type_.upper()]
     if self.type_ == STEP_TYPE.GAP and not self.eval_str:
        raise ValueError('eval string can not be empty for GAP Step')
 
@@ -45,15 +43,22 @@ class Protocol:
     '''
     '''
     procedure_file_path: Path
-    device_settings: Dict
+    device_settings: Dict[str,Any]
     steps: List[Step]
+    has_frequency_sweep:bool = False
 
     def __post_init__(self) -> None:
       '''Data sanity checks'''
       if isinstance(self.procedure_file_path,str):
          self.procedure_file_path = Path(self.procedure_file_path)
+      if not self.procedure_file_path.is_file():
+         raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
       
-      
+    #   for k,v in self.device_settings.items():
+    #     if isinstance(k,str):
+    #        self.device_settings.pop(k)
+    #        key_enum = DeviceSettings[k.upper()]
+    #        self.device_settings[key_enum.value] = v
 
       # self.pyaml_path = exp.protocol_path
       # self.p_data : dict = exp.protocol_data
@@ -113,9 +118,12 @@ class MetaProtocol:
             filepath = Path(filepath)
         if not filepath.is_file():
             raise FileNotFoundError(f'could not find settings file at {filepath}')
-        with open(filepath,encoding='utf-8') as fh:
+        with open(filepath,'r',encoding='utf-8') as fh:
             data = yaml.load(fh,yaml.SafeLoader)
         
+        data.pop('height_tension',None)
+        data.pop('height_compression',None)
+
         protocols = []
         for protocol_dict in data.pop('protocols'):
             steps_str_list = protocol_dict.pop('steps')
@@ -127,7 +135,8 @@ class MetaProtocol:
             if not procedure_file_path.is_absolute():
                 procedure_file_path = filepath.parent / procedure_file_path
 
-            protocol = Protocol(**protocol_dict,**data,steps=steps)
+            protocol = Protocol(**protocol_dict,**data,
+                steps=steps,procedure_file_path=procedure_file_path)
             protocols.append(protocol)
 
 
