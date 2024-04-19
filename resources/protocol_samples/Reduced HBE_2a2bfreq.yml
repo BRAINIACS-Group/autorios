@@ -1,4 +1,6 @@
 ---
+#global settings for all protocols
+
 protocol1 :
   frequency_sweep : True
   protocol_name : HBE_Protokoll_with_frequency_2a_red

@@ -1,3 +1,6 @@
+#ignore settings
+settings/*.yaml
+
 #vscode settings
 *.code-workspace
 .vscode/

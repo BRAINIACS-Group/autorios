@@ -30,10 +30,13 @@ import pyautogui
 from PyQt5.QtWidgets import QApplication
 
 #local imports
-from utility import write_to_input,write_float_to_input,is_button
+from .utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
-from protocol1 import Protocol
-from pyqtgui import show_warning_messagebox,show_question_messagebox, ExperimentInfo
+from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
+from .pyqtgui import show_warning_messagebox,show_question_messagebox
+from experiment_info import ExperimentInfo
+from .device_settings import DeviceSettings
+from .specimen import Specimen
 
 logger = logging.getLogger(__name__)
 
@@ -215,8 +218,7 @@ class TRIOS(MyApplication):
         
         #HR30
         retries = 50
-        trial = 0
-        while trial < retries:
+        for trial in retries:
             try:
                 for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").iter_children():
                     #child.draw_outline()
@@ -230,9 +232,9 @@ class TRIOS(MyApplication):
                 return val_dict
 
             except COMError as ce:
-                target_error =  ce.args
-                if target_error[1] == 'Ein Ereignis konnte keinen Abonnenten aufrufen.':
-                    trial +=1
+                logging.warning('Got COMError while trying to read control panel, retrying (%d)',trial)
+                continue
+
         raise RuntimeError(f'COMError still persists after more than {retries} retries')
 
     def _get_gap_value(self):
@@ -255,38 +257,34 @@ class TRIOS(MyApplication):
 
         return buttons
 
-    def _load_protocol(self,protocol:Protocol,p_name):
+    def _load_procedure_file(self,filepath:Path):
         ''''''
-
-        # To open the procedure file and upload protocol 2a
-        #self.window_main.Button7.draw_outline()
-        #self.window_main.Button7.click() #procedure file upload button when Geometry dropdown is expanded
-       
+        if not filepath.is_file():
+            raise FileNotFoundError(f'could not find procedure file at {filepath}')
+      
         open_procedure_file_button = self._get_experiment_tab_buttons("Procedure: .*")[1]
         open_procedure_file_button.click_input()
         logger.info("waiting for procedure file dialog")
         Desktop(backend='win32')["Open procedure file"].wait('exists',5)
         logger.info("typing procedure file path")
-        keyboard.send_keys('^a'+str(protocol.get_path(p_name))+"{ENTER}") # type the address of procedure file 2a
+        keyboard.send_keys('^a'+str(filepath)+"{ENTER}") # type the address of procedure file 2a
         
-
-    def _wait_for_point_countdown(self)->None:
+    def _wait_for_point_countdown(self,timeout:int=300)->None:
         '''
-        '''
-        
+        '''        
         countdown_pane = self.window_main.child_window(auto_id="Link_StatusPointsLeft_E")
 
         # To search for the Countdown pane. Need to be tested for other materials which take time for frequency sweep
         # Starts the data logger as soon as it finds the pane
         try:
             logger.info("Waiting for point countdown panel")
-            countdown_pane.wait('exists',300)
+            countdown_pane.wait('exists',timeout)
             logger.info("There it is: point countdown panel found!!")
         except pywinauto.timings.TimeoutError as te:
             raise pywinauto.timings.TimeoutError('timeout finding time pane') from te  
 
 
-    def _wait_for_time_pane(self):
+    def _wait_for_time_pane(self,timeout:int=300):
         '''
         Args:
         Raises:
@@ -299,17 +297,17 @@ class TRIOS(MyApplication):
         # Starts the data logger as soon as it finds the pane
         try:
             logger.info("Waiting for countdown time panel")
-            time_pane.wait('exists',300)
+            time_pane.wait('exists',timeout)
             logger.info("There it is: time panel found!!")
         except pywinauto.timings.TimeoutError as te:
             raise pywinauto.timings.TimeoutError('timeout finding time pane') from te    
      
-    def get_status(self)->str:
+    def get_status(self,timeout:int=60)->str:
         '''
         '''
         
         status_window = self.window_main.child_window(auto_id="labelMainStatus", control_type="Text")
-        status_window.wait('exists',60)
+        status_window.wait('exists',timeout)
         text_str = status_window.texts()[0].lower()
         if "idle" in text_str:
             return "idle"
@@ -318,7 +316,7 @@ class TRIOS(MyApplication):
         raise ValueError(f'unknown status {text_str}')
 
 
-    def set_settings(self,settings:Dict):
+    def set_settings(self,settings:Dict,timeout:float=60):
         '''
         '''
         
@@ -335,16 +333,15 @@ class TRIOS(MyApplication):
         options_button.click_input()
 
         settings_window = self.window_main.child_window(title="TA Instruments TRIOS", auto_id="MasterOptionsDialog", control_type="Window")
-        settings_window.wait('exists',60)
+        settings_window.wait('exists',timeout)
 
         #press gap button
         gap_button = settings_window.child_window(title="   Gap", control_type="ListItem")
         gap_button.draw_outline()
         gap_button.click_input()
 
-        if 'velocity' in settings.keys():
+        if DeviceSettings.VELOCITY in settings.keys():
             #select dropdown
-            logging.info('setting velocity to %g um/s',settings["velocity"])
             closure_profile_dropdown = settings_window.child_window(title="Closure profile", auto_id="Link_SampleCompressionMode_E", control_type="ComboBox")
             closure_profile_dropdown.draw_outline()
             closure_profile_dropdown.click_input()
@@ -352,9 +349,10 @@ class TRIOS(MyApplication):
             linear_profile_item.wait('exists',1)
             linear_profile_item.click_input()
             velocity_edit = settings_window.child_window(title="Velocity", auto_id="Link_CompressionVelocity_E", control_type="Edit")
-            
             write_float_to_input(velocity_edit,settings['velocity'])
 
+        if DeviceSettings.FINE_VELOCITY in settings.keys():
+            logging.info('setting fine velocity to %g um/s',settings["velocity"])
             fine_velocity_edit = settings_window.child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
             fine_velocity_edit.wait('exists',1)
             write_float_to_input(fine_velocity_edit,settings['fine_velocity'])
@@ -363,19 +361,22 @@ class TRIOS(MyApplication):
         ok_button.click_input()
         logging.info('finished setting settings')
 
-    def _type_protocol_values(self,protocol:Protocol,p_name,specimen:NamedTuple):
+    def _type_protocol_values(self,protocol:Protocol,specimen:Specimen):
         '''
+        fill in information for protocol steps
         '''
 
-        for name,input_type,value in protocol.get_steps(p_name,specimen):
-            step_ctrl = self.window_main.child_window(title=name, auto_id="LabelDisabledText", control_type="Text") 
+        logger.info('filling protocol step values')
+        for step in protocol.steps:
+            step_ctrl = self.window_main.child_window(title=step.label,
+                auto_id="LabelDisabledText", control_type="Text")
             step_top_parent =  step_ctrl.parent().parent().parent()
 
             step_dropdown = step_ctrl.parent().parent().children()[0]
             step_dropdown.draw_outline("blue")
             step_dropdown.click_input()
 
-            if input_type == "gap":
+            if step.type == STEP_TYPE.GAP:
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
                 #HR3
@@ -383,39 +384,39 @@ class TRIOS(MyApplication):
                 #HR30
                 gap_edit = step_gap_control.children()[3].children()[1]
                 gap_edit.draw_outline()
-                if value == "height_compression":
-                    write_float_to_input(gap_edit,protocol.height_compression)
-                elif value == "height_tension":
-                    write_float_to_input(gap_edit,protocol.height_tension)
-            elif input_type == "wait_for_temperature":
+                gap_value = step.eval(specimen)
+                logger.debug('write gap value %f',gap_value)
+                write_float_to_input(gap_edit,gap_value)
+            
+            elif step.type == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")
                 temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
                 temp_checkbox.draw_outline()
                 checkbox_state = temp_checkbox.get_toggle_state()
-                logger.debug(f"checkbox state for {name}:{checkbox_state}")
+                logger.debug(f"checkbox state for {step.label}:{checkbox_state}")
                 if  temp_checkbox.get_toggle_state() != 1:
+                    logger.debug("toggle checkbox for %s",step.label)
                     temp_checkbox.click_input()
             else:
-                raise ValueError(f'type {input_type} unknown')
+                raise ValueError(f'step type {step.type_} unknown')
 
+            #close dropdown
             step_dropdown.click_input()
 
-        logger.info('finished typing {}')
-
-    def _run_protocol(self,protocol:Protocol,p_name,specimen:NamedTuple,datalogger_save_path:Path,next_protocol:Protocol=None):
+    def _run_protocol(self,protocol:Protocol,datalogger_save_path:Path):
         '''
         '''
         
         self.window_main.set_focus()
         
-        self.set_settings(protocol.get_velocity(p_name))
+        self.set_settings(protocol.device_settings)
 
         if self._datalogger_restart:
             self.detach_datalogger()
             time.sleep(.1)
 
-        if self.datalogger is None: 
+        if self.datalogger is None:
             self.attach_datalogger()
             self.datalogger.set_path(datalogger_save_path)
 
@@ -439,7 +440,7 @@ class TRIOS(MyApplication):
 
         #TODO: make this more flexible (when to start the datalogger)
         if not self.datalogger.is_recording:
-            if protocol.set_freq_sweep(p_name):
+            if protocol.has_frequency_sweep:
                 self._wait_for_point_countdown()
                 self._wait_for_time_pane()
                 self.datalogger.start_recording()
@@ -458,10 +459,63 @@ class TRIOS(MyApplication):
         if status != "idle":
             raise ValueError(f"got status {status} but expected idle")
         
-        
-
-        logger.info(f"finished running protocol {protocol}")
+        logger.info("finished running protocol %s",repr(protocol))
             
+    def run(self,experiment_info:ExperimentInfo,protocols:List[Protocol]):
+        '''Run experiment
+        Args:
+            experiment_info: ExperimentInfo object defining the experiment
+        Returns:
+        Raises:
+        '''
+        #self.window_main.set_focus()
+        
+        # if not self._calibrated:
+        #     self.calibrate()
+        # if not self._zero_gap_set:
+        #     self.find_zero_gap()
+
+        self.window_main.set_focus() # brings the window to top
+        self._focus_experiment_tab()
+
+        self._input_experiment_names(experiment_info)
+       
+        #messagebox.showinfo("Sample Attachment",
+        #    "Please press Ok when you have succesfully attached the specimen"
+        #    " and lowered the specimen holders to their initial position")
+        # app = QApplication([])
+        # show_warning_messagebox(message=f"Please press Ok when you have"\
+        #                 f"succesfully attached the specimen and lowered the"\
+        #                 f" specimen holders to their initial position",\
+        #                       title="Sample Attachment")
+
+        #@jan: now run the protocol etc.
+        height = self._get_gap_value()
+        logger.info('found specimen height: %g',height)
+        #@jan just an idea to use a namedtuple
+        specimen = Specimen(height)
+
+        self._set_geometry(specimen)
+
+        #if any(p.start_datalogger for p in protocols):
+        #self.attach_datalogger()
+        #self.datalogger.set_path(experiment_info.save_path_datalogger)
+
+        for n,protocol in enumerate(protocols):
+            self._load_procedure_file(protocol.procedure_file_path)
+            self._type_protocol_values(protocol,specimen)
+            #TODO: find a nicer way to pass the updated datalogger save path
+            save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
+                experiment_info.save_path_datalogger.stem+f'_{n+1}')
+            self._run_protocol(protocol,datalogger_save_path=save_path_datalogger_inc)
+            self._focus_experiment_tab()
+            
+        #stop and kill the datalogger if it is still open
+        if self.datalogger is not None:
+            self.detach_datalogger()
+
+        self._zero_gap_set = False
+        self._calibrated = False
 
     def attach_datalogger(self):
         ''''''
@@ -497,63 +551,6 @@ class TRIOS(MyApplication):
         self.window_main.child_window(title="Geometry", control_type="ToolBar").child_window(title="Calibrate", control_type="Button").click()
         self.window_main.child_window(title="Procedure", control_type="ToolBar").child_window(title="Setup", control_type="Button").draw_outline()#click()
         self.window_main.child_window(title="Procedure", control_type="ToolBar").child_window(title="Setup", control_type="Button").click()
-
-
-    def run(self,experiment_info:ExperimentInfo,protocols:List,p_class:Protocol):
-        '''Run experiment
-        Args:
-            experiment_info: ExperimentInfo object defining the experiment
-        Returns:
-        Raises:
-        '''
-        #self.window_main.set_focus()
-        
-        if not self._calibrated:
-            self.calibrate()
-        if not self._zero_gap_set:
-            self.find_zero_gap()
-
-        self.window_main.set_focus() # brings the window to top
-        self._focus_experiment_tab()
-
-        self._input_experiment_names(experiment_info)
-       
-        #messagebox.showinfo("Sample Attachment",
-        #    "Please press Ok when you have succesfully attached the specimen"
-        #    " and lowered the specimen holders to their initial position")
-        app = QApplication([])
-        show_warning_messagebox(message=f"Please press Ok when you have"\
-                        f"succesfully attached the specimen and lowered the"\
-                        f" specimen holders to their initial position",\
-                              title="Sample Attachment")
-
-        #@jan: now run the protocol etc.
-        height = self._get_gap_value()
-        logger.info('found specimen height: %g',height)
-        #@jan just an idea to use a namedtuple
-        specimen = namedtuple('specimen',['height'])(height)
-
-        self._set_geometry(specimen)
-
-        #if any(p.start_datalogger for p in protocols):
-        #self.attach_datalogger()
-        #self.datalogger.set_path(experiment_info.save_path_datalogger)
-
-        for n,prot in enumerate(protocols):
-            self._load_protocol(protocol=p_class,p_name=prot)
-            self._type_protocol_values(protocol=p_class,p_name=prot,specimen=specimen)
-            save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
-            experiment_info.save_path_datalogger.stem+f'_{n+1}')
-            self._run_protocol(protocol=p_class,p_name=prot,specimen=specimen,datalogger_save_path=save_path_datalogger_inc)
-            self._focus_experiment_tab()
-            
-
-        #stop and kill the datalogger
-        if self.datalogger is not None:
-            self.detach_datalogger()
-
-        self._zero_gap_set = False
-        self._calibrated = False
 
 
 class DataLogger(MyApplication):
@@ -633,9 +630,6 @@ class DataLogger(MyApplication):
         self.window_main.click_input(coords=(150,165),double=True,use_log=True,absolute=False)
         Desktop(backend='uia')["Save As"].wait('exists')
         keyboard.send_keys(str(path)+"{ENTER}")
-
-    
-    
 
     def exit(self)->None:
         '''

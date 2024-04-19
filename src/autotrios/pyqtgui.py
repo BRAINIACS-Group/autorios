@@ -11,72 +11,53 @@ import yaml
 from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
       QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFileDialog,\
           QMainWindow, QWidget, QMessageBox, QDialogButtonBox
-from .protocol import Protocol
+from .protocol import MetaProtocol
+from .experiment_info import ExperimentInfo
 
 logger = logging.getLogger('trios_auto')
 #taraswin: change the path
 #HR3
 #protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
 #HR30
-protocol_config_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
+#protocol_config_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
 
-
-@dataclass
-class ExperimentInfo():
-    '''Stores all information for one experiment'''
-    
-    sample_name: str
-    operator_name: str
-    protocols: List[Protocol]
-    save_path_trios: Path
-    save_path_datalogger: Path
-    protocol_data : dict
-    exp_status : bool
-
-def get_experiment_info(protocols_path:Path)->ExperimentInfo:
+def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
     '''
     '''
     
     app = QApplication([])
-    info = GetExpInfo()
+    info = GetExpInfo(protocol_config_dir)
     info.setWindowTitle("Starting a new Experiment or are you done?")
     info.setFixedSize(600,400)
-    info.exec_()
+    retval = info.exec_()
+    if retval != 0:
+        raise RuntimeError('error getting input from dialogue')
     info.check()
 
-    yaml_path = protocols_path / (info.protocol_combo.currentText() + '.yml')
+    protocol_config_path = protocol_config_dir / (info.protocol_combo.currentText() + '.yml')
+    meta_protocol = MetaProtocol.from_file(protocol_config_path)
 
-    with open(yaml_path, 'r') as file:
-        protocol_data = yaml.safe_load(file)
-    if info.protocol_combo.currentText() == "other" :
-        show_info_messagebox(message=protocol_data["message"],title="Create protocol file")
-        return None
-    else:
-        return ExperimentInfo(info.sample_name_edit.text(),info.operator_name_edit.text(),\
-                              yaml_path,info.save_dir_trios,info.save_dir_datalogger,\
-                                protocol_data, info.experiment)
+    return ExperimentInfo(info.sample_name_edit.text(),
+                        info.operator_name_edit.text(),\
+                        meta_protocol,
+                        info.save_dir_trios,
+                        info.save_dir_datalogger)
     
-def get_protocol_files():
+def get_protocol_files(protocol_config_dir:Path):
     '''
     '''
-
-    files =[]
-    for name in os.listdir(path=protocols_path):
-        #taraswin: what if someone bymistake saved with wrong file extension
-        if name.endswith(".yml"):
-            #taraswin: do we need to avoid printing the file extension
-            extname = os.path.splitext(name)[0]
-            files.append(extname)
-    return files
+    return protocol_config_dir.glob('*.yml')
 
 class GetExpInfo(QDialog):
     '''GUI dialogue to get experimental info from user'''
     
-    def __init__(self):
+    def __init__(self,protocol_config_dir:Path):
         '''
         '''
         
         super().__init__()
+
+        self._protocol_config_dir = protocol_config_dir
 
         self.sample_name_edit = QLineEdit()
         self.operator_name_edit = QLineEdit()
@@ -103,7 +84,7 @@ class GetExpInfo(QDialog):
         layout.addWidget(QLabel("Operator Name:"))
         layout.addWidget(self.operator_name_edit)
 
-        files = get_protocol_files()
+        files = get_protocol_files(self._protocol_config_dir)
         layout.addWidget(QLabel("Select Protocol:"))
         self.protocol_combo.addItems(files)
         layout.addWidget(self.protocol_combo)

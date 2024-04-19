@@ -45,7 +45,11 @@ SETTINGS_FILE_PATH = Path(__file__).resolve().parents[2] / 'settings' / 'setting
 @click.option('--debug/--no-debug',default=False)
 @click.option('--settings_file',default='')
 def cli(start:bool,debug:bool,settings_file_path:str):
-
+    '''comand line interface entry point
+    Args:
+    start: 
+    '''
+    
     if not settings_file_path:
         settings_file_path = SETTINGS_FILE_PATH
     global_settings = GlobalSettings.from_file(settings_file_path)
@@ -66,10 +70,11 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     
         logger.info("starting the exepriment")        
         data_from_protocol = Protocol(experiment_info)
-        protocols = list(data_from_protocol.p_data.keys())
+        #protocols = list(data_from_protocol.p_data.keys())
+        
         trios_app = TRIOS.connect(start_if_not_open=start,
             datalogger_restart=global_settings.datalogger_restart)
-        trios_app.run(experiment_info,protocols,data_from_protocol)
+        trios_app.run(experiment_info)
         
         if debug:
             break
