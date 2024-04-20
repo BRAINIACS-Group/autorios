@@ -27,6 +27,7 @@ classifiers = [
 
 dependencies = [
   "click",
+  "pydantic== 1.10.8",
   "PyAutoGUI==0.9.54",
   "pywinauto==0.6.6",
 ]
