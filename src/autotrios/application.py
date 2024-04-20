@@ -95,9 +95,10 @@ class TRIOS(MyApplication):
     WINDOW_NAME =  "TA Instruments Trios" #"5333-0538 : TA Instruments Trios v5.0.0.44608"
     PATH  = Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\Trios.exe")
 
-    def __init__(self, app: Application,datalogger_restart:bool=False) -> None:
+    def __init__(self, app: Application,datalogger_restart:bool=False,trios_workaround:bool=False) -> None:
         super().__init__(app)
 
+        self._trios_workaround = trios_workaround
         self.datalogger = None
         self._datalogger_restart = datalogger_restart
 
@@ -379,10 +380,13 @@ class TRIOS(MyApplication):
             if step.type_ == STEP_TYPE.GAP:
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
-                #HR3
-                #gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
-                #HR30
-                gap_edit = step_gap_control.children()[3].children()[1]
+                if self._trios_workaround:
+                     #HR30
+                    gap_edit = step_gap_control.children()[3].children()[1]
+                else:
+                    #HR3
+                    gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
+               
                 gap_edit.draw_outline()
                 gap_value = step.eval(specimen=specimen)
                 logger.debug('write gap value %f',gap_value)

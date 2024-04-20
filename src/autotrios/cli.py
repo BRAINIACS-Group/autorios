@@ -79,7 +79,8 @@ def cli(start:bool,debug:bool,settings_file_path:str):
        
         logger.info('connecting to TRIOS')
         trios_app = TRIOS.connect(start_if_not_open=start,
-            datalogger_restart=global_settings.datalogger_restart)
+            datalogger_restart=global_settings.datalogger_restart,
+            trios_workaround=global_settings.trios_workaround)
         logger.info("starting the exepriment")      
         trios_app.run(experiment_info)
         

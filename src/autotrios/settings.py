@@ -1,9 +1,10 @@
 
 #STl imports
 from __future__ import annotations
-from dataclasses import dataclass
+#from dataclasses import dataclass
 from typing import Union
 from pathlib import Path
+from pydantic.dataclasses import dataclass
 
 #3rd party imports
 import yaml
@@ -13,6 +14,7 @@ import yaml
 class GlobalSettings:
   protocol_config_path:Path
   datalogger_restart:bool = False
+  trios_workaround:bool = False
   
   def __post_init__(self):
      if isinstance(self.protocol_config_path,str):
