@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import List,NamedTuple,Dict,Any
 import time
 import sys
-import re
+import csv
 import logging
 from dataclasses import dataclass
 #from tkinter import simpledialog, messagebox
@@ -198,7 +198,7 @@ class TRIOS(MyApplication):
         file_name_ctrl = self.window_main.child_window(title="File Name:", control_type="Text")
         file_name_ctrl.draw_outline()
         file_name_ctrl.click_input()
-        keyboard.send_keys("{TAB}^a"+str(experiment_info.save_path_trios))
+        keyboard.send_keys("{TAB}^a"+str(experiment_info.save_dir_trios))
         file_name_ctrl.click_input()
 
     def _read_control_panel(self)->Dict[str,Any]:
@@ -408,7 +408,7 @@ class TRIOS(MyApplication):
             #close dropdown
             step_dropdown.click_input()
 
-    def _run_protocol(self,protocol:Protocol,datalogger_save_path:Path):
+    def _run_protocol(self,protocol:Protocol,filepath_datalogger:Path):
         '''
         '''
         
@@ -422,7 +422,10 @@ class TRIOS(MyApplication):
 
         if self.datalogger is None:
             self.attach_datalogger()
-            self.datalogger.set_path(datalogger_save_path)
+            timelog_file = filepath_datalogger.with_stem(
+                filepath_datalogger.stem+'_timelog').with_suffix('.csv')
+            self.datalogger.set_timelog_file(timelog_file)
+            self.datalogger.set_path(filepath_datalogger)
 
         self.window_main.set_focus()
 
@@ -509,9 +512,9 @@ class TRIOS(MyApplication):
             self._load_procedure_file(protocol.procedure_file_path)
             self._type_protocol_values(protocol,specimen)
             #TODO: find a nicer way to pass the updated datalogger save path
-            save_path_datalogger_inc = experiment_info.save_path_datalogger.with_stem(
-                experiment_info.save_path_datalogger.stem+f'_{n+1}')
-            self._run_protocol(protocol,datalogger_save_path=save_path_datalogger_inc)
+            filepath_datalogger_inc = experiment_info.filepath_datalogger.with_stem(
+                experiment_info.file_path_datalogger.stem+f'_{n+1}')
+            self._run_protocol(protocol,filepath_datalogger= filepath_datalogger_inc)
             self._focus_experiment_tab()
             
         #stop and kill the datalogger if it is still open
@@ -566,13 +569,34 @@ class DataLogger(MyApplication):
     def __init__(self, app: Application) -> None:
         super().__init__(app)
         self._rheometer_connected = False
+        self._started = False
         self._is_recording = False
-    
+        self._timelog_file = None
+        self._start_time = None
+        self._stop_time = None
+
     @property
     def is_recording(self)->bool:
         '''
         '''
         return self._is_recording
+
+    def set_timelog_file(self,timelogfile_path)->None:
+        '''set path to timelog file that stores start and stop times'''
+        self._timelog_file = timelogfile_path
+        if timelogfile_path.is_file():
+            logger.warning('timelog file %s exists already, appending to it',str(timelogfile_path))
+        with open(timelogfile_path,'a',encoding='utf-8') as fh:
+            writer = csv.writer(fh)
+            writer.writerow(['label','time'])
+
+
+    def _write_time(self,label:str,time_val:datetime.datetime):
+        if self._timelog_file is None:
+            return
+        with open(self._timelog_file,'a',encoding='utf-8') as fh:
+            writer = csv.writer(fh)
+            writer.write([label,time_val.isoformat()])
 
     def set_sampling_mode(self,mode:int)->None:
         '''
@@ -586,18 +610,26 @@ class DataLogger(MyApplication):
         self.window_main.set_focus()
         self.window_main.Stop.draw_outline()
         logger.info("datalogger stop recording at %s",str(datetime.datetime.now()))
+        self._stop_time = datetime.datetime.now()
         self.window_main.Stop.click_input()
+        self._write_time('stop',self._stop_time)
         self._is_recording = False
 
     def start_recording(self):
         '''
         '''
+        if self._started:
+            raise RuntimeError('can only start DataLogger recording once,'
+                ' create a new one for a new recording')
+        
         self.window_main.set_focus()
         if not self._rheometer_connected:
             self.connect_rheometer()
         self.window_main.Start.draw_outline()
-        logger.info("datalogger starts recording at %s",str(datetime.datetime.now()))
+        self._start_time = datetime.datetime.now()
         self.window_main.Start.click_input()
+        logger.info("datalogger starts recording at %s",str(self._start_time))
+        self._write_time('start',self._start_time)
         self._is_recording = True
     
 

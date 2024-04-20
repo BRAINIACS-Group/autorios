@@ -66,22 +66,28 @@ def cli(start:bool,debug:bool,settings_file_path:str):
             if not out_folder.is_dir():
                 out_folder.mkdir(parents=True)
 
+            sample_name = f'test{time_str}'
             experiment_info = ExperimentInfo(
-                sample_name=f'test{time_str}',
-                operator_name='tester',
-                meta_protocol=MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq.yml'),
-                save_path_trios=out_folder/'trios',
-                save_path_datalogger=out_folder/'datalogger'
+                sample_name = sample_name,
+                operator_name = 'tester',
+                meta_protocol = MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq.yml'),
+                save_dir_trios = out_folder / 'trios',
+                save_dir_datalogger = out_folder / 'datalogger',
+                log_dir = out_folder
                 )
         
         else:
             experiment_info = get_experiment_info(global_settings.protocol_config_path)
        
+        #set log file and format
+        logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s',force=True,
+            filename=experiment_info.log_dir / f'{experiment_info.sample_name}.log')
+
         logger.info('connecting to TRIOS')
         trios_app = TRIOS.connect(start_if_not_open=start,
             datalogger_restart=global_settings.datalogger_restart,
             trios_workaround=global_settings.trios_workaround)
-        logger.info("starting the exepriment")      
+        logger.info("starting the exepriment")
         trios_app.run(experiment_info)
         
         if debug:
