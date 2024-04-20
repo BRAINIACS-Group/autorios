@@ -302,7 +302,7 @@ class TRIOS(MyApplication):
         except pywinauto.timings.TimeoutError as te:
             raise pywinauto.timings.TimeoutError('timeout finding time pane') from te    
      
-    def get_status(self,timeout:int=60)->str:
+    def get_status(self,timeout:float=60)->str:
         '''
         '''
         

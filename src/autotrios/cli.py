@@ -85,5 +85,3 @@ def cli(start:bool,debug:bool,settings_file_path:str):
         
         if debug:
             break
-
-        experiment_info = get_experiment_info()        
