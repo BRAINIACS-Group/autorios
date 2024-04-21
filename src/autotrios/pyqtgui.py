@@ -41,7 +41,9 @@ def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
                         info.operator_name_edit.text(),\
                         meta_protocol,
                         info.save_dir_trios,
-                        info.save_dir_datalogger)
+                        info.filepath_datalogger,
+                        info.filepath_logfile
+                        )
     
 def get_protocol_files(protocol_config_dir:Path):
     '''
@@ -66,7 +68,8 @@ class GetExpInfo(QDialog):
         self.protocol_combo = QComboBox()
         self.directory_label = QLabel("")
         self.save_dir_trios = ""
-        self.save_dir_datalogger = ""
+        self.filepath_datalogger = ""
+        self.filepath_logfile = ""
         self.experiment : bool
         self.initUI()
 
@@ -126,6 +129,7 @@ class GetExpInfo(QDialog):
         save_directory = self.directory_label.text()
         if not save_directory:
             raise ValueError('error getting dir name')
+        
         save_directory = Path(save_directory)
         if not save_directory.is_dir():
             raise FileNotFoundError(f'could not find {save_directory}')
@@ -133,21 +137,23 @@ class GetExpInfo(QDialog):
         save_dir_trios = save_directory / "trios"
         if not save_dir_trios.is_dir():
             save_dir_trios.mkdir()
+        
         save_dir_datalogger = save_directory / "datalogger"
         if not save_dir_datalogger.is_dir():
             save_dir_datalogger.mkdir()
         #save_path_trios = save_dir_trios / sample_name
         self.save_dir_trios = save_dir_trios
-        self.save_dir_datalogger = save_dir_datalogger / self.sample_name_edit.text()
+        self.filepath_datalogger = save_dir_datalogger / self.sample_name_edit.text()
+        self.filepath_logfile = save_directory / f'{self.sample_name_edit.text()}.log'
 
         if self.sample_name_edit.text() is not None and \
             self.operator_name_edit.text() is not None and \
-                self.protocol_combo.currentText() != "Other": 
+                self.protocol_combo.currentText() != "Other":
             datamessage = f"Sample: {self.sample_name_edit.text()}\n"\
                     f"operator: {self.operator_name_edit.text()}\n"\
                     f"protocol: {self.protocol_combo.currentText()}"
             show_info_messagebox(message=datamessage,title="Given Info")
-            logger.debug('read experiment information successfully')            
+            logger.debug('read experiment information successfully')
         else:
             datawarning = "Information entered is invalid.\nPlease check"
             show_warning_messagebox(message=datawarning,title="Check Data")

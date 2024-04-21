@@ -66,14 +66,25 @@ def cli(start:bool,debug:bool,settings_file_path:str):
             if not out_folder.is_dir():
                 out_folder.mkdir(parents=True)
 
+            save_dir_trios = out_folder / 'trios'
+            if not save_dir_trios.is_dir():
+                save_dir_trios.mkdir()
+
+            save_dir_datalogger =  out_folder / 'datalogger'
+            if not save_dir_datalogger.is_dir():
+                save_dir_datalogger.mkdir()
+            filepath_datalogger = save_dir_datalogger / f'{sample_name}.txt'
+
+
+
             sample_name = f'test{time_str}'
             experiment_info = ExperimentInfo(
                 sample_name = sample_name,
                 operator_name = 'tester',
                 meta_protocol = MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq.yml'),
-                save_dir_trios = out_folder / 'trios',
-                save_dir_datalogger = out_folder / 'datalogger',
-                log_dir = out_folder
+                save_dir_trios = save_dir_trios,
+                filepath_datalogger = filepath_datalogger,
+                filepath_logfile = out_folder / f'{sample_name}.log'
                 )
         
         else:
@@ -81,7 +92,7 @@ def cli(start:bool,debug:bool,settings_file_path:str):
        
         #set log file and format
         logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s',force=True,
-            filename=experiment_info.log_dir / f'{experiment_info.sample_name}.log')
+            filename=experiment_info.filepath_logfile)
 
         logger.info('connecting to TRIOS')
         trios_app = TRIOS.connect(start_if_not_open=start,

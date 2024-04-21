@@ -317,10 +317,10 @@ class TRIOS(MyApplication):
         raise ValueError(f'unknown status {text_str}')
 
 
-    def set_settings(self,settings:Dict,timeout:float=60):
+    def set_settings(self,settings:DeviceSettings,timeout:float=60):
         '''
         '''
-        
+
         #updating the velocity
         self.window_main.set_focus()
         instrument_tab =self.window_main.child_window(title="Instrument", control_type="TabItem")
@@ -659,6 +659,7 @@ class DataLogger(MyApplication):
             app = QApplication([])
             ans = show_question_messagebox(question=f'File {path} already exists."\
                                 " Do you want to overwrite it?')
+            raise NotImplementedError('check the actual answer!!')
             path.unlink()
 
         logger.info(f"datalogger setting path {str(path)}")
