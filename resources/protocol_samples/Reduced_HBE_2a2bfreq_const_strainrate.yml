@@ -31,7 +31,7 @@ protocols :
 
 
   steps:
-    #- ["1: Oscillation Frequency","wait_for_temperature",None]
+    - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
 
 - procedure_file_path : procedure_files/HBE_Protokoll2b_red.tprc

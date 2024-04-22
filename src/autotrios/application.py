@@ -387,7 +387,7 @@ class TRIOS(MyApplication):
                      #HR30
                     gap_edit = step_gap_control.children()[3].children()[1]
                 else:
-                    #HR3
+                    #DHR3
                     gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
                
                 gap_edit.draw_outline()
@@ -399,7 +399,17 @@ class TRIOS(MyApplication):
             elif step.type_ == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")
-                temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
+                if self._trios_workaround:
+                    #HR30 [0].children()
+                    # for i,child in enumerate(step_env_control.children(control_type="CheckBox")):
+                    #     print(i)
+                    #     child.draw_outline()
+                    temp_checkbox = next(filter(lambda e: e.element_info.name ==  'Wait For Temperature',
+                        step_env_control.children(control_type="CheckBox")))
+                else:
+                    #DHR 3
+                    temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
+                
                 temp_checkbox.draw_outline()
                 checkbox_state = temp_checkbox.get_toggle_state()
                 logger.debug(f"checkbox state for {step.label}:{checkbox_state}")
