@@ -380,6 +380,7 @@ class TRIOS(MyApplication):
             step_dropdown.click_input()
 
             if step.type_ == STEP_TYPE.GAP:
+                
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
                 if self._trios_workaround:
@@ -391,6 +392,7 @@ class TRIOS(MyApplication):
                
                 gap_edit.draw_outline()
                 gap_value = step.eval(specimen=specimen)
+                logger.info('step %s setting gap value %f',step.label,gap_value)
                 logger.debug('write gap value %f',gap_value)
                 write_float_to_input(gap_edit,gap_value)
             

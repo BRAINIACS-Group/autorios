@@ -40,6 +40,8 @@ class Step:
 
   def eval(self,**eval_args)->float:
     ''''''
+    if not self.eval_str:
+       return self.eval_str
     eval_str_filled = self.eval_str.format(**eval_args)
     eval_str_res = eval_expr(eval_str_filled)
     return eval_str_res
