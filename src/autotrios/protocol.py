@@ -35,14 +35,14 @@ class Step:
     #   self.type_ = STEP_TYPE[self.type_.upper()]
     if self.type_ == STEP_TYPE.GAP and not self.eval_str:
        raise ValueError('eval string can not be empty for GAP Step')
-    if not self.eval_str:
+    if not self.eval_str or self.eval_str == "None":
        return
     #check for error in the evaluation string
     self.test_eval()
 
   def eval(self,**eval_args)->float:
     ''''''
-    if not self.eval_str:
+    if not self.eval_str or self.eval_str == "None":
        return self.eval_str
     eval_str_filled = self.eval_str.format(**eval_args)
     eval_str_res = eval_expr(eval_str_filled)
