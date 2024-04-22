@@ -9,6 +9,7 @@ from pydantic.dataclasses import dataclass
 from typing import List
 from enum import Enum,auto
 import random
+from copy import deepcopy
 
 #3rd Party
 import yaml
@@ -57,7 +58,7 @@ class Protocol:
     '''
     '''
     procedure_file_path: Path
-    device_settings: Dict[str,Any]
+    device_settings: DeviceSettings
     steps: List[Step]
     has_frequency_sweep:bool = False
 
@@ -89,7 +90,10 @@ class MetaProtocol:
         data.pop('height_compression',None)
 
         protocols = []
-        for protocol_dict in data.pop('protocols'):
+        for protocol_dict_update in data.pop('protocols'):
+            protocol_dict = deepcopy(data)
+            protocol_dict.update(protocol_dict_update)
+            
             steps_str_list = protocol_dict.pop('steps')
             steps = [Step(label,STEP_TYPE[type_.upper()],eval_str) for label,type_,eval_str in steps_str_list]
             
@@ -99,8 +103,12 @@ class MetaProtocol:
             if not procedure_file_path.is_absolute():
                 procedure_file_path = filepath.parent / procedure_file_path
 
-            protocol = Protocol(**protocol_dict,**data,
-                steps=steps,procedure_file_path=procedure_file_path)
+            device_settings_dict = protocol_dict.pop('device_settings',dict())
+            device_settings = DeviceSettings(**device_settings_dict)
+
+            protocol = Protocol(**protocol_dict,
+                steps=steps,procedure_file_path=procedure_file_path,
+                device_settings=device_settings)
             protocols.append(protocol)
 
 

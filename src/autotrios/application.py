@@ -317,9 +317,10 @@ class TRIOS(MyApplication):
         raise ValueError(f'unknown status {text_str}')
 
 
-    def set_settings(self,settings:DeviceSettings,timeout:float=60):
+    def set_settings(self,device_settings:DeviceSettings,timeout:float=60):
         '''
         '''
+        assert device_settings.evaluated, "settings.eval has not been called"
 
         #updating the velocity
         self.window_main.set_focus()
@@ -341,8 +342,9 @@ class TRIOS(MyApplication):
         gap_button.draw_outline()
         gap_button.click_input()
 
-        if 'velocity' in settings.keys():
+        if device_settings.velocity is not None:
             #select dropdown
+            logging.info('setting velocity to %g um/s',device_settings.velocity)
             closure_profile_dropdown = settings_window.child_window(title="Closure profile", auto_id="Link_SampleCompressionMode_E", control_type="ComboBox")
             closure_profile_dropdown.draw_outline()
             closure_profile_dropdown.click_input()
@@ -350,13 +352,13 @@ class TRIOS(MyApplication):
             linear_profile_item.wait('exists',1)
             linear_profile_item.click_input()
             velocity_edit = settings_window.child_window(title="Velocity", auto_id="Link_CompressionVelocity_E", control_type="Edit")
-            write_float_to_input(velocity_edit,settings['velocity'])
+            write_float_to_input(velocity_edit,device_settings.velocity)
 
-        if 'fine_velocity' in settings.keys():
-            logging.info('setting fine velocity to %g um/s',settings["velocity"])
+        if device_settings.fine_velocity is not None:
+            logging.info('setting fine velocity to %g um/s',device_settings.fine_velocity)
             fine_velocity_edit = settings_window.child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
             fine_velocity_edit.wait('exists',1)
-            write_float_to_input(fine_velocity_edit,settings['fine_velocity'])
+            write_float_to_input(fine_velocity_edit,device_settings.fine_velocity)
 
         ok_button = settings_window.child_window(title="OK", auto_id="okButton", control_type="Button")
         ok_button.click_input()
@@ -408,13 +410,16 @@ class TRIOS(MyApplication):
             #close dropdown
             step_dropdown.click_input()
 
-    def _run_protocol(self,protocol:Protocol,filepath_datalogger:Path):
+    def _run_protocol(self,protocol:Protocol,specimen:Specimen,filepath_datalogger:Path):
         '''
         '''
         
         self.window_main.set_focus()
         
-        self.set_settings(protocol.device_settings)
+        self._type_protocol_values(protocol,specimen)
+
+        device_settings_evaluated = protocol.device_settings.eval(specimen=specimen)
+        self.set_settings(device_settings_evaluated)
 
         if self._datalogger_restart:
             self.detach_datalogger()
@@ -510,11 +515,10 @@ class TRIOS(MyApplication):
 
         for n,protocol in enumerate(experiment_info.meta_protocol.protocols):
             self._load_procedure_file(protocol.procedure_file_path)
-            self._type_protocol_values(protocol,specimen)
             #TODO: find a nicer way to pass the updated datalogger save path
             filepath_datalogger_inc = experiment_info.filepath_datalogger.with_stem(
-                experiment_info.file_path_datalogger.stem+f'_{n+1}')
-            self._run_protocol(protocol,filepath_datalogger= filepath_datalogger_inc)
+                experiment_info.filepath_datalogger.stem+f'_{n+1}')
+            self._run_protocol(protocol,specimen,filepath_datalogger= filepath_datalogger_inc)
             self._focus_experiment_tab()
             
         #stop and kill the datalogger if it is still open
@@ -586,17 +590,16 @@ class DataLogger(MyApplication):
         self._timelog_file = timelogfile_path
         if timelogfile_path.is_file():
             logger.warning('timelog file %s exists already, appending to it',str(timelogfile_path))
-        with open(timelogfile_path,'a',encoding='utf-8') as fh:
+        with open(timelogfile_path,'a',encoding='utf-8',newline='') as fh:
             writer = csv.writer(fh)
             writer.writerow(['label','time'])
-
 
     def _write_time(self,label:str,time_val:datetime.datetime):
         if self._timelog_file is None:
             return
-        with open(self._timelog_file,'a',encoding='utf-8') as fh:
+        with open(self._timelog_file,'a',encoding='utf-8',newline='') as fh:
             writer = csv.writer(fh)
-            writer.write([label,time_val.isoformat()])
+            writer.writerow([label,time_val.isoformat()])
 
     def set_sampling_mode(self,mode:int)->None:
         '''
