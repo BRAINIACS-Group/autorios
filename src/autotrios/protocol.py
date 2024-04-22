@@ -35,6 +35,8 @@ class Step:
     #   self.type_ = STEP_TYPE[self.type_.upper()]
     if self.type_ == STEP_TYPE.GAP and not self.eval_str:
        raise ValueError('eval string can not be empty for GAP Step')
+    if not self.eval_str:
+       return
     #check for error in the evaluation string
     self.test_eval()
 
