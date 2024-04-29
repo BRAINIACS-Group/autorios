@@ -105,10 +105,9 @@ def cli(start:bool,debug:bool,settings_file_path:str):
         #set log file and format
         #logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s',force=True,
         #    filename=experiment_info.filepath_logfile)
-        logfile_handler = logging.FileHandler(experiment_info.filepath_logfile)
+        logfile_handler = logging.FileHandler(str(experiment_info.filepath_logfile))
         logfile_handler.setFormatter(log_formatter)
         logging.getLogger().addHandler(logfile_handler)
-
 
         logger.info('connecting to TRIOS')
         trios_app = TRIOS.connect(start_if_not_open=start,

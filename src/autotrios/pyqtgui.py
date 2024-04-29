@@ -28,7 +28,7 @@ def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
     app = QApplication([])
     info = GetExpInfo(protocol_config_dir)
     info.setWindowTitle("Starting a new Experiment or are you done?")
-    info.setFixedSize(600,400)
+    info.setFixedSize(1000,400)
     retval = info.exec_()
     if retval != 1:
         raise RuntimeError('error getting input from dialogue')
