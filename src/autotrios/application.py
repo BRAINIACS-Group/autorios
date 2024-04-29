@@ -472,6 +472,13 @@ class TRIOS(MyApplication):
                 self.datalogger.start_recording()
             self.window_main.set_focus()
 
+        #give the system time to 
+        time.sleep(.1)
+        if self.datalogger.check_file_exists():
+            logger.info('Found datalogger file: %s',self.datalogger.get_path())
+        else:
+            logger.error('Could not find datalogger file: %s',self.datalogger.get_path())
+
         #if next_protocol is not None:
         #    self._type_protocol_values(protocol,specimen)
 
@@ -590,12 +597,17 @@ class DataLogger(MyApplication):
         self._timelog_file = None
         self._start_time = None
         self._stop_time = None
+        self._path = None
 
     @property
     def is_recording(self)->bool:
         '''
         '''
         return self._is_recording
+
+    def get_path(self)->Path:
+        ''' '''
+        return self._path
 
     def set_timelog_file(self,timelogfile_path)->None:
         '''set path to timelog file that stores start and stop times'''
@@ -665,12 +677,10 @@ class DataLogger(MyApplication):
         
         '''
         path = path.with_suffix('.txt')
+        self._path = path
         if path.is_file():
             logger.warning(f'file {path} already exists')
-            #response = messagebox.askquestion('Overwrite',
-            #    f'File {path} already exists. Do you want to overwrite it?',icon='warning')
-            #if response != "yes": raise FileExistsError(f'file {path} already exists!')
-            #delete the file
+          
             app = QApplication([])
             ans = show_question_messagebox(question=f'File {path} already exists."\
                                 " Do you want to overwrite it?')
@@ -682,6 +692,10 @@ class DataLogger(MyApplication):
         self.window_main.click_input(coords=(150,165),double=True,use_log=True,absolute=False)
         Desktop(backend='uia')["Save As"].wait('exists')
         keyboard.send_keys(str(path)+"{ENTER}")
+
+    def check_file_exists(self)->bool:
+        '''check if the output file has been created'''
+        return self._path.is_file()
 
     def exit(self)->None:
         '''

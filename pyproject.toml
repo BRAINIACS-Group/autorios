@@ -10,6 +10,7 @@ allow-direct-references = true
 
 [project.scripts]
 autotrios = "autotrios:__main__"
+autotrios-gui= "autorios:gui"
 
 [project]
 name = "autotrios"

@@ -15,18 +15,14 @@ from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
 
 logger = logging.getLogger('trios_auto')
-#taraswin: change the path
-#HR3
-#protocols_path = Path(r"C:\Users\iwtm663\Documents\autotrios\src\autotrios\protocols")
-#HR30
-#protocol_config_path = Path(r"C:\Users\iwtm663\Desktop\protocol_config")
 
-def get_experiment_info(protocol_config_dir:Path)->ExperimentInfo:
+def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentInfo=None)->ExperimentInfo:
     '''
     '''
-    
     app = QApplication([])
     info = GetExpInfo(protocol_config_dir)
+    if old_experiment_info is not None:
+        info.set_values(old_experiment_info)
     info.setWindowTitle("Starting a new Experiment or are you done?")
     info.setFixedSize(600,400)
     retval = info.exec_()
@@ -70,6 +66,7 @@ class GetExpInfo(QDialog):
         self.save_dir_trios = ""
         self.filepath_datalogger = ""
         self.filepath_logfile = ""
+        self.filepath_timelog = ""
         self.experiment : bool
         self.initUI()
 
@@ -114,6 +111,20 @@ class GetExpInfo(QDialog):
         layout.addLayout(button_box)
         self.setLayout(layout)
 
+    def set_values(self,experiment_info:ExperimentInfo):
+
+        if not all(experiment_info.filepath_datalogger.parents[1] == d
+            for d in [experiment_info.save_dir_trios.parent,
+                experiment_info.filepath_logfile.parents[1],
+                experiment_info.filepath_timelog.parents[1]]):
+            raise FileExistsError(f'different paths in experiment_info: {repr(experiment_info)}')
+
+        self.directory_label.setText(str(experiment_info.filepath_datalogger.parent))
+
+        self.sample_name_edit.setText(experiment_info.sample_name)
+
+        self.operator_name_edit.setText(experiment_info.operator_name)   
+
     def openDirectoryDialog(self):
         '''
         '''
@@ -141,10 +152,16 @@ class GetExpInfo(QDialog):
         save_dir_datalogger = save_directory / "datalogger"
         if not save_dir_datalogger.is_dir():
             save_dir_datalogger.mkdir()
+        
+        save_dir_logfile = save_directory / "log"
+        if not save_dir_logfile.is_dir():
+            save_dir_logfile.mkdir()
+
         #save_path_trios = save_dir_trios / sample_name
         self.save_dir_trios = save_dir_trios
         self.filepath_datalogger = save_dir_datalogger / self.sample_name_edit.text()
-        self.filepath_logfile = save_directory / f'{self.sample_name_edit.text()}.log'
+        self.filepath_timelog = save_dir_logfile / (self.sample_name_edit.text() + '_timelog.csv')
+        self.filepath_logfile = save_dir_logfile / f'{self.sample_name_edit.text()}.log'
 
         if self.sample_name_edit.text() is not None and \
             self.operator_name_edit.text() is not None and \
@@ -187,10 +204,11 @@ def show_question_messagebox(question:str, title:str = "I have a question") -> i
     '''
     '''
 
-    msg = QMessageBox() 
-    msg.setIcon(QMessageBox.Question) 
-    msg.setText(question) 
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Question)
+    msg.setText(question)
     msg.setWindowTitle(title)
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-    retval = msg.exec_() 
+    retval = msg.exec_()
     return retval
+

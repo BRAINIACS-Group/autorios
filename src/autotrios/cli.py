@@ -63,13 +63,20 @@ def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
         save_dir_datalogger.mkdir()
     filepath_datalogger = save_dir_datalogger / f'{sample_name}.txt'
 
+    save_dir_log = out_folder / 'log'
+    if not save_dir_log.is_dir():
+        save_dir_log.mkdir()
+    filepath_logfile = save_dir_log / '{sample_name}.log'
+    filepath_timelog = save_dir_log / (filepath_datalogger.stem + '_timelog.csv')
+
     experiment_info = ExperimentInfo(
         sample_name = sample_name,
         operator_name = 'tester',
         meta_protocol = MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq_const_strainrate.yml'),
         save_dir_trios = save_dir_trios,
         filepath_datalogger = filepath_datalogger,
-        filepath_logfile = out_folder / f'{sample_name}.log'
+        filepath_timelog = filepath_timelog,
+        filepath_logfile = filepath_logfile
         )
     return experiment_info
 
@@ -82,7 +89,7 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     Args:
     start: 
     '''
-    
+
     if not settings_file_path:
         settings_file_path = SETTINGS_FILE_PATH
     global_settings = GlobalSettings.from_file(settings_file_path)
@@ -95,13 +102,16 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     stream_handler.setFormatter(log_formatter)
     logging.getLogger().addHandler(stream_handler)
 
+    experiment_info = None
+
     while True:
         logger.info('getting experiment info')
         if debug:
             experiment_info = create_debug_experimentinfo(global_settings)
         else:
-            experiment_info = get_experiment_info(global_settings.protocol_config_path)
-       
+            experiment_info = get_experiment_info(global_settings.protocol_config_path,
+                old_experiment_info=experiment_info)
+
         #set log file and format
         #logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s',force=True,
         #    filename=experiment_info.filepath_logfile)
@@ -111,12 +121,17 @@ def cli(start:bool,debug:bool,settings_file_path:str):
 
 
         logger.info('connecting to TRIOS')
-        trios_app = TRIOS.connect(start_if_not_open=start,
-            datalogger_restart=global_settings.datalogger_restart,
-            trios_workaround=global_settings.trios_workaround)
-        logger.info("starting the exepriment")
-        trios_app.run(experiment_info)
-        
+        try:
+            trios_app = TRIOS.connect(start_if_not_open=start,
+                datalogger_restart=global_settings.datalogger_restart,
+                trios_workaround=global_settings.trios_workaround)
+            logger.info("starting the exepriment")
+            trios_app.run(experiment_info)
+        except Exception as exc:
+            logger.exception('autotrios got an exception: error hase been logger to %s',
+                str(experiment_info.filepath_logfile))
+            raise exc
+
         logging.getLogger().removeHandler(logfile_handler)
         if debug:
             break

@@ -17,6 +17,7 @@ class ExperimentInfo():
     meta_protocol: MetaProtocol
     save_dir_trios: Path
     filepath_datalogger: Path
+    filepath_timelog: Path
     filepath_logfile: Path
 
     def __post_init__(self):
@@ -26,6 +27,9 @@ class ExperimentInfo():
 
         if not self.save_dir_trios.is_dir():
             raise FileNotFoundError(f'directory for save path trios {self.save_dir_trios.parent} does not exist')
+
+        if not self.filepath_timelog.parent.is_dir():
+            raise FileNotFoundError(f'parent directory for timelog file {self.filepath_timelog} does not exist')
 
         if not self.filepath_logfile.parent.is_dir():
             raise FileNotFoundError(f'directory for log file path {self.filepath_logfile.parent} does not exist')
