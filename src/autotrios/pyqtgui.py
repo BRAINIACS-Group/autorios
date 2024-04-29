@@ -24,7 +24,7 @@ def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentI
     if old_experiment_info is not None:
         info.set_values(old_experiment_info)
     info.setWindowTitle("Starting a new Experiment or are you done?")
-    info.setFixedSize(600,400)
+    info.setFixedSize(1000,400)
     retval = info.exec_()
     if retval != 1:
         raise RuntimeError('error getting input from dialogue')
