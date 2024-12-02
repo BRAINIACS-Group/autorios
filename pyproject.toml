@@ -12,6 +12,7 @@ allow-direct-references = true
 require-runtime-dependencies = true
 scriptname="src/autotrios/__main__.py"
 name="autotrios"
+loglevel="DEBUG"
 
 flags=["--onedir"]
 

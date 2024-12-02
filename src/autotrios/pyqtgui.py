@@ -5,6 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import os
 from typing import List
+import sys
 
 #3rd party imports
 import yaml
@@ -105,7 +106,7 @@ class GetExpInfo(QDialog):
         stop_button = QPushButton("STOP")
         self.experiment = start_button.clicked.connect(self.accept)
         #stop_button.clicked.connect(self.reject)
-        stop_button.clicked.connect(quit)
+        stop_button.clicked.connect(lambda _: sys.exit(1))
         button_box.addWidget(start_button)
         button_box.addWidget(stop_button)
         layout.addLayout(button_box)
