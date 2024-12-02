@@ -11,9 +11,15 @@ allow-direct-references = true
 [tool.hatch.build.targets.pyinstaller]
 require-runtime-dependencies = true
 scriptname="src/autotrios/__main__.py"
+name="autotrios"
+
+flags=["--onedir"]
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/autotrios/_version.py"
+
+[tool.hatch.version]
+source="vcs"
 
 [project.scripts]
 autotrios = "autotrios:__main__"
@@ -37,4 +43,8 @@ dependencies = [
   "pydantic== 1.10.8",
   "PyAutoGUI==0.9.54",
   "pywinauto==0.6.6",
+  "PyQt5",
+  "pyyaml",
+  "pywin32",
+  "platformdirs"
 ]

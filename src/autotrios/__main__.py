@@ -7,7 +7,7 @@ import logging
 from PyQt5.QtWidgets import QApplication
 
 #local imports
-from .cli import cli
+from autotrios.cli import cli
 
 #logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s')
 cli()

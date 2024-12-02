@@ -4,7 +4,6 @@ import logging
 
 #3rd party imports
 from pywinauto.keyboard import send_keys
-import pyautogui
 
 
 logger = logging.getLogger(__name__)

@@ -19,6 +19,7 @@ from datetime import date,datetime
 
 #3rd party modules
 import click
+import platformdirs
 
 #local imports
 #from .experiment_info import get_experiment_info, ExperimentInfo
@@ -39,7 +40,7 @@ from .settings import GlobalSettings
 
 logger = logging.getLogger(__name__)
 
-SETTINGS_FILE_PATH = Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
+SETTINGS_FILE_PATH = Path(platformdirs.site_config_dir()) / "autotrios" / "settings.yaml" #Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
 
 def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
     test_folder = Path(r'C:\Users\iwtm663\Documents\autotrios\testing')
@@ -93,6 +94,11 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     if not settings_file_path:
         settings_file_path = SETTINGS_FILE_PATH
     global_settings = GlobalSettings.from_file(settings_file_path)
+
+    global_settings.protocol_config_path = Path(platformdirs.user_config_dir()) / "autotrios" / "protocols"
+
+    if not global_settings.protocol_config_path.is_dir():
+        global_settings.protocol_config_path.mkdir(parents=True)
 
     log_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 
