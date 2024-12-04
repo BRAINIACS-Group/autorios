@@ -13,7 +13,7 @@ require-runtime-dependencies = true
 scriptname="src/autotrios/__main__.py"
 name="autotrios"
 loglevel="DEBUG"
-
+add-data=["src/autotrios/data:autotrios/data"]
 flags=["--onedir"]
 
 [tool.hatch.build.hooks.vcs]

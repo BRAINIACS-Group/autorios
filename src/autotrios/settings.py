@@ -34,6 +34,7 @@ class GlobalSettings:
     Args:
       settings_file: filepath to settings file    
     '''
+    logger.info(f"loading settings from {settings_file}")
     if isinstance(settings_file,str):
         settings_file = Path(settings_file)
     if not settings_file.is_file():
