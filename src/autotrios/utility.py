@@ -1,6 +1,8 @@
 
 #STL imports
 import logging
+import subprocess
+from pathlib import Path
 
 #3rd party imports
 from pywinauto.keyboard import send_keys
@@ -41,3 +43,6 @@ def write_float_to_input(element,input_value:float,press_tab:bool=False, draw_ou
         input_str = input_str.replace('.',DECIMAL_SEPARATOR)
     if draw_outline: element.draw_outline()
     write_to_input(element,input_str,press_tab=press_tab)
+
+def open_filexplorer(filepath:Path)->None:
+    subprocess.Popen(fr'explorer /select,"{str(filepath.resolve())}"')

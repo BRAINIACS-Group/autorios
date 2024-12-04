@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
 from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
 from ._version import __version__
+from .utility import open_filexplorer
 
 logger = logging.getLogger('trios_auto')
 
@@ -106,9 +107,12 @@ class GetExpInfo(QDialog):
         button_box = QHBoxLayout()
         start_button = QPushButton("START")
         stop_button = QPushButton("STOP")
+        settings_dir_button = QPushButton("Open Settings")
+        settings_dir_button.clicked.connect(lambda _: open_filexplorer(self._protocol_config_dir))
         self.experiment = start_button.clicked.connect(self.accept)
         #stop_button.clicked.connect(self.reject)
         stop_button.clicked.connect(lambda _: sys.exit(1))
+        button_box.addWidget(settings_dir_button)
         button_box.addWidget(start_button)
         button_box.addWidget(stop_button)
         layout.addLayout(button_box)
