@@ -1,0 +1,37 @@
+#This file contains the parameters of the protocols being used currently
+
+#In case of missing protocol, please use a copy of this file
+#and change the values according to your protocol
+#Please give a distinctive and suitable name
+
+#Please pay attention to the identation, "2 spaces"
+
+#  key:value pair
+
+---
+protocol1 :
+  frequency_sweep : True
+  protocol_name : HBE_Protokoll_with_frequency_2a
+  settings :
+    velocity : 40
+    fine_velocity : 40
+  tension_factor : 1.15
+  compression_factor : 0.85
+  steps:
+    - ["2: Conditioning Sample Loading","gap", height_compression]
+    - ["3: Conditioning Sample Loading","gap", height_tension]
+    - ["4: Conditioning Sample Loading","gap", height_compression]
+    - ["5: Conditioning Sample Loading","gap", height_tension]
+    - ["6: Conditioning Sample Loading","gap", height_compression]
+    - ["7: Conditioning Sample Loading","gap", height_tension]
+protocol2 :
+  frequency_sweep : False
+  protocol_name : HBE_Protokoll2b
+  settings :
+    velocity : 100
+    fine_velocity : 100
+  tension_factor : 1.15
+  compression_factor : 0.85
+  steps :
+    - ["1: Conditioning Sample Loading","gap", height_compression]
+    - ["3: Conditioning Sample Loading","gap", height_tension]

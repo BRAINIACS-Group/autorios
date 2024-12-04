@@ -1,5 +1,4 @@
-protocol_config_path: C:\Users\iwtm663\Desktop\protocol_config
-datalogger_restart: True   #this is needed for new versions of TRIOS as the 
+datalogger_restart: False  #this is needed for new versions of TRIOS as the 
                            #datalogger stops when a protocol is started
 trios_workaround: True     #use internal gui specific workaround for the new
                            # TRIOS version of HR30
