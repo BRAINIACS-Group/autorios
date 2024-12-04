@@ -30,6 +30,7 @@ from .protocol import MetaProtocol
 from .application import TRIOS
 from .settings import GlobalSettings
 from ._version import __version__
+from .system_paths import SYSTEM_SETTINGS_FILE_PATH
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -41,7 +42,6 @@ from ._version import __version__
 
 logger = logging.getLogger(__name__)
 
-SETTINGS_FILE_PATH = Path(platformdirs.site_config_dir()) / "autotrios" / "settings.yaml" #Path(__file__).resolve().parents[2] / 'settings' / 'settings.yaml'
 
 def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
     test_folder = Path(r'C:\Users\iwtm663\Documents\autotrios\testing')
@@ -85,7 +85,7 @@ def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
 @click.command()
 @click.option('--start/--no-start',default=False)
 @click.option('--debug/--no-debug',default=False)
-@click.option('--settings_file_path',default='')
+@click.option('--settings_file_path',default=SYSTEM_SETTINGS_FILE_PATH)
 def cli(start:bool,debug:bool,settings_file_path:str):
     '''comand line interface entry point
     Args:
@@ -102,12 +102,9 @@ def cli(start:bool,debug:bool,settings_file_path:str):
 
     logger.info(f"running autotrios {__version__}")
 
-    if not settings_file_path:
-        settings_file_path = SETTINGS_FILE_PATH
     global_settings = GlobalSettings.from_file(settings_file_path)
 
-    global_settings.protocol_config_path = Path(platformdirs.user_config_dir()) / "autotrios" / "protocol_config"
-
+    
     if not global_settings.protocol_config_path.is_dir():
         global_settings.protocol_config_path.mkdir(parents=True)
     logger.debug(f'user config path: {global_settings.protocol_config_path}')
