@@ -29,6 +29,7 @@ from .protocol import MetaProtocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
 from .application import TRIOS
 from .settings import GlobalSettings
+from ._version import __version__
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -99,6 +100,8 @@ def cli(start:bool,debug:bool,settings_file_path:str):
 
     logging.getLogger().setLevel(logging.DEBUG)
 
+    logger.info(f"running autotrios {__version__}")
+
     if not settings_file_path:
         settings_file_path = SETTINGS_FILE_PATH
     global_settings = GlobalSettings.from_file(settings_file_path)
@@ -108,8 +111,6 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     if not global_settings.protocol_config_path.is_dir():
         global_settings.protocol_config_path.mkdir(parents=True)
     logger.debug(f'user config path: {global_settings.protocol_config_path}')
-
-   
 
     experiment_info = None
 

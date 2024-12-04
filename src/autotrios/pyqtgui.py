@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel,\
           QMainWindow, QWidget, QMessageBox, QDialogButtonBox
 from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
+from ._version import __version__
 
 logger = logging.getLogger('trios_auto')
 
@@ -24,7 +25,7 @@ def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentI
     info = GetExpInfo(protocol_config_dir)
     if old_experiment_info is not None:
         info.set_values(old_experiment_info)
-    info.setWindowTitle("Starting a new Experiment or are you done?")
+    info.setWindowTitle(f"Autotrios {__version__}")
     info.setFixedSize(1000,400)
     retval = info.exec_()
     if retval != 1:
