@@ -5,6 +5,8 @@ import logging
 #3rd party imports
 from pywinauto.keyboard import send_keys
 
+#local import
+from .locale import DECIMAL_SEPARATOR
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,8 @@ def write_float_to_input(element,input_value:float,press_tab:bool=False, draw_ou
     Returns:
     Raises:
     '''
-    input_str = str(input_value).replace('.',',')
+    input_str = str(input_value)
+    if DECIMAL_SEPARATOR != '.':
+        input_str = input_str.replace('.',DECIMAL_SEPARATOR)
     if draw_outline: element.draw_outline()
     write_to_input(element,input_str,press_tab=press_tab)

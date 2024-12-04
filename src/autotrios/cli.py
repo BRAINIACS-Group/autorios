@@ -91,22 +91,25 @@ def cli(start:bool,debug:bool,settings_file_path:str):
     start: 
     '''
 
-    if not settings_file_path:
-        settings_file_path = SETTINGS_FILE_PATH
-    global_settings = GlobalSettings.from_file(settings_file_path)
-
-    global_settings.protocol_config_path = Path(platformdirs.user_config_dir()) / "autotrios" / "protocols"
-
-    if not global_settings.protocol_config_path.is_dir():
-        global_settings.protocol_config_path.mkdir(parents=True)
-
     log_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
-
-    logging.getLogger().setLevel(logging.DEBUG)
 
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(log_formatter)
     logging.getLogger().addHandler(stream_handler)
+
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    if not settings_file_path:
+        settings_file_path = SETTINGS_FILE_PATH
+    global_settings = GlobalSettings.from_file(settings_file_path)
+
+    global_settings.protocol_config_path = Path(platformdirs.user_config_dir()) / "autotrios" / "protocol_config"
+
+    if not global_settings.protocol_config_path.is_dir():
+        global_settings.protocol_config_path.mkdir(parents=True)
+    logger.debug(f'user config path: {global_settings.protocol_config_path}')
+
+   
 
     experiment_info = None
 

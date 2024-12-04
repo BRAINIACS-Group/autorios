@@ -39,6 +39,7 @@ def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentI
                         meta_protocol,
                         info.save_dir_trios,
                         info.filepath_datalogger,
+                        info.filepath_timelog,
                         info.filepath_logfile
                         )
     
