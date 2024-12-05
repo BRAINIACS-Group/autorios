@@ -126,11 +126,11 @@ class GetExpInfo(QDialog):
                 experiment_info.filepath_timelog.parents[1]]):
             raise FileExistsError(f'different paths in experiment_info: {repr(experiment_info)}')
 
-        self.directory_label.setText(str(experiment_info.filepath_datalogger.parent))
+        self.directory_label.setText(str(experiment_info.filepath_datalogger.parents[1]))
 
         self.sample_name_edit.setText(experiment_info.sample_name)
 
-        self.operator_name_edit.setText(experiment_info.operator_name)   
+        self.operator_name_edit.setText(experiment_info.operator_name)
 
     def openDirectoryDialog(self):
         '''
