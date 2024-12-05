@@ -33,7 +33,8 @@ from PyQt5.QtWidgets import QApplication
 from .utility import write_to_input,write_float_to_input,is_button
 #from .experiment_info import ExperimentInfo
 from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
-from .pyqtgui import show_warning_messagebox,show_question_messagebox
+from .pyqtgui import (show_warning_messagebox,show_question_messagebox,
+    show_error_messagebox)
 from .experiment_info import ExperimentInfo
 from .device_settings import DeviceSettings
 from .specimen import Specimen
@@ -467,17 +468,23 @@ class TRIOS(MyApplication):
             if protocol.has_frequency_sweep:
                 self._wait_for_point_countdown()
                 self._wait_for_time_pane()
+            datalogger_file_found = False
+            for _ in range(500):
                 self.datalogger.start_recording()
-            else:
-                self.datalogger.start_recording()
-            self.window_main.set_focus()
+                #give the system time to create datalogger file
+                time.sleep(.01)
+                if self.datalogger.check_file_exists():
+                    datalogger_file_found = True
+                    logger.info('Found datalogger file: %s',self.datalogger.get_path())
+                    break
+                logger.error('Could not find datalogger file: %s',self.datalogger.get_path())
 
-        #give the system time to 
-        time.sleep(.1)
-        if self.datalogger.check_file_exists():
-            logger.info('Found datalogger file: %s',self.datalogger.get_path())
-        else:
-            logger.error('Could not find datalogger file: %s',self.datalogger.get_path())
+            if not datalogger_file_found:
+                show_error_messagebox("datalogger file not found after 500 tries")
+                raise RuntimeError(
+                    f'datalogger file {self.datalogger.get_path()} not found')
+
+            self.window_main.set_focus()
 
         #if next_protocol is not None:
         #    self._type_protocol_values(protocol,specimen)

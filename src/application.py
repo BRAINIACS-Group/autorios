@@ -379,9 +379,7 @@ class TRIOS(MyApplication):
             if protocol.start_datalogger_after_sweep:
                 self._wait_for_point_countdown()
                 self._wait_for_time_pane()
-                self.datalogger.start_recording()
-            else:
-                self.datalogger.start_recording()
+            self.datalogger.start_recording()
             self.window_main.set_focus()
 
         status = self.get_status()

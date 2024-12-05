@@ -219,3 +219,14 @@ def show_question_messagebox(question:str, title:str = "I have a question") -> i
     retval = msg.exec_()
     return retval
 
+def show_error_messagebox(question:str, title:str = "Shit hit the fan") -> int:
+    '''
+    '''
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText(question)
+    msg.setWindowTitle(title)
+    msg.setStandardButtons(QMessageBox.Ok)
+    retval = msg.exec_()
+    return retval
+

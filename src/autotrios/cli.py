@@ -77,8 +77,8 @@ def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
         meta_protocol = MetaProtocol.from_file(global_settings.protocol_config_path / 'Reduced_HBE_2a2bfreq_const_strainrate.yml'),
         save_dir_trios = save_dir_trios,
         filepath_datalogger = filepath_datalogger,
-        filepath_timelog = filepath_timelog,
-        filepath_logfile = filepath_logfile
+        filepath_timelog    = filepath_timelog,
+        filepath_logfile    = filepath_logfile
         )
     return experiment_info
 
