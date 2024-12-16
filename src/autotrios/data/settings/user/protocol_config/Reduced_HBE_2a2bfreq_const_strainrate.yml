@@ -12,7 +12,11 @@
 #local Yaml variables
 height_tension :     &height_tension 1.15*{specimen.height}
 height_compression : &height_compression 0.85*{specimen.height}
-  
+#use a strain rate of 8e-3 1/s
+velocity_cyclic:      &velocity_cyclic 0.008*{specimen.height}
+#use a strain rate of 2e-2 1/s
+velocity_relaxation : &velocity_relaxation 0.02*{specimen.height}
+
 protocols :
 
 #protocol1
@@ -25,13 +29,13 @@ protocols :
   
   #Trios device settings
   device_settings :
-    #use a strain rate of 8e-3 1/s
-    velocity : 0.008*{specimen.height}
-    fine_velocity : 0.008*{specimen.height}
+    velocity :      *velocity_cyclic
+    fine_velocity : *velocity_cyclic
 
 
   steps:
     - ["1: Oscillation Frequency","wait_for_temperature",None]
+    - ["2: Conditioning Sample Loading","gap", *height_compression]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
 
 - procedure_file_path : procedure_files/HBE_Protokoll2b_red.tprc
@@ -39,8 +43,8 @@ protocols :
   
   device_settings :
     #use a strain rate of 2e-2 1/s
-    velocity : 0.02*{specimen.height}
-    fine_velocity : 0.02*{specimen.height}
+    velocity : *velocity_relaxation
+    fine_velocity : *velocity_relaxation
 
   steps :
     - ["1: Conditioning Sample Loading","gap", *height_compression]

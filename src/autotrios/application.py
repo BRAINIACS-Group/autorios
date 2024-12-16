@@ -397,6 +397,12 @@ class TRIOS(MyApplication):
                 logger.debug('write gap value %f',gap_value)
                 write_float_to_input(gap_edit,gap_value)
             
+            elif step.type_ == STEP_TYPE.VELOCITY:
+                for i,child in enumerate(step_env_control.children(control_type="Group")):
+                    print(i)
+                    child.draw_outline()
+                pass
+
             elif step.type_ == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")

@@ -21,7 +21,9 @@ from .specimen import Specimen
 
 class STEP_TYPE(Enum):
     GAP = auto()
+    VELOCITY = auto()
     WAIT_FOR_TEMPERATURE = auto()
+
 
 @dataclass
 class Step:
