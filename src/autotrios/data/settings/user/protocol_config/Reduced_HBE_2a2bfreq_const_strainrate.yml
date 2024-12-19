@@ -36,7 +36,7 @@ protocols :
   steps:
     - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
-    - ["2: Conditioning Sample Loading","gap", *height_compression]
+    - ["2: Conditioning Sample Loading","velocity", *velocity_cyclic]
 
 - procedure_file_path : procedure_files/HBE_Protokoll2b_red.tprc
   has_frequency_sweep : False
@@ -47,4 +47,5 @@ protocols :
     fine_velocity : *velocity_relaxation
 
   steps :
-    - ["1: Conditioning Sample Loading","gap", *height_compression]
+    - ["1: Conditioning Sample Loading","gap",      *height_compression]
+    - ["1: Conditioning Sample Loading","velocity", *velocity_relaxation]

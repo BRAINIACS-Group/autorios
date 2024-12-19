@@ -267,7 +267,7 @@ class TRIOS(MyApplication):
         open_procedure_file_button = self._get_experiment_tab_buttons("Procedure: .*")[1]
         open_procedure_file_button.click_input()
         logger.info("waiting for procedure file dialog")
-        Desktop(backend='win32')["Open procedure file"].wait('exists',5)
+        Desktop(backend='win32')["Open procedure"].wait('exists',5)
         logger.info("typing procedure file path")
         keyboard.send_keys('^a'+str(filepath.with_suffix(''))+"{ENTER}") # type the address of procedure file 2a
         
@@ -398,10 +398,17 @@ class TRIOS(MyApplication):
                 write_float_to_input(gap_edit,gap_value)
             
             elif step.type_ == STEP_TYPE.VELOCITY:
-                for i,child in enumerate(step_env_control.children(control_type="Group")):
-                    print(i)
-                    child.draw_outline()
-                pass
+                step_closure_control = step_top_parent.descendants(title="Closure profile", control_type="Group")[0]
+              
+                closure_profile_dropdown = step_closure_control.children()[1]   
+                closure_profile_dropdown.draw_outline()
+                closure_profile_dropdown.select("Linear")
+             
+                velocity_edit = step_closure_control.children()[3].children()[0]
+                velocity_edit.draw_outline()
+                velocity_edit.click_input()
+                velocity_value = step.eval(specimen=specimen)
+                write_float_to_input(velocity_edit,velocity_value)
 
             elif step.type_ == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]

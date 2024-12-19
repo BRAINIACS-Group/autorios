@@ -24,8 +24,10 @@ logging.basicConfig(level=logging.DEBUG)
 from collections import namedtuple
 import pywinauto
 #local imports
-from protocol import Protocol_HBE_A,Protocol_HBE_B
-from application import TRIOS
+from autotrios.protocol import Protocol,Step,STEP_TYPE
+from autotrios.device_settings import DeviceSettings
+from autotrios.application import TRIOS
+from autotrios.specimen import Specimen
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +79,20 @@ if __name__ == "__main__":
     #gap_edit = pywinauto.findwindows.find_elements(parent=step_1_gap_control,auto_id="Link_ProcedureGapEnd_E", control_type="Edit")
     #gap_edit.draw_outline()
 
-    height = trios._get_gap_value()
-    #@jan just an idea to use a namedtuple
-    specimen = namedtuple('specimen',['height'])(height)
+    # height = trios._get_gap_value()
+    # #@jan just an idea to use a namedtuple
+    # specimen = namedtuple('specimen',['height'])(height)
 
-    #trios._type_protocol_values(protocol=Protocol_HBE_B(),specimen=specimen)
-    #trios._type_protocol_values(protocol=Protocol_HBE_A(),specimen=specimen)
-    trios.attach_datalogger()
-    trios.datalogger.set_path(Path(r"C:\Users\iwtm663\Documents\trios_automation\test\out\datalogger\test.txt"))
-    trios._run_protocol(protocol=Protocol_HBE_A(),specimen=specimen)
+    # #trios._type_protocol_values(protocol=Protocol_HBE_B(),specimen=specimen)
+    # #trios._type_protocol_values(protocol=Protocol_HBE_A(),specimen=specimen)
+    # trios.attach_datalogger()
+    # trios.datalogger.set_path(Path(r"C:\Users\iwtm663\Documents\trios_automation\test\out\datalogger\test.txt"))
+    # trios._run_protocol(protocol=Protocol_HBE_A(),specimen=specimen)
+
+    protocol_steps = [
+        Step("2: Conditioning Sample Loading",STEP_TYPE.VELOCITY, "1.")
+    ]
+    specimen = Specimen(5000.)
+    Path(__file__).resolve().parent
+    protocol = Protocol(Path(),device_settings=DeviceSettings(),steps=protocol_steps)
+    trios._run_protocol(protocol,specimen,Path())

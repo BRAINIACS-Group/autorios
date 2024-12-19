@@ -37,6 +37,8 @@ class Step:
     #   self.type_ = STEP_TYPE[self.type_.upper()]
     if self.type_ == STEP_TYPE.GAP and not self.eval_str:
        raise ValueError('eval string can not be empty for GAP Step')
+    if self.type_ == STEP_TYPE.VELOCITY and not self.eval_str:
+       raise ValueError('eval string can not be empty for Velocity Step')
     if not self.eval_str or self.eval_str == "None":
        return
     #check for error in the evaluation string
@@ -72,7 +74,7 @@ class Protocol:
       '''Data sanity checks'''
     #   if isinstance(self.procedure_file_path,str):
     #      self.procedure_file_path = Path(self.procedure_file_path)
-      if not self.procedure_file_path.is_file():
+      if not self.procedure_file_path == Path() and not self.procedure_file_path.is_file():
          raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
       
 @dataclass

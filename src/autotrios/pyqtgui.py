@@ -34,6 +34,7 @@ def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentI
     info.check()
 
     protocol_config_path = protocol_config_dir / (info.protocol_combo.currentText() + '.yml')
+    logger.info(f"loading metaprotocol from {protocol_config_path}")
     meta_protocol = MetaProtocol.from_file(protocol_config_path)
 
     return ExperimentInfo(info.sample_name_edit.text(),
