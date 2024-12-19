@@ -267,7 +267,8 @@ class TRIOS(MyApplication):
         open_procedure_file_button = self._get_experiment_tab_buttons("Procedure: .*")[1]
         open_procedure_file_button.click_input()
         logger.info("waiting for procedure file dialog")
-        Desktop(backend='win32')["Open procedure"].wait('exists',5)
+        #Desktop(backend='win32')["Open procedure"].wait('exists',5)
+        Desktop(backend='win32').window(title_re ="Open procedure*").wait('exists',5)
         logger.info("typing procedure file path")
         keyboard.send_keys('^a'+str(filepath.with_suffix(''))+"{ENTER}") # type the address of procedure file 2a
         
