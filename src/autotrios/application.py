@@ -362,6 +362,20 @@ class TRIOS(MyApplication):
             fine_velocity_edit.wait('exists',1)
             write_float_to_input(fine_velocity_edit,device_settings.fine_velocity)
 
+        if device_settings.velocity is None and device_settings.fine_velocity is None and device_settings.default_velocity is not None:
+            logging.info('setting both velocities to default %g um/s', device_settings.default_velocity)
+            closure_profile_dropdown = settings_window.child_window(title="Closure profile", auto_id="Link_SampleCompressionMode_E", control_type="ComboBox")
+            closure_profile_dropdown.draw_outline()
+            closure_profile_dropdown.click_input()
+            linear_profile_item = closure_profile_dropdown.child_window(title="linear", control_type="ListItem")
+            linear_profile_item.wait('exists',1)
+            linear_profile_item.click_input()
+            velocity_edit = settings_window.child_window(title="Velocity", auto_id="Link_CompressionVelocity_E", control_type="Edit")
+            write_float_to_input(velocity_edit, device_settings.default_velocity)
+            fine_velocity_edit = settings_window.child_window(title="Fine velocity", auto_id="Link_GapSetNearVelocity_E", control_type="Edit")
+            fine_velocity_edit.wait('exists',1)
+            write_float_to_input(fine_velocity_edit, device_settings.default_velocity)
+
         ok_button = settings_window.child_window(title="OK", auto_id="okButton", control_type="Button")
         ok_button.click_input()
         logging.info('finished setting settings')
@@ -565,6 +579,9 @@ class TRIOS(MyApplication):
         if self.datalogger is not None:
             self.detach_datalogger()
 
+        default_speed = DeviceSettings(velocity=None, fine_velocity=None, default_velocity=protocol.device_settings.default_velocity)
+        self.window_main.set_focus()
+        self.set_settings(default_speed.eval())
         self._zero_gap_set = False
         self._calibrated = False
 
