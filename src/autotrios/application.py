@@ -738,7 +738,12 @@ class DataLogger(MyApplication):
 
         logger.info(f"datalogger setting path {str(path)}")
         self.window_main.set_focus()
-        self.window_main.click_input(coords=(150,165),double=True,use_log=True,absolute=False)
+        # define the coordinates for the click input based on window size
+        # standard window size: w=419, h=288, standard position: (150,165)
+        window_width = self.window_main.rectangle().width()
+        window_height = self.window_main.rectangle().height()
+        coords_path = (int(150/419*window_width),int(165/288*window_height))
+        self.window_main.click_input(coords=coords_path,double=True,use_log=True,absolute=False)
         Desktop(backend='uia')["Save As"].wait('exists')
         keyboard.send_keys(str(path)+"{ENTER}")
 
