@@ -445,6 +445,17 @@ class TRIOS(MyApplication):
                 if  temp_checkbox.get_toggle_state() != 1:
                     logger.debug("toggle checkbox for %s",step.label)
                     temp_checkbox.click_input()
+            elif step.type_ == STEP_TYPE.MOTOR_ROTATION:
+                step_advanced = step_top_parent.descendants(title="Advanced", control_type="Group")[0]
+                step_advanced_button = step_advanced.children()[0]
+                step_advanced_button.draw_outline()
+                step_advanced_button.click_input()
+                motor_rotation_edit = step_advanced.children()[0].children()[0]
+                motor_rotation_edit.draw_outline()
+                motor_rotation_edit.click_input()
+                motor_rotation_value = step.eval(specimen=specimen)
+                logger.info('step %s superimposing motor rotation value %f',step.label,motor_rotation_value)
+                write_float_to_input(motor_rotation_edit,motor_rotation_value)
             else:
                 raise ValueError(f'step type {step.type_} unknown')
 
