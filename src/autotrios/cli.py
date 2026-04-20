@@ -134,7 +134,7 @@ def cli(start:bool,debug:bool,settings_file_path:str):
             logger.info("starting the exepriment")
             trios_app.run(experiment_info)
         except Exception as exc:
-            logger.exception('autotrios got an exception: error hase been logger to %s',
+            logger.exception('autotrios got an exception: error has been logged to %s',
                 str(experiment_info.filepath_logfile))
             raise exc
 
