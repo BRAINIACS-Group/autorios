@@ -115,6 +115,7 @@ class TRIOS(MyApplication):
         Raises:
         '''
         obj = super().start()
+        obj.app[cls.WINDOW_NAME].maximize()
         #Instrument view - connect to HR-3
         # gives error if Instrument view is already open
         dialog1 = obj.app.window(title="Instrument View")
