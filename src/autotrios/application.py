@@ -272,7 +272,7 @@ class TRIOS(MyApplication):
         logger.info("typing procedure file path")
         keyboard.send_keys('^a'+str(filepath.with_suffix(''))+"{ENTER}") # type the address of procedure file 2a
         
-    def _wait_for_point_countdown(self,timeout:int=300)->None:
+    def _wait_for_point_countdown(self,timeout:int=600)->None:
         '''
         '''        
         countdown_pane = self.window_main.child_window(auto_id="Link_StatusPointsLeft_E")
