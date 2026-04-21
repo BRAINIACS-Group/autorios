@@ -16,12 +16,7 @@ from .specimen import Specimen
 class DeviceSettings:
     velocity:      Union[float,str,None] = None
     fine_velocity: Union[float,str,None] = None
-<<<<<<< HEAD
-=======
-    motor_rotation: Union[float,str,None] = None
-    default_velocity: Union[float,str,None] = None
->>>>>>> 80fbe71 (add motor rotation)
-
+    
     def __post_init__(self):
         '''sanitize and internal variables'''
         self.evaluated = False
