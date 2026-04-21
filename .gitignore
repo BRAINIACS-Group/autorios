@@ -7,6 +7,9 @@ settings/*.yaml
 *.code-workspace
 .vscode/
 
+#generated version file
+src/autotrios/_version.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

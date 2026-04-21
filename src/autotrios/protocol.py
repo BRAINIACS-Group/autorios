@@ -23,6 +23,7 @@ class STEP_TYPE(Enum):
     GAP = auto()
     VELOCITY = auto()
     WAIT_FOR_TEMPERATURE = auto()
+    MOTOR_ROTATION = auto()
 
 
 @dataclass
@@ -32,7 +33,7 @@ class Step:
   eval_str: str = ''
 
   def __post_init__(self) -> None:
-    '''sanitize and tpye conversions'''
+    '''sanitize and type conversions'''
     # if isinstance(self.type_,str):
     #   self.type_ = STEP_TYPE[self.type_.upper()]
     if self.type_ == STEP_TYPE.GAP and not self.eval_str:

@@ -16,7 +16,7 @@ from .specimen import Specimen
 class DeviceSettings:
     velocity:      Union[float,str,None] = None
     fine_velocity: Union[float,str,None] = None
-
+    
     def __post_init__(self):
         '''sanitize and internal variables'''
         self.evaluated = False
