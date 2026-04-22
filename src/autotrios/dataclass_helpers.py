@@ -42,13 +42,20 @@ class EvalException(Exception):
 
 class EvaluatableField(object):
     '''dataclass field class for fields that can be evaluated'''
-    def __init__(self,eval_str:str=None):
+    def __init__(self,eval_str:str=None,value_type:type=float):
         self.eval_str = eval_str
         self.evaluated = False
         self.value = None
+        self.value_type = value_type
 
     def __set__(self, instance, value):
-        self.eval_str = value
+        if isinstance(value,self.value_type):
+            self.evaluated = True
+            self.value = value
+        if isinstance(value,str):
+            self.eval_str = value
+        raise ValueError(f'expected value of type {self.value_type} or str, '
+                         f'got {type(value)}')
 
     def eval(self,**eval_args)->float:
         '''evaluate the field with the given arguments'''
@@ -64,6 +71,14 @@ class EvaluatableField(object):
         return eval_res
 
 class Evaluatable(DataclassBaseHelper):
+
+    @property
+    def evaluated(self)->bool:
+        '''return true if all evaluatable fields have been evaluated'''
+        for field in asdict(self).values():
+            if isinstance(field,EvaluatableField) and not field.evaluated:
+                return False
+        return True
 
     def __post_init__(self):
         '''sanitize and internal variables'''
@@ -90,7 +105,7 @@ class Evaluatable(DataclassBaseHelper):
                 except EvalException as exc:
                     raise ValueError('received exception evaluating field '
                                      f'{field_name}') from exc
-        self.evaluated = True
+        
     
     def test_eval(self):
         '''dynamic test evaluation of expressions given by the user to 
