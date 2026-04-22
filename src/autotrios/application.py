@@ -630,6 +630,15 @@ class TRIOS(MyApplication):
         self._zero_gap_set = False
         self._calibrated = False
 
+        if self._settings.idle_velocity is not None:
+            self._set_idle_velocity(self._settings.idle_velocity)
+
+    def _set_idle_velocity(self,velocity:float):
+
+        self.set_device_settings(
+            TriosDeviceSettings(velocity=velocity,fine_velocity=velocity))
+
+
     def attach_datalogger(self):
         ''''''
         self.datalogger = DataLogger.connect(
