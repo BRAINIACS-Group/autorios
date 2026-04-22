@@ -530,7 +530,7 @@ class TRIOS(MyApplication):
         if not self.datalogger.is_recording:
             if protocol.has_frequency_sweep:
                 self._wait_for_point_countdown()
-                self._wait_for_time_pane()
+                self._wait_for_time_pane(settings.freqsweep_timeout)
             datalogger_file_found = False
             for _ in range(500):
                 self.datalogger.start_recording()
