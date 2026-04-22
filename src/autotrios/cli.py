@@ -30,6 +30,7 @@ from .protocol import MetaProtocol
 from .application import TRIOS
 from .settings import get_settings
 from ._version import __version__
+from .block_user_input import block_user_input
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -128,9 +129,9 @@ def cli(start:bool,debug:bool,settings_file_path:str):
                                       settings.trios_paths,
                                       start_if_not_open=settings.trios_start_if_not_open,
                                       settings=settings)
-            
-            logger.info("starting the exepriment")
-            trios_app.run(experiment_info)
+            with block_user_input(timeout=30*60):
+                logger.info("starting the exepriment")
+                trios_app.run(experiment_info)
             
         except Exception as exc:
             logger.exception('autotrios got an exception: error has been logged to %s',
