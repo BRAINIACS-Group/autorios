@@ -10,13 +10,14 @@ from typing import List
 from enum import Enum,auto
 import random
 from copy import deepcopy
+from settings import Settings
 
 #3rd Party
 import yaml
 
 #local imports
 from .exp_parser import eval_expr
-from .device_settings import DeviceSettings
+from .settings import Settings
 from .specimen import Specimen
 
 class STEP_TYPE(Enum):
@@ -24,7 +25,6 @@ class STEP_TYPE(Enum):
     VELOCITY = auto()
     WAIT_FOR_TEMPERATURE = auto()
     MOTOR_ROTATION = auto()
-
 
 @dataclass
 class Step:
@@ -56,33 +56,39 @@ class Step:
   def test_eval(self):
     ''''''
     try:
-       height_random = 4000+1000*random.random()
-       specimen = Specimen(height=height_random)
-       self.eval(specimen=specimen)
+        height_random = 4000+1000*random.random()
+        specimen = Specimen(height=height_random)
+        self.eval(specimen=specimen)
     except Exception as exc:
-       raise ValueError(f'received exception evaluating {self.eval_str}') from exc
+        raise ValueError(f'received exception evaluating {self.eval_str}') from exc
 
 @dataclass
 class Protocol:
     '''
     '''
     procedure_file_path: Path
-    device_settings: DeviceSettings
+    settings_update: Settings
     steps: List[Step]
     has_frequency_sweep:bool = False
 
     def __post_init__(self) -> None:
-      '''Data sanity checks'''
+        '''Data sanity checks'''
     #   if isinstance(self.procedure_file_path,str):
     #      self.procedure_file_path = Path(self.procedure_file_path)
-      if not self.procedure_file_path == Path() and not self.procedure_file_path.is_file():
-         raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
-      
+        for field in self.settings_update.fields:
+            if field not in ['protocol_settings','device_settings']:
+              raise ValueError(f'settings_update for protocol can only contain'
+                f' protocol_settings and device_settings, but got {field}')
+
+        if not self.procedure_file_path.is_file():
+            raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
+
 @dataclass
 class MetaProtocol:
     '''
     '''
     protocols: List[Protocol]
+    settings_update: Settings
 
     @staticmethod
     def from_file(filepath:Path)->Protocol:
@@ -98,6 +104,15 @@ class MetaProtocol:
         data.pop('height_tension',None)
         data.pop('height_compression',None)
 
+        #remove local variables which serves as placeholder already during yaml
+        #file loading.
+        for key in data.keys():
+           if key.startswith('local_'):
+              data.pop(key)
+
+        metaprotocol_settings_update_dict = data.pop('settings',dict())
+        metaprotocol_settings_update = Settings(**metaprotocol_settings_update_dict)
+
         protocols = []
         for protocol_dict_update in data.pop('protocols'):
             protocol_dict = deepcopy(data)
@@ -112,13 +127,16 @@ class MetaProtocol:
             if not procedure_file_path.is_absolute():
                 procedure_file_path = filepath.parent / procedure_file_path
 
-            device_settings_dict = protocol_dict.pop('device_settings',dict())
-            device_settings = DeviceSettings(**device_settings_dict)
+            #device_settings_dict = protocol_dict.pop('device_settings',dict())
+            #device_settings = TriosDeviceSettings(**device_settings_dict)
 
-            protocol = Protocol(**protocol_dict,
-                steps=steps,procedure_file_path=procedure_file_path,
-                device_settings=device_settings)
+            settings_update = Settings(protocol_dict.pop('settings',dict()))
+
+            protocol = Protocol(
+                **protocol_dict,
+                steps=steps,
+                procedure_file_path=procedure_file_path,
+                settings_update=settings_update)
             protocols.append(protocol)
 
-
-        return MetaProtocol(protocols)
+        return MetaProtocol(protocols,metaprotocol_settings_update)

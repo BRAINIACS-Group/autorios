@@ -1,13 +1,13 @@
 #@Jan: sorting imports can help with an overview
 #STL modules
 from __future__ import annotations
-from typing import List,NamedTuple,Dict,Any
+from typing import List,NamedTuple,Dict,Any,Union
 import time
 import sys
 import csv
 import logging
 from dataclasses import dataclass
-#from tkinter import simpledialog, messagebox
+import copy
 from pathlib import Path
 import tempfile
 from abc import ABC
@@ -36,90 +36,130 @@ from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
 from .pyqtgui import (show_warning_messagebox,show_question_messagebox,
     show_error_messagebox)
 from .experiment_info import ExperimentInfo
-from .device_settings import DeviceSettings
+from .device_settings import TriosDeviceSettings
+from .settings import Settings
 from .specimen import Specimen
 
 logger = logging.getLogger(__name__)
 
-class MyApplication(ABC):
-    ''''''
-    '''Represents the automated TRIOS application'''
-    WINDOW_NAME = ""
-    PATH  = None
+def get_valid_app_path(paths:List[Union[str,Path]])->Path:
+    '''get the first valid path pointing to an executable from the list of paths'''
+    for path in paths:
+        if isinstance(path,str):
+            path = Path(path)
+        if path.exists():
+            if path.suffix != '.exe':
+                raise ValueError(f'path {path} does not point to an executable')
+            return path
+    raise FileNotFoundError('No valid path found')
 
-    def __init__(self,app:application.Application) -> None:
+class MyApplication(ABC):
+    '''Represents the automated TRIOS application'''
+    # WINDOW_NAME = ""
+    # PATH  = None
+
+    def __init__(
+            self,
+            app:application.Application,
+            window_name:str,
+            backend:str) -> None:
         '''Constructor
         Args:
             app: application.Application representing TRIOS
         Raises:
             '''
         self.app = app
-        self.window_main = app.window(title_re=f".*{self.WINDOW_NAME}.*")
-        for window in app.windows(): logging.debug("app window: %s",repr(window))
+        self.window_main = app.window(title_re=f".*{window_name}.*")
+        self.backend = backend
+        for window in app.windows():
+            logging.debug("app window: %s",repr(window))
         self.window_main.wait('exists',timeout=2)
       
     @classmethod
-    def start(cls,backend="uia"):
+    def start(cls,window_name:str,paths:List[Union[str,Path]],backend="uia",
+              **kwargs):
         '''start application and connect
         Args:
         Returns:
             object
         Raises:
         '''
-        logger.info(f'starting {cls.PATH}')
-        app = application.Application(backend=backend).start(str(cls.PATH))
-        return cls(app)
+        path = get_valid_app_path(paths)
+        logger.info('starting %s', path)
+        app = application.Application(backend=backend).start(str(path))
+        return cls(app,window_name,backend,**kwargs)
 
     @classmethod
-    def connect(cls,start_if_not_open:bool=True,backend="uia" or "win32",**kwargs):
+    def connect(
+        cls,
+        window_name:str,
+        paths: List[Union[str,Path]] = None,
+        start_if_not_open:bool=True,
+        backend="uia",
+        **kwargs):
         '''Attach to a running TRIOS instance
         Args:
         Returns:
             TRIOS object
         Raises:
             RuntimeError if window is not found'''
-        
+        if start_if_not_open and paths is None:
+            raise ValueError('path must be provided if start_if_not_open is True')
+
+        path = get_valid_app_path(paths)
+
         try:
             app = application.Application(backend=backend).connect(
-                path=str(cls.PATH),timeout=1)
+                path=str(path),timeout=1)
                 #title=cls.WINDOW_NAME)
         except (ProcessNotFoundError, TimeoutError) as te:
+            logger.error('could not connect to %s',path)
+            logger.info('trying to start %s',path)
             if start_if_not_open:
-                return cls.start()
-            raise ProcessNotFoundError(f'could not connect to {cls.PATH}') from te
-        logger.info("connected to %s",cls.PATH)
+                return cls.start(paths=paths, backend=backend, **kwargs)
+            raise ProcessNotFoundError(f'could not connect to {path}') from te
+        logger.info("connected to %s",path)
         #@jan: Do we need this? maybe there is some event to wait for...
   
-        return cls(app,**kwargs)
+        return cls(app,window_name,backend,**kwargs)
 
-class TRIOS(MyApplication):    
-    WINDOW_NAME =  "TA Instruments Trios" #"5333-0538 : TA Instruments Trios v5.0.0.44608"
-    PATH  = Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\Trios.exe")
+class TRIOS(MyApplication):
+    # WINDOW_NAME =  "TA Instruments Trios" #"5333-0538 : TA Instruments Trios v5.0.0.44608"
+    # PATH  = Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\Trios.exe")
 
-    def __init__(self, app: Application,datalogger_restart:bool=False,trios_workaround:bool=False) -> None:
-        super().__init__(app)
+    def __init__(
+            self,
+            app: Application,
+            window_name: str,
+            backend:str,
+            settings: Settings,
+        ) -> None:
+        super().__init__(app,window_name=window_name,backend=backend)
 
-        self._trios_workaround = trios_workaround
+        self._settings = settings
         self.datalogger = None
-        self._datalogger_restart = datalogger_restart
 
         self._calibrated = False
         self._zero_gap_set = False
 
     @classmethod
-    def start(cls):
+    def start(cls,window_name:str,paths:List[Union[str,Path]],backend='uia',
+              settings: Settings=None, **kwargs):
         '''start application and connect
         Args:
         Returns:
             object
         Raises:
         '''
-        obj = super().start()
+        if settings is None:
+            raise ValueError('settings argument must be provided')
+        obj = super().start(paths=paths,window_name=window_name,
+            backend=backend,settings=settings,**kwargs)
         #Instrument view - connect to HR-3
         # gives error if Instrument view is already open
         dialog1 = obj.app.window(title="Instrument View")
         dialog1.Connect.click()
-        pane1 = obj.app[cls.WINDOW_NAME]['Experiment 1']
+        pane1 = obj.app[window_name]['Experiment 1']
         pane1.wait("ready")     #waits till the experiment pane is ready
         #@jan: Do we need this? maybe there is some event to wait for...
         logger.info("connected to trios")
@@ -127,11 +167,17 @@ class TRIOS(MyApplication):
         return obj
     
     @classmethod
-    def connect(cls, start_if_not_open: bool = True,**kwargs):
+    def connect(cls,window_name:str,paths: List[Union[str,Path]]=None,
+        start_if_not_open: bool = True,backend:str="uia",
+        settings:Settings=None,**kwargs):
         '''connect to running instance of TRIOS
         '''
-        return super().connect(start_if_not_open,**kwargs)
-
+        if settings is None:
+            raise ValueError('settings argument must be provided')
+        
+        return super().connect(window_name=window_name, paths=paths,
+                               start_if_not_open=start_if_not_open,
+                               backend=backend,settings=settings,**kwargs)
     def calibrate(self):
         '''Represent calibration process, for now asks user to press Ok when he
         has done this
@@ -140,14 +186,8 @@ class TRIOS(MyApplication):
         Raises:
         '''
 
-        # For calibration and zero gap, technically the script shouldn't continue untill
-        #the OK button is pressed
-        #messagebox.showinfo("Advice", r"Please calibrate and zero gap before continuing\n"
-        #    r"press OK when done")
-        #self.window_main.set_focus()
-        app = QApplication([])
-        show_warning_messagebox(message=f"Please calibrate and zero gap before"
-                        f" continuing.\nPress OK when done",title="Advice")
+        show_warning_messagebox(message="Please calibrate and zero gap before"
+                        " continuing.\nPress OK when done",title="Advice")
         self._calibrated = True
 
     def find_zero_gap(self):
@@ -156,14 +196,9 @@ class TRIOS(MyApplication):
         Returns:
         Raises:
         '''
-        # For calibration and zero gap, technically the script shouldn't continue untill
-        #the OK button is pressed
-        #messagebox.showinfo("Advice", r"Please zero gap before continuing\n"
-        #    r"press OK when done")
-        #self.window_main.set_focus()
-        app = QApplication([])
-        show_warning_messagebox(message=f"Please zero gap before continuing\n"
-            f"Press OK when done",title = "Advice")
+       
+        show_warning_messagebox(message="Please zero gap before continuing\n"
+            "Press OK when done",title = "Advice")
         self._zero_gap_set = True
 
     def _input_experiment_names(self,experiment_info:ExperimentInfo):
@@ -188,6 +223,7 @@ class TRIOS(MyApplication):
         except:
             sample_dropdown_button.click_input()
             logger.info('sample dropdown expanded')
+
         write_to_input(sample_edit,
             experiment_info.sample_name)
     
@@ -234,7 +270,8 @@ class TRIOS(MyApplication):
                 return val_dict
 
             except COMError as ce:
-                logging.warning('Got COMError while trying to read control panel, retrying (%d)',trial)
+                logging.warning("Got COMError %s while trying to read control "
+                                "panel, retrying (%d/%d)", ce, trial, retries)
                 continue
 
         raise RuntimeError(f'COMError still persists after more than {retries} retries')
@@ -319,7 +356,7 @@ class TRIOS(MyApplication):
         raise ValueError(f'unknown status {text_str}')
 
 
-    def set_settings(self,device_settings:DeviceSettings,timeout:float=60):
+    def set_device_settings(self,device_settings:TriosDeviceSettings,timeout:float=60):
         '''
         '''
         assert device_settings.evaluated, "settings.eval has not been called"
@@ -448,7 +485,8 @@ class TRIOS(MyApplication):
             #close dropdown
             step_dropdown.click_input()
 
-    def _run_protocol(self,protocol:Protocol,specimen:Specimen,filepath_datalogger:Path):
+    def _run_protocol(self,protocol:Protocol,settings:Settings,
+        specimen:Specimen,filepath_datalogger:Path):
         '''
         '''
         
@@ -456,10 +494,10 @@ class TRIOS(MyApplication):
         
         self._type_protocol_values(protocol,specimen)
 
-        device_settings_evaluated = protocol.device_settings.eval(specimen=specimen)
-        self.set_settings(device_settings_evaluated)
+        device_settings_evaluated = settings.device_settings.eval(specimen=specimen)
+        self.set_device_settings(device_settings_evaluated)
 
-        if self._datalogger_restart:
+        if settings.datalogger_restart:
             self.detach_datalogger()
             time.sleep(.1)
 
@@ -564,12 +602,25 @@ class TRIOS(MyApplication):
         #self.attach_datalogger()
         #self.datalogger.set_path(experiment_info.save_path_datalogger)
 
+        experiment_settings = (
+            copy.deepcopy(self._settings)
+            .update(experiment_info.meta_protocol.settings_update)
+            )
+
         for n,protocol in enumerate(experiment_info.meta_protocol.protocols):
+            protocol_settings = (
+                copy.deepcopy(experiment_settings)
+                .update(protocol.settings_update)
+                )
             self._load_procedure_file(protocol.procedure_file_path)
             #TODO: find a nicer way to pass the updated datalogger save path
             filepath_datalogger_inc = experiment_info.filepath_datalogger.with_stem(
                 experiment_info.filepath_datalogger.stem+f'_{n+1}')
-            self._run_protocol(protocol,specimen,filepath_datalogger= filepath_datalogger_inc)
+            self._run_protocol(
+                protocol,
+                protocol_settings,
+                specimen,
+                filepath_datalogger=filepath_datalogger_inc)
             self._focus_experiment_tab()
             
         #stop and kill the datalogger if it is still open
@@ -581,7 +632,11 @@ class TRIOS(MyApplication):
 
     def attach_datalogger(self):
         ''''''
-        self.datalogger = DataLogger.connect(start_if_not_open=True)
+        self.datalogger = DataLogger.connect(
+            window_name=self._settings.datalogger_windowname,
+            paths=self._settings.datalogger_paths,
+            start_if_not_open=True
+        )
 
     def detach_datalogger(self):
         if self.datalogger is not None:
@@ -617,12 +672,9 @@ class TRIOS(MyApplication):
 
 class DataLogger(MyApplication):
     '''Represents data logger application'''
-
-    PATH        = "C:\\Program Files (x86)\\TA Instruments\\TRIOS\\ARG2AuxiliarySample.exe"
-    WINDOW_NAME = "ARG2AuxiliarySample"# v1.0.3"
-    
-    def __init__(self, app: Application) -> None:
-        super().__init__(app)
+  
+    def __init__(self, app: Application,window_name:str,backend:str="uia") -> None:
+        super().__init__(app,window_name,backend)
         self._rheometer_connected = False
         self._started = False
         self._is_recording = False

@@ -28,9 +28,8 @@ from .pyqtgui import get_experiment_info, ExperimentInfo
 from .protocol import MetaProtocol
 #from .protocol import Protocol_HBE_A_red,Protocol_HBE_B_red
 from .application import TRIOS
-from .settings import GlobalSettings
+from .settings import get_settings
 from ._version import __version__
-from .system_paths import SYSTEM_SETTINGS_FILE_PATH
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -85,7 +84,7 @@ def create_debug_experimentinfo(global_settings:GlobalSettings)->ExperimentInfo:
 @click.command()
 @click.option('--start/--no-start',default=False)
 @click.option('--debug/--no-debug',default=False)
-@click.option('--settings_file_path',default=SYSTEM_SETTINGS_FILE_PATH)
+@click.option('--settings_file_path',default=None)
 def cli(start:bool,debug:bool,settings_file_path:str):
     '''comand line interface entry point
     Args:
@@ -102,42 +101,44 @@ def cli(start:bool,debug:bool,settings_file_path:str):
 
     logger.info(f"running autotrios {__version__}")
 
-    global_settings = GlobalSettings.from_file(settings_file_path)
+    settings = get_settings()
 
+    if settings_file_path is not None:
+        settings.update_from_file(settings_file_path)
     
-    if not global_settings.protocol_config_path.is_dir():
-        global_settings.protocol_config_path.mkdir(parents=True)
-    logger.debug(f'user config path: {global_settings.protocol_config_path}')
-
     experiment_info = None
 
     while True:
         logger.info('getting experiment info')
         if debug:
-            experiment_info = create_debug_experimentinfo(global_settings)
+            experiment_info = create_debug_experimentinfo(settings)
         else:
-            experiment_info = get_experiment_info(global_settings.protocol_config_path,
+            experiment_info = get_experiment_info(
+                settings.protocol_config_path,
                 old_experiment_info=experiment_info)
 
-        #set log file and format
-        #logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s',force=True,
-        #    filename=experiment_info.filepath_logfile)
+        #setup logging to file for the current experiment
         logfile_handler = logging.FileHandler(str(experiment_info.filepath_logfile))
         logfile_handler.setFormatter(log_formatter)
         logging.getLogger().addHandler(logfile_handler)
 
         logger.info('connecting to TRIOS')
         try:
-            trios_app = TRIOS.connect(start_if_not_open=start,
-                datalogger_restart=global_settings.datalogger_restart,
-                trios_workaround=global_settings.trios_workaround)
+            trios_app = TRIOS.connect(settings.trios_windowname,
+                                      settings.trios_paths,
+                                      start_if_not_open=settings.trios_start_if_not_open,
+                                      settings=settings)
+            
             logger.info("starting the exepriment")
             trios_app.run(experiment_info)
+            
         except Exception as exc:
             logger.exception('autotrios got an exception: error has been logged to %s',
                 str(experiment_info.filepath_logfile))
             raise exc
 
+        #remove logfile handler to prevent logging to old logfile in the next 
+        # loop iteration
         logging.getLogger().removeHandler(logfile_handler)
         if debug:
             break

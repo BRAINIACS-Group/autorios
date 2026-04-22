@@ -1,0 +1,2 @@
+ idle_velocity: 1e4 #velocity when no experiment is runnning so you don't have 
+                    #to wait unnecessary long for the rheometer to raise
