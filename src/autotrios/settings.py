@@ -15,7 +15,7 @@ from pydantic.dataclasses import dataclass, asdict, is_dataclass
 #local imports
 from .system_paths import (SYSTEM_SETTINGS_FILE_PATH,USER_SETTINGS_FILE_PATH,PROTOCOL_CONFIG_DIR_PATH)
 from .device_settings import TriosDeviceSettings
-from .updateable import Updateable
+from .dataclass_helpers import Updateable
 
 logger = logging.getLogger(__name__)
 
