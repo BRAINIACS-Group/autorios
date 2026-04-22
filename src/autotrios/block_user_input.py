@@ -7,7 +7,7 @@ import time
 from pynput import keyboard, mouse
 
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
 
 
@@ -128,7 +128,7 @@ class CountdownTimer(threading.Thread):
         self.countdown_window = None
         if show_window:
             self.countdown_window = CountdownWindow()
-        self._stop_event = threading.Event()        
+        self._stop_event = threading.Event()
 
     def run(self):
         time_start = time.time()
@@ -185,7 +185,7 @@ class InputBlocker(object):
         self.keyboard_listener.stop()
         self.mouse_listener.stop()
         if self.timer:
-            self.timer.cancel()
+            self.timer.stop()
             self.timer = None
 
     def __enter__(self):
@@ -195,9 +195,9 @@ class InputBlocker(object):
         self.mouse_listener.start()
         return self
 
-
-
 def block_user_input(timeout:float=10)->InputBlocker:
-    '''block all user input from mouse and keyboard apart from hotkeys'''
+    '''returns context aware object that will block all user input from mouse 
+       and keyboard apart from hotkeys. Timeout in seconds after which the block
+       will end automatically.'''
 
     return InputBlocker(timeout)
