@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import os
 from typing import List
 import sys
+import threading
+from typing import Callable
 
 #3rd party imports
 import yaml
@@ -51,17 +53,17 @@ logger = logging.getLogger('autotrios')
 #                         info.filepath_logfile
 #                         )
     
-def get_protocol_files(protocol_config_dir:Path):
-    '''
-    '''
-    path_list = protocol_config_dir.glob('*.yml')
-    file_stems = [p.stem for p in path_list]
-    return file_stems
+
 
 
 # ---------------------------------------------------------------------------
 # Helpers (stubs – replace with your real implementations)
 # ---------------------------------------------------------------------------
+
+def show_yesno_button(message,title,question)->bool:
+    ret = QMessageBox.question(title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
+    return ret == QMessageBox.StandardButton.Yes
+    
 
 def show_info_messagebox(message, title):
     QMessageBox.information(None, title, message)
@@ -296,16 +298,15 @@ def _card() -> QFrame:
 class AutoTriosGui(QWidget):
     """GUI dialogue to get experimental info from user."""
 
-    def __init__(self, protocol_config_dir: Path):
+    def __init__(self, 
+                 meta_protocols:List[str],
+                 callback_start_experiment:Callable[[ExperimentInfo],None],
+                 callback_stop_experiment:Callable[[],None]):
         super().__init__()
-        self._protocol_config_dir = protocol_config_dir
+        self._protocol_names = protocol_names
 
-        # Outputs
-        self.save_dir_trios = ""
-        self.filepath_datalogger = ""
-        self.filepath_logfile = ""
-        self.filepath_timelog = ""
-        self.experiment: bool
+        self._callback_start_experiment = callback_start_experiment
+        self._callback_stop_experiment  = callback_stop_experiment
 
         # Widgets declared here so other methods can reference them
         self.sample_name_edit = QLineEdit()
@@ -324,7 +325,7 @@ class AutoTriosGui(QWidget):
         self.setMinimumSize(520, 560)
         self.resize(600, 620)
         self.setStyleSheet(STYLESHEET)
-        self.setSizeGripEnabled(True)
+        #self.setSizeGripEnabled(True)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(24, 24, 24, 24)
@@ -392,7 +393,7 @@ class AutoTriosGui(QWidget):
         layout.setSpacing(6)
         layout.addWidget(_field_label("PROTOCOL"))
 
-        file_names = get_protocol_files(self._protocol_config_dir)
+        file_names = [e[0].stem for e in self.metaprotocols]
         self.protocol_combo.addItems(file_names)
         self.protocol_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout.addWidget(self.protocol_combo)
@@ -428,13 +429,13 @@ class AutoTriosGui(QWidget):
         start_btn = QPushButton("▶  START")
         start_btn.setObjectName("start_btn")
         start_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        start_btn.clicked.connect(self.accept)
+        start_btn.clicked.connect(lambda _:self._start_experiment)
         self.experiment = True
 
         stop_btn = QPushButton("■  STOP")
         stop_btn.setObjectName("stop_btn")
         stop_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        stop_btn.clicked.connect(lambda _: sys.exit(1))
+        stop_btn.clicked.connect(lambda _: self._callback_stop_experiment)
 
         layout.addWidget(start_btn)
         layout.addWidget(stop_btn)
@@ -459,79 +460,65 @@ class AutoTriosGui(QWidget):
         layout.addWidget(status_dot)
         return layout
 
-    # ------------------------------------------------------------------
-    # Public API (unchanged signatures)
-    # ------------------------------------------------------------------
+    def get_experiment_info(self):
 
-    def set_values(self, experiment_info):
-        if not all(
-            experiment_info.filepath_datalogger.parents[1] == d
-            for d in [
-                experiment_info.save_dir_trios.parent,
-                experiment_info.filepath_logfile.parents[1],
-                experiment_info.filepath_timelog.parents[1],
-            ]
-        ):
-            raise FileExistsError(
-                f"different paths in experiment_info: {repr(experiment_info)}"
+        expinfo = ExperimentInfo(
+            sample_name = self.sample_name_edit.text(),
+            operator_name = self.operator_name_edit.text(),
+            meta_protocol = self._meta_protocols[self.protocol_combo.currentIndex()],
+            savedir=self.directory_label.text()
             )
+        return expinfo
 
-        self.directory_label.setText(
-            str(experiment_info.filepath_datalogger.parents[1])
-        )
-        self.sample_name_edit.setText(experiment_info.sample_name)
-        self.operator_name_edit.setText(experiment_info.operator_name)
+    def _start_experiment(self):
+        experiment_info = self.get_experiment_info()
+        self._callback_start_experiment(experiment_info)
 
     def openDirectoryDialog(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.directory_label.setText(directory)
 
-    def check(self):
-        save_directory = self.directory_label.text()
-        if not save_directory or save_directory == "No directory selected":
-            raise ValueError("error getting dir name")
+    # def check(self):
+    #     save_directory = self.directory_label.text()
+    #     if not save_directory or save_directory == "No directory selected":
+    #         raise ValueError("error getting dir name")
 
-        save_directory = Path(save_directory)
-        if not save_directory.is_dir():
-            raise FileNotFoundError(f"could not find {save_directory}")
+    #     save_directory = Path(save_directory)
+    #     if not save_directory.is_dir():
+    #         raise FileNotFoundError(f"could not find {save_directory}")
 
-        for sub in ("trios", "datalogger", "log"):
-            d = save_directory / sub
-            if not d.is_dir():
-                d.mkdir()
+    #     for sub in ("trios", "datalogger", "log"):
+    #         d = save_directory / sub
+    #         if not d.is_dir():
+    #             d.mkdir()
 
-        self.save_dir_trios = save_directory / "trios"
-        self.filepath_datalogger = (
-            save_directory / "datalogger" / self.sample_name_edit.text()
-        )
-        self.filepath_timelog = (
-            save_directory / "log" / (self.sample_name_edit.text() + "_timelog.csv")
-        )
-        self.filepath_logfile = (
-            save_directory / "log" / f"{self.sample_name_edit.text()}.log"
-        )
+    #     self.save_dir_trios = save_directory / "trios"
+    #     self.filepath_datalogger = (
+    #         save_directory / "datalogger" / self.sample_name_edit.text()
+    #     )
+    #     self.filepath_timelog = (
+    #         save_directory / "log" / (self.sample_name_edit.text() + "_timelog.csv")
+    #     )
+    #     self.filepath_logfile = (
+    #         save_directory / "log" / f"{self.sample_name_edit.text()}.log"
+    #     )
 
-        sample = self.sample_name_edit.text()
-        operator = self.operator_name_edit.text()
-        protocol = self.protocol_combo.currentText()
+    #     sample = self.sample_name_edit.text()
+    #     operator = self.operator_name_edit.text()
+    #     protocol = self.protocol_combo.currentText()
 
-        if sample and operator and protocol != "Other":
-            show_info_messagebox(
-                message=f"Sample:   {sample}\nOperator: {operator}\nProtocol: {protocol}",
-                title="Session Summary",
-            )
-        else:
-            show_warning_messagebox(
-                message="Information entered is invalid.\nPlease check all fields.",
-                title="Check Data",
-            )
+    #     if sample and operator and protocol != "Other":
+    #         show_info_messagebox(
+    #             message=f"Sample:   {sample}\nOperator: {operator}\nProtocol: {protocol}",
+    #             title="Session Summary",
+    #         )
+    #     else:
+    #         show_warning_messagebox(
+    #             message="Information entered is invalid.\nPlease check all fields.",
+    #             title="Check Data",
+    #         )
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    gui = AutoTriosGui(protocol_config_dir=Path("./protocols"))
-    gui.show()
-    sys.exit(app.exec_())
 
 # class GetExpInfo(QDialog):
 #     '''GUI dialogue to get experimental info from user'''

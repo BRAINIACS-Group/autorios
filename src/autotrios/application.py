@@ -6,27 +6,23 @@ import time
 import sys
 import csv
 import logging
-from dataclasses import dataclass
 import copy
 from pathlib import Path
-import tempfile
 from abc import ABC
-from collections import namedtuple
-from enum import Enum
 import logging
 from comtypes import COMError
 import datetime
-
+import threading
 import sys
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
+
 #3rd party modules
-from pywinauto import application,findwindows, mouse, keyboard,Desktop, base_wrapper
+from pywinauto import application,keyboard,Desktop, base_wrapper
 from pywinauto.application import Application,ProcessNotFoundError
 from pywinauto.keyboard import send_keys
 import pywinauto.timings
-import pyautogui
 from PyQt5.QtWidgets import QApplication
 
 #local imports
@@ -52,6 +48,9 @@ def get_valid_app_path(paths:List[Union[str,Path]])->Path:
                 raise ValueError(f'path {path} does not point to an executable')
             return path
     raise FileNotFoundError('No valid path found')
+
+class StopException(Exception):
+    pass
 
 class MyApplication(ABC):
     '''Represents the automated TRIOS application'''
@@ -139,6 +138,7 @@ class TRIOS(MyApplication):
         self._settings = settings
         self.datalogger = None
 
+        self._event_stop = threading.Event()
         self._calibrated = False
         self._zero_gap_set = False
 
@@ -485,15 +485,20 @@ class TRIOS(MyApplication):
             #close dropdown
             step_dropdown.click_input()
 
+    def _check_for_stop_event(self):
+        if self._event_stop.is_set():
+            self._event_stop.clear()
+            raise StopException()
+
     def _run_protocol(self,protocol:Protocol,settings:Settings,
         specimen:Specimen,filepath_datalogger:Path):
         '''
         '''
         
         self.window_main.set_focus()
-        
         self._type_protocol_values(protocol,specimen)
 
+        self._check_for_stop_event()
         device_settings_evaluated = settings.device_settings.eval(specimen=specimen)
         self.set_device_settings(device_settings_evaluated)
 
@@ -501,6 +506,7 @@ class TRIOS(MyApplication):
             self.detach_datalogger()
             time.sleep(.1)
 
+        self._check_for_stop_event()
         if self.datalogger is None:
             self.attach_datalogger()
             timelog_file = filepath_datalogger.with_stem(
@@ -509,10 +515,6 @@ class TRIOS(MyApplication):
             self.datalogger.set_path(filepath_datalogger)
 
         self.window_main.set_focus()
-
-        #Open the protocol section and type parameters
-        #self.window_main.Button10.draw_outline()
-        #self.window_main.Button10.click_input()
 
         # To start the experiment
         experiment_tab =self.window_main.child_window(title="Experiment", control_type="TabItem")
@@ -549,9 +551,6 @@ class TRIOS(MyApplication):
 
             self.window_main.set_focus()
 
-        #if next_protocol is not None:
-        #    self._type_protocol_values(protocol,specimen)
-
         status = self.get_status()
         while status == "running":
             time.sleep(.1)
@@ -562,45 +561,25 @@ class TRIOS(MyApplication):
         
         logger.info("finished running protocol %s",repr(protocol))
             
-    def run(self,experiment_info:ExperimentInfo):
+    def run_experiment(self,experiment_info:ExperimentInfo):
         '''Run experiment
         Args:
             experiment_info: ExperimentInfo object defining the experiment
         Returns:
         Raises:
         '''
-        #self.window_main.set_focus()
-        
-        # if not self._calibrated:
-        #     self.calibrate()
-        # if not self._zero_gap_set:
-        #     self.find_zero_gap()
 
         self.window_main.set_focus() # brings the window to top
         self._focus_experiment_tab()
 
         self._input_experiment_names(experiment_info)
        
-        #messagebox.showinfo("Sample Attachment",
-        #    "Please press Ok when you have succesfully attached the specimen"
-        #    " and lowered the specimen holders to their initial position")
-        # app = QApplication([])
-        # show_warning_messagebox(message=f"Please press Ok when you have"\
-        #                 f"succesfully attached the specimen and lowered the"\
-        #                 f" specimen holders to their initial position",\
-        #                       title="Sample Attachment")
-
-        #@jan: now run the protocol etc.
+        #now run the protocol etc.
         height = self._get_gap_value()
         logger.info('found specimen height: %g',height)
-        #@jan just an idea to use a namedtuple
         specimen = Specimen(height)
 
         self._set_geometry(specimen)
-
-        #if any(p.start_datalogger for p in protocols):
-        #self.attach_datalogger()
-        #self.datalogger.set_path(experiment_info.save_path_datalogger)
 
         experiment_settings = (
             copy.deepcopy(self._settings)

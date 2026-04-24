@@ -3,6 +3,7 @@
 import logging
 import subprocess
 from pathlib import Path
+import threading
 
 #3rd party imports
 from pywinauto.keyboard import send_keys
@@ -11,6 +12,15 @@ from pywinauto.keyboard import send_keys
 from .locale import DECIMAL_SEPARATOR
 
 logger = logging.getLogger(__name__)
+
+class StoppableThread(threading.Thread):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._stop_event = threading.Event()
+    
+    def stop(self):
+        self._stop_event.set()
 
 
 def is_button(ctrl)->bool:

@@ -1,15 +1,24 @@
 '''base class to make dataclasses updateable with another dataclass of the same
 type. This is used for settings dataclasses to allow updating settings with user'''
 #STL imports
-from abc import ABC
 from __future__ import annotations
-from dataclass import asdict, is_dataclass
+from abc import ABC
+from dataclasses import asdict, is_dataclass
 import random
+from typing import Annotated, Any, Callable, Type
 
 #3rd party imports
 from pydantic.dataclasses import dataclass
-from exp_parser import eval_expr
-from specimen import Specimen
+from pydantic import (
+    BaseModel,
+    GetCoreSchemaHandler,
+    ValidationError,
+    ValidationInfo,
+)
+from pydantic_core import core_schema
+from pydantic import BaseModel
+from .exp_parser import eval_expr
+from .specimen import Specimen
 
 class DataclassBaseHelper(ABC):
     '''empty base class to enable multiple inheritance'''
@@ -40,14 +49,13 @@ class EvalException(Exception):
     '''exception class for evaluation errors'''
     pass
 
-class EvaluatableField(object):
+class EvaluatableField(BaseModel):
     '''dataclass field class for fields that can be evaluated'''
-    def __init__(self,eval_str:str=None,value_type:type=float):
-        self.eval_str = eval_str
-        self.evaluated = False
-        self.value = None
-        self.value_type = value_type
-
+    eval_str:str = None 
+    value_type:Type = float
+    _evaluated:bool = False
+    _value: float = None
+    
     def __set__(self, instance, value):
         if isinstance(value,self.value_type):
             self.evaluated = True

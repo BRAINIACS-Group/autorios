@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
 
+from .utility import StoppableThread
 
 class CountdownWindow(QWidget):
     def __init__(self):
@@ -119,7 +120,7 @@ class CountdownWindow(QWidget):
         #self.subtitle.setText("Time's up. Well done.")
         #self.heading.setText("SESSION COMPLETE")
 
-class CountdownTimer(threading.Thread):
+class CountdownTimer(StoppableThread):
     '''thread to run the countdown window'''
 
     def __init__(self, seconds: float, show_window: bool = True):
@@ -128,7 +129,6 @@ class CountdownTimer(threading.Thread):
         self.countdown_window = None
         if show_window:
             self.countdown_window = CountdownWindow()
-        self._stop_event = threading.Event()
 
     def run(self):
         time_start = time.time()
@@ -140,9 +140,6 @@ class CountdownTimer(threading.Thread):
             if self.countdown_window is not None:
                 self.countdown_window.update_remaining(remaining)
             time.sleep(1)
-
-    def stop(self):
-        self._stop_event.set()
 
 
 class InputBlocker(object):

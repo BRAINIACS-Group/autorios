@@ -7,10 +7,11 @@ from abc import ABC
 #from dataclasses import dataclass
 from typing import Union
 from pathlib import Path
+from dataclasses import asdict, is_dataclass
 
 #3rd party imports
 import yaml
-from pydantic.dataclasses import dataclass, asdict, is_dataclass
+from pydantic.dataclasses import dataclass
 
 #local imports
 from .system_paths import (SYSTEM_SETTINGS_FILE_PATH,USER_SETTINGS_FILE_PATH,PROTOCOL_CONFIG_DIR_PATH)
