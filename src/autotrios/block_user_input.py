@@ -2,21 +2,26 @@
 import threading
 import sys
 import time
+import logging
 
 #3rd party imports
 from pynput import keyboard, mouse
 
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,pyqtSignal
 from PyQt5.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
 
 from .utility import StoppableThread
 
+logger = logging.getLogger(__name__)
+
 class CountdownWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.remaining=0
+
         self.init_ui()
-  
+
     def init_ui(self):
         self.setWindowTitle("Autotrios Mouse and Keyboard blocked")
         self.setFixedSize(480, 320)
@@ -95,9 +100,14 @@ class CountdownWindow(QWidget):
         m, s = divmod(secs, 60)
         return f"{m:02d}:{s:02d}"
 
+    def connect_update_function(self,update_signal:pyqtSignal):
+        update_signal.connect(self.update_remaining)
+
     def update_remaining(self, seconds):
         self.remaining = seconds
-        self.countdown_label.setText(self.format_time(self.remaining))
+        countdown_str = self.format_time(self.remaining)
+        logger.debug(f"countdown text {countdown_str}")
+        self.countdown_label.setText(countdown_str)
 
         if self.remaining <= 10:
             self.countdown_label.setStyleSheet("""
@@ -107,6 +117,7 @@ class CountdownWindow(QWidget):
                 font-weight: bold;
                 letter-spacing: -2px;
             """)
+        
 
     def finish(self):
         self.countdown_label.setText("00:00")
@@ -127,19 +138,27 @@ class CountdownTimer(StoppableThread):
         super().__init__()
         self.seconds = seconds
         self.countdown_window = None
+        self._update_signal =None
         if show_window:
+            self._update_signal = pyqtSignal(int,name="update_remaining")
             self.countdown_window = CountdownWindow()
+            self.countdown_window.connect_update_function(self._update_signal)
+            self.countdown_window.show()
+            self.countdown_window.update_remaining(5)
+            QApplication.processEvents()
 
     def run(self):
+        logger.debug("CountdownTimer run called")
         time_start = time.time()
-        if self.countdown_window is not None: 
-            self.countdown_window.show()
-        while remaining := int(self.seconds - (time.time() - time_start)) > 0:    
+        remaining = self.seconds
+        while remaining > 0:    
+            logger.debug("CountdownTimer tick remaining %d",remaining)
             if self._stop_event.is_set():
                 break
             if self.countdown_window is not None:
-                self.countdown_window.update_remaining(remaining)
+                self._update_signal.emit(remaining)
             time.sleep(1)
+            remaining = int(self.seconds - (time.time() - time_start))
 
 
 class InputBlocker(object):
@@ -175,7 +194,8 @@ class InputBlocker(object):
         self.mouse_listener.stop()
         return False
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):#
+        logger.info("unblocking user input")
         self._stop_listeners()
 
     def _stop_listeners(self):
@@ -186,6 +206,7 @@ class InputBlocker(object):
             self.timer = None
 
     def __enter__(self):
+        logger.info(f"blocking all user input for max {self.timeout} seconds. Press ctrl+c to exit")
         self.timer = CountdownTimer(self.timeout, self.show_window)
         self.timer.start()
         self.keyboard_listener.start()

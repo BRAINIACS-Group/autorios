@@ -23,6 +23,7 @@ from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
 from ._version import __version__
 from .utility import open_filexplorer
+from .system_paths import USER_SETTINGS_FILE_PATH,SYSTEM_SETTINGS_FILE_PATH
 
 logger = logging.getLogger('autotrios')
 
@@ -160,7 +161,6 @@ QPushButton {
     letter-spacing: 2px;
     padding: 10px 18px;
     border: none;
-    cursor: pointer;
 }
 
 /* Settings button */
@@ -170,6 +170,17 @@ QPushButton#settings_btn {
     border: 1px solid #2d3148;
 }
 QPushButton#settings_btn:hover {
+    color: #94a3b8;
+    border-color: #475569;
+    background-color: #1a1d27;
+}
+
+QPushButton#settings_system_btn {
+    background-color: transparent;
+    color: #475569;
+    border: 1px solid #2d3148;
+}
+QPushButton#settings_system_btn:hover {
     color: #94a3b8;
     border-color: #475569;
     background-color: #1a1d27;
@@ -275,12 +286,15 @@ class AutoTriosGui(QWidget):
     def __init__(self,
                  meta_protocols:List[Tuple[Path, MetaProtocol]],
                  callback_start_experiment:Callable[[ExperimentInfo],None],
-                 callback_stop_experiment:Callable[[],None]):
+                 callback_stop_experiment:Callable[[],None],
+                 exception_as_messsagebox:bool=True):
         super().__init__()
         self._meta_protocols = meta_protocols
 
         self._callback_start_experiment = callback_start_experiment
         self._callback_stop_experiment  = callback_stop_experiment
+
+        self._exception_as_messagebox = exception_as_messsagebox
 
         # Widgets declared here so other methods can reference them
         self.sample_name_edit = QLineEdit()
@@ -306,10 +320,10 @@ class AutoTriosGui(QWidget):
         root.setSpacing(0)
 
         # ── Header ──────────────────────────────────────────────────────
-        root.addLayout(self._build_header())
-        root.addSpacing(20)
-        root.addWidget(_make_divider())
-        root.addSpacing(20)
+        # root.addLayout(self._build_header())
+        # root.addSpacing(20)
+        #root.addWidget(_make_divider())
+        #root.addSpacing(20)
 
         # ── Input fields card ────────────────────────────────────────────
         fields_card = _card()
@@ -367,7 +381,8 @@ class AutoTriosGui(QWidget):
         layout.setSpacing(6)
         layout.addWidget(_field_label("PROTOCOL"))
 
-        file_names = [e[0].stem for e in self.metaprotocols]
+        file_names = [e[0].stem for e in self._meta_protocols]
+        logger.debug("file names for protocol combo box %s",repr(file_names))
         self.protocol_combo.addItems(file_names)
         self.protocol_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout.addWidget(self.protocol_combo)
@@ -416,11 +431,18 @@ class AutoTriosGui(QWidget):
     def _build_bottom_bar(self) -> QHBoxLayout:
         layout = QHBoxLayout()
 
-        settings_btn = QPushButton("⚙  OPEN SETTINGS")
+        settings_btn = QPushButton("⚙  OPEN USER SETTINGS")
         settings_btn.setObjectName("settings_btn")
         settings_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         settings_btn.clicked.connect(
-            lambda _: open_filexplorer(self._protocol_config_dir)
+            lambda _: open_filexplorer(USER_SETTINGS_FILE_PATH)
+        )
+
+        settings_system_btn = QPushButton("⚙  OPEN SYSTEM SETTINGS")
+        settings_system_btn.setObjectName("settings_system_btn")
+        settings_system_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        settings_system_btn.clicked.connect(
+            lambda _: open_filexplorer(SYSTEM_SETTINGS_FILE_PATH)
         )
 
         status_dot = QLabel("● READY")
@@ -428,6 +450,7 @@ class AutoTriosGui(QWidget):
         status_dot.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         layout.addWidget(settings_btn)
+        layout.addWidget(settings_system_btn)
         layout.addStretch(1)
         layout.addWidget(status_dot)
         return layout
@@ -437,7 +460,7 @@ class AutoTriosGui(QWidget):
             sample_name = self.sample_name_edit.text(),
             operator_name = self.operator_name_edit.text(),
             meta_protocol = self._meta_protocols[self.protocol_combo.currentIndex()][1],
-            savedir=self.directory_label.text()
+            save_dir=Path(self.directory_label.text())
             )
         return expinfo
 

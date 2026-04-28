@@ -6,7 +6,7 @@
 #@Jan: sorting imports can help with an overview
 #STL modules
 from __future__ import annotations
-from typing import List,NamedTuple,Dict,Any
+from typing import List,NamedTuple,Dict,Any,Tuple
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -56,15 +56,13 @@ def setup_console_logging()->None:
     logging.getLogger().addHandler(stream_handler)
     logging.getLogger().setLevel(logging.DEBUG)
 
-def get_metaprotocols(protocol_dir:Path)->Dict[str,MetaProtocol]:
+def get_metaprotocols(protocol_dir:Path)->Tuple[str,MetaProtocol]:
     '''
     '''
     protocols = [
         (fp, MetaProtocol.from_file(fp)) for fp in
             itertools.chain(protocol_dir.glob('*.yml'),protocol_dir.glob('*.yaml'))
     ]
-    for filepath in protocol_dir.glob('*.yml'):
-        (MetaProtocol.from_file(filepath))
     return protocols
 
 class ExperimentLogger(object):
@@ -84,6 +82,7 @@ class ExperimentLogger(object):
 class ExperimentThread(threading.Thread):
 
     def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo):
+        super().__init__()
         self._trios_app = trios_app
         self._experiment_info = experiment_info
 
@@ -127,9 +126,13 @@ def run_gui(settings:Settings):
         experiment_thread.join()
         experiment_thread = None
 
-    metaprotocols = get_metaprotocols(settings.protocol_dir)
+    metaprotocols = get_metaprotocols(settings.protocol_config_path)
 
-  
+    if not metaprotocols:
+        logger.error("no metaprotocol .yml files under: %s",settings.protocol_config_path)
+        show_error_messagebox(f"no metaprotocol .yml files under: {settings.protocol_config_path}")
+        raise RuntimeError(f"no metaprotocol .yml files under: {settings.protocol_config_path}")
+
     autotrios_gui = AutoTriosGui(
         metaprotocols,
         callback_start_experiment=run_experiment,
@@ -139,7 +142,7 @@ def run_gui(settings:Settings):
     return(app.exec())
 
 @click.command()
-@click_logging.simple_verbosity_option(logger)
+@click_logging.simple_verbosity_option(logging.getLogger())
 @click.version_option(__version__)
 @click.option('--settings_file_path',default=None)
 def gui(settings_file_path:str):

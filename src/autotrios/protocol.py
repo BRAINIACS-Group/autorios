@@ -129,7 +129,7 @@ class MetaProtocol:
             #device_settings_dict = protocol_dict.pop('device_settings',dict())
             #device_settings = TriosDeviceSettings(**device_settings_dict)
 
-            settings_update = Settings(protocol_dict.pop('settings',dict()))
+            settings_update = Settings(**(protocol_dict.pop('settings',dict())))
 
             protocol = Protocol(
                 **protocol_dict,
