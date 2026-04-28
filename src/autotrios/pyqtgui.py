@@ -7,7 +7,7 @@ import os
 from typing import List
 import sys
 import threading
-from typing import Callable
+from typing import Callable,Tuple
 
 #3rd party imports
 import yaml
@@ -26,51 +26,23 @@ from .utility import open_filexplorer
 
 logger = logging.getLogger('autotrios')
 
-# def get_experiment_info(protocol_config_dir:Path,old_experiment_info:ExperimentInfo=None)->ExperimentInfo:
-#     '''
-#     '''
-#     app = QApplication([])
-#     info = GetExpInfo(protocol_config_dir)
-#     if old_experiment_info is not None:
-#         info.set_values(old_experiment_info)
-#     info.setWindowTitle(f"Autotrios {__version__}")
-#     info.setFixedSize(1000,400)
-#     retval = info.exec_()
-#     if retval != 1:
-#         raise RuntimeError('error getting input from dialogue')
-#     info.check()
-
-#     protocol_config_path = protocol_config_dir / (info.protocol_combo.currentText() + '.yml')
-#     logger.info(f"loading metaprotocol from {protocol_config_path}")
-#     meta_protocol = MetaProtocol.from_file(protocol_config_path)
-
-#     return ExperimentInfo(info.sample_name_edit.text(),
-#                         info.operator_name_edit.text(),\
-#                         meta_protocol,
-#                         info.save_dir_trios,
-#                         info.filepath_datalogger,
-#                         info.filepath_timelog,
-#                         info.filepath_logfile
-#                         )
-    
-
-
-
 # ---------------------------------------------------------------------------
 # Helpers (stubs – replace with your real implementations)
 # ---------------------------------------------------------------------------
 
-def show_yesno_button(message,title,question)->bool:
+def show_yesno_messagebox(question, title="Question")->bool:
     ret = QMessageBox.question(title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
-    return ret == QMessageBox.StandardButton.Yes
-    
+    yes_clicked = ret == QMessageBox.StandardButton.Yes
+    return yes_clicked
 
-def show_info_messagebox(message, title):
+def show_info_messagebox(message, title="Information")->None:
     QMessageBox.information(None, title, message)
 
-def show_warning_messagebox(message, title):
+def show_warning_messagebox(message, title="Warning")->None:
     QMessageBox.warning(None, title, message)
 
+def show_error_messagebox(message, title="Error")->None:
+    QMessageBox.critical(None, title, message)
 
 # ---------------------------------------------------------------------------
 # Stylesheet
@@ -117,12 +89,14 @@ QLabel#header_title {
     font-weight: 700;
     letter-spacing: 3px;
 }
-QLabel#header_subtitle {
-    color: #475569;
-    font-size: 10px;
-    letter-spacing: 4px;
-}
-
+/*
+ QLabel#header_subtitle {
+     color: #475569;
+     font-size: 10px;
+     letter-spacing: 4px;
+ }
+*/
+ 
 /* ── Line edits ──────────────────────────────────────── */
 QLineEdit {
     background-color: #0d1117;
@@ -298,12 +272,12 @@ def _card() -> QFrame:
 class AutoTriosGui(QWidget):
     """GUI dialogue to get experimental info from user."""
 
-    def __init__(self, 
-                 meta_protocols:List[str],
+    def __init__(self,
+                 meta_protocols:List[Tuple[Path, MetaProtocol]],
                  callback_start_experiment:Callable[[ExperimentInfo],None],
                  callback_stop_experiment:Callable[[],None]):
         super().__init__()
-        self._protocol_names = protocol_names
+        self._meta_protocols = meta_protocols
 
         self._callback_start_experiment = callback_start_experiment
         self._callback_stop_experiment  = callback_stop_experiment
@@ -371,11 +345,11 @@ class AutoTriosGui(QWidget):
         title = QLabel("EXPERIMENT SETUP")
         title.setObjectName("header_title")
 
-        subtitle = QLabel("MEASUREMENT DEVICE  ·  SESSION CONFIGURATION")
-        subtitle.setObjectName("header_subtitle")
+        #subtitle = QLabel("MEASUREMENT DEVICE  ·  SESSION CONFIGURATION")
+        #subtitle.setObjectName("header_subtitle")
 
         layout.addWidget(title)
-        layout.addWidget(subtitle)
+        #layout.addWidget(subtitle)
         return layout
 
     def _build_text_field(self, label_text: str, widget: QLineEdit,
@@ -429,14 +403,12 @@ class AutoTriosGui(QWidget):
         start_btn = QPushButton("▶  START")
         start_btn.setObjectName("start_btn")
         start_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        start_btn.clicked.connect(lambda _:self._start_experiment)
-        self.experiment = True
+        start_btn.clicked.connect(lambda _:self._start_experiment())
 
         stop_btn = QPushButton("■  STOP")
         stop_btn.setObjectName("stop_btn")
         stop_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        stop_btn.clicked.connect(lambda _: self._callback_stop_experiment)
-
+        stop_btn.clicked.connect(lambda _: self._callback_stop_experiment())
         layout.addWidget(start_btn)
         layout.addWidget(stop_btn)
         return layout
@@ -461,240 +433,32 @@ class AutoTriosGui(QWidget):
         return layout
 
     def get_experiment_info(self):
-
         expinfo = ExperimentInfo(
             sample_name = self.sample_name_edit.text(),
             operator_name = self.operator_name_edit.text(),
-            meta_protocol = self._meta_protocols[self.protocol_combo.currentIndex()],
+            meta_protocol = self._meta_protocols[self.protocol_combo.currentIndex()][1],
             savedir=self.directory_label.text()
             )
         return expinfo
 
     def _start_experiment(self):
-        experiment_info = self.get_experiment_info()
-        self._callback_start_experiment(experiment_info)
+        try:
+           experiment_info = self.get_experiment_info()
+        except Exception as e:
+            if self._exception_as_messagebox:
+                show_error_messagebox(str(e), "Error ExperimentInfo")
+                return
+            raise e
+        try:
+            self._callback_start_experiment(experiment_info)
+        except Exception as e:
+            if self._exception_as_messagebox:
+                show_error_messagebox(str(e), "Error Starting Experiment")
+                return
+            raise e
 
     def openDirectoryDialog(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.directory_label.setText(directory)
-
-    # def check(self):
-    #     save_directory = self.directory_label.text()
-    #     if not save_directory or save_directory == "No directory selected":
-    #         raise ValueError("error getting dir name")
-
-    #     save_directory = Path(save_directory)
-    #     if not save_directory.is_dir():
-    #         raise FileNotFoundError(f"could not find {save_directory}")
-
-    #     for sub in ("trios", "datalogger", "log"):
-    #         d = save_directory / sub
-    #         if not d.is_dir():
-    #             d.mkdir()
-
-    #     self.save_dir_trios = save_directory / "trios"
-    #     self.filepath_datalogger = (
-    #         save_directory / "datalogger" / self.sample_name_edit.text()
-    #     )
-    #     self.filepath_timelog = (
-    #         save_directory / "log" / (self.sample_name_edit.text() + "_timelog.csv")
-    #     )
-    #     self.filepath_logfile = (
-    #         save_directory / "log" / f"{self.sample_name_edit.text()}.log"
-    #     )
-
-    #     sample = self.sample_name_edit.text()
-    #     operator = self.operator_name_edit.text()
-    #     protocol = self.protocol_combo.currentText()
-
-    #     if sample and operator and protocol != "Other":
-    #         show_info_messagebox(
-    #             message=f"Sample:   {sample}\nOperator: {operator}\nProtocol: {protocol}",
-    #             title="Session Summary",
-    #         )
-    #     else:
-    #         show_warning_messagebox(
-    #             message="Information entered is invalid.\nPlease check all fields.",
-    #             title="Check Data",
-    #         )
-
-
-# class GetExpInfo(QDialog):
-#     '''GUI dialogue to get experimental info from user'''
-    
-#     def __init__(self,protocol_config_dir:Path):
-#         '''
-#         '''
-        
-#         super().__init__()
-
-#         self._protocol_config_dir = protocol_config_dir
-
-#         self.sample_name_edit = QLineEdit()
-#         self.operator_name_edit = QLineEdit()
-#         self.protocol_combo = QComboBox()
-#         self.directory_label = QLabel("")
-#         self.save_dir_trios = ""
-#         self.filepath_datalogger = ""
-#         self.filepath_logfile = ""
-#         self.filepath_timelog = ""
-#         self.experiment : bool
-#         self.initUI()
-
-#     def initUI(self):
-#         '''
-#         '''
-        
-#         QBtn = QDialogButtonBox.SaveAll | QDialogButtonBox.Cancel
-#         self.buttonBox = QDialogButtonBox(QBtn)
-#         self.buttonBox.accepted.connect(self.accept)
-#         self.buttonBox.rejected.connect(self.reject)
-#         layout = QVBoxLayout()
-
-#         layout.addWidget(QLabel("Sample Name:"))
-#         layout.addWidget(self.sample_name_edit)
-
-#         layout.addWidget(QLabel("Operator Name:"))
-#         layout.addWidget(self.operator_name_edit)
-
-#         file_names = get_protocol_files(self._protocol_config_dir)
-#         layout.addWidget(QLabel("Select Protocol:"))
-#         self.protocol_combo.addItems(file_names)
-#         layout.addWidget(self.protocol_combo)
-
-#         directory_layout = QHBoxLayout()
-#         directory_layout.addWidget(QLabel("Directory Path:"))
-#         directory_button = QPushButton("Select Directory")
-#         directory_button.clicked.connect(self.openDirectoryDialog)
-#         directory_layout.addWidget(directory_button)
-#         layout.addLayout(directory_layout)
-
-#         layout.addWidget(self.directory_label)
-
-#         button_box = QHBoxLayout()
-#         start_button = QPushButton("START")
-#         stop_button = QPushButton("STOP")
-#         settings_dir_button = QPushButton("Open Settings")
-#         settings_dir_button.clicked.connect(lambda _: open_filexplorer(self._protocol_config_dir))
-#         self.experiment = start_button.clicked.connect(self.accept)
-#         #stop_button.clicked.connect(self.reject)
-#         stop_button.clicked.connect(lambda _: sys.exit(1))
-#         button_box.addWidget(settings_dir_button)
-#         button_box.addWidget(start_button)
-#         button_box.addWidget(stop_button)
-#         layout.addLayout(button_box)
-#         self.setLayout(layout)
-
-#     def set_values(self,experiment_info:ExperimentInfo):
-
-#         if not all(experiment_info.filepath_datalogger.parents[1] == d
-#             for d in [experiment_info.save_dir_trios.parent,
-#                 experiment_info.filepath_logfile.parents[1],
-#                 experiment_info.filepath_timelog.parents[1]]):
-#             raise FileExistsError(f'different paths in experiment_info: {repr(experiment_info)}')
-
-#         self.directory_label.setText(str(experiment_info.filepath_datalogger.parents[1]))
-
-#         self.sample_name_edit.setText(experiment_info.sample_name)
-
-#         self.operator_name_edit.setText(experiment_info.operator_name)
-
-#     def openDirectoryDialog(self):
-#         '''
-#         '''
-        
-#         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
-#         if directory:
-#             self.directory_label.setText(directory)
-
-#     def check(self):
-#         '''
-#         '''
-        
-#         save_directory = self.directory_label.text()
-#         if not save_directory:
-#             raise ValueError('error getting dir name')
-        
-#         save_directory = Path(save_directory)
-#         if not save_directory.is_dir():
-#             raise FileNotFoundError(f'could not find {save_directory}')
-
-#         save_dir_trios = save_directory / "trios"
-#         if not save_dir_trios.is_dir():
-#             save_dir_trios.mkdir()
-        
-#         save_dir_datalogger = save_directory / "datalogger"
-#         if not save_dir_datalogger.is_dir():
-#             save_dir_datalogger.mkdir()
-        
-#         save_dir_logfile = save_directory / "log"
-#         if not save_dir_logfile.is_dir():
-#             save_dir_logfile.mkdir()
-
-#         #save_path_trios = save_dir_trios / sample_name
-#         self.save_dir_trios = save_dir_trios
-#         self.filepath_datalogger = save_dir_datalogger / self.sample_name_edit.text()
-#         self.filepath_timelog = save_dir_logfile / (self.sample_name_edit.text() + '_timelog.csv')
-#         self.filepath_logfile = save_dir_logfile / f'{self.sample_name_edit.text()}.log'
-
-#         if self.sample_name_edit.text() is not None and \
-#             self.operator_name_edit.text() is not None and \
-#                 self.protocol_combo.currentText() != "Other":
-#             datamessage = f"Sample: {self.sample_name_edit.text()}\n"\
-#                     f"operator: {self.operator_name_edit.text()}\n"\
-#                     f"protocol: {self.protocol_combo.currentText()}"
-#             show_info_messagebox(message=datamessage,title="Given Info")
-#             logger.debug('read experiment information successfully')
-#         else:
-#             datawarning = "Information entered is invalid.\nPlease check"
-#             show_warning_messagebox(message=datawarning,title="Check Data")
-
-# def show_info_messagebox(message : str, title:str = "Information") -> int: 
-#     '''
-    
-#     '''
-    
-#     msg = QMessageBox()
-#     msg.setIcon(QMessageBox.Information)
-#     msg.setText(message)
-#     msg.setWindowTitle(title) 
-#     msg.setStandardButtons(QMessageBox.Ok)
-#     retval = msg.exec_() 
-#     return retval
-  
-# def show_warning_messagebox(message:str, title:str = "Warning") -> int: 
-#     '''
-#     '''
-    
-#     msg = QMessageBox() 
-#     msg.setIcon(QMessageBox.Warning) 
-#     msg.setText(message) 
-#     msg.setWindowTitle(title) 
-#     msg.setStandardButtons(QMessageBox.Ok) 
-#     retval = msg.exec_()
-#     return retval
-
-# def show_question_messagebox(question:str, title:str = "I have a question") -> int:
-#     '''
-#     '''
-
-#     msg = QMessageBox()
-#     msg.setIcon(QMessageBox.Question)
-#     msg.setText(question)
-#     msg.setWindowTitle(title)
-#     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-#     retval = msg.exec_()
-#     return retval
-
-# def show_error_messagebox(question:str, title:str = "Shit hit the fan") -> int:
-#     '''
-#     '''
-#     msg = QMessageBox()
-#     msg.setIcon(QMessageBox.Critical)
-#     msg.setText(question)
-#     msg.setWindowTitle(title)
-#     msg.setStandardButtons(QMessageBox.Ok)
-#     retval = msg.exec_()
-#     return retval
 

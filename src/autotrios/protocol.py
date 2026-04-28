@@ -72,10 +72,10 @@ class Protocol:
 
     def __post_init__(self) -> None:
         '''Data sanity checks'''
-    #   if isinstance(self.procedure_file_path,str):
-    #      self.procedure_file_path = Path(self.procedure_file_path)
-        for field in self.settings_update.fields:
-            if field not in ['protocol_settings','device_settings']:
+        if not self.procedure_file_path.is_file():
+            raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
+        for field in self.settings_update.get_update_fields():
+            if field.name not in ['protocol_settings','device_settings']:
               raise ValueError(f'settings_update for protocol can only contain'
                 f' protocol_settings and device_settings, but got {field}')
 

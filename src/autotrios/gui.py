@@ -16,6 +16,7 @@ import warnings
 warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
 from datetime import date,datetime
+import itertools
 
 #3rd party modules
 import click
@@ -24,14 +25,14 @@ import click_logging
 from PyQt5.QtWidgets import QApplication
 
 #local imports
-from .pyqtgui import get_experiment_info, ExperimentInfo
 from .protocol import MetaProtocol
-from .application import TRIOS
 from .settings import get_settings,Settings
 from ._version import __version__
 from .block_user_input import block_user_input
-from .pyqtgui import show_info_messagebox,AutoTriosGui
+from .pyqtgui import show_info_messagebox,AutoTriosGui,show_error_messagebox
 from .system_paths import USER_LOGFILE
+from .trios import TRIOS
+from .experiment_info import ExperimentInfo
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -55,15 +56,13 @@ def setup_console_logging()->None:
 def get_metaprotocols(protocol_dir:Path)->Dict[str,MetaProtocol]:
     '''
     '''
-    protocols = {
-        filepath : MetaProtocol.from_file(fp) for fp in 
-            itettols.chain(protocol_dir.glob('*.yml'),protocol_dir.glob('*.yaml'))
-    }
+    protocols = [
+        (fp, MetaProtocol.from_file(fp)) for fp in
+            itertools.chain(protocol_dir.glob('*.yml'),protocol_dir.glob('*.yaml'))
+    ]
     for filepath in protocol_dir.glob('*.yml'):
         (MetaProtocol.from_file(filepath))
     return protocols
-
-
 
 class ExperimentLogger(object):
 
@@ -82,7 +81,7 @@ class ExperimentLogger(object):
 class ExperimentThread(threading.Thread):
 
     def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo):
-        self._triosapp = trios_app
+        self._trios_app = trios_app
         self._experiment_info = experiment_info
 
     def run(self):
@@ -100,47 +99,58 @@ def run_gui(settings:Settings):
         start_if_not_open=settings.trios_start_if_not_open,
         settings=settings)
 
+    experiment_thread = None
     def run_experiment(experiment_info:ExperimentInfo):
+        nonlocal experiment_thread
+        if experiment_thread is not None:
+            show_error_messagebox("An experiment is already running. Stop the "
+                               "current experiment before starting a new one.")
+            return
         logger.info('running experiment %s',repr(experiment_info))
         experiment_thread = ExperimentThread(trios_app,experiment_info)
         experiment_thread.start()
 
     def stop_experiment():
+        nonlocal experiment_thread
         logger.info('stopping current experiment')
         trios_app.stop_experiment()
+        experiment_thread.join()
+        experiment_thread = None
+
+    metaprotocols = get_metaprotocols(settings.protocol_dir)
 
     app = QApplication(sys.argv)
-    gui = AutoTriosGui(
-        protocols,
+    autotrios_gui = AutoTriosGui(
+        metaprotocols,
         callback_start_experiment=run_experiment,
         callback_stop_experiment=stop_experiment
     )
-    gui.show()
+    autotrios_gui.show()
     return(app.exec())
 
 @click.command()
 @click_logging.simple_verbosity_option(logger)
 @click.version_option(__version__)
-@click.option('--start/--no-start',default=False)
 @click.option('--settings_file_path',default=None)
-def gui(start:bool,debug:bool,settings_file_path:str):
+def gui(settings_file_path:str):
     '''comand line interface entry point
     Args:
     start: 
     '''
     logging.getLogger().addHandler(default_file_logger)
 
-    logger.info(f"running autotrios {__version__}")
+    logger.info("running autotrios %s", __version__)
 
     settings = get_settings()
 
     if settings_file_path is not None:
         settings.update_from_file(settings_file_path)
-    
+
     try:
-        run_gui()
+        run_gui(settings)
     except Exception as exc:
-        logger.exception('autotrios got an exception: error has been logged to %s')
+        logger.exception('autotrios got an exception: error has been logged'
+                         ' to %s', str(USER_LOGFILE))
         raise exc
 
     

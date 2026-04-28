@@ -3,9 +3,9 @@ type. This is used for settings dataclasses to allow updating settings with user
 #STL imports
 from __future__ import annotations
 from abc import ABC
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass,Field,fields
 import random
-from typing import Annotated, Any, Callable, Type
+from typing import Annotated, Any, Callable, Type, List
 
 #3rd party imports
 from pydantic.dataclasses import dataclass
@@ -44,6 +44,12 @@ class Updateable(DataclassBaseHelper):
             else:
                setattr(self,field_name,other_value)
         return self
+    
+    def get_update_fields(self)->List[Field]:
+        field_list = [
+            field for field in fields(self) if getattr(self,field.name) is not None
+        ]
+        return field_list
 
 class EvalException(Exception):
     '''exception class for evaluation errors'''
