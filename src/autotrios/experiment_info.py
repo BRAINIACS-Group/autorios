@@ -24,12 +24,12 @@ class ExperimentInfo():
 
     @computed_field
     @property
-    def filepath_timelog(self):
+    def filepath_timelog(self) -> Path:
         return self._save_dir_logfile / (self.sample_name + '_timelog.csv')
 
     @computed_field
     @property
-    def filepath_logfile(self):
+    def filepath_logfile(self) -> Path:
         return self._save_dir_logfile / f'{self.sample_name}.log'
 
     def __post_init__(self):

@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QApplication
 #local imports
 from .application import MyApplication
 from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
-from .pyqtgui import (show_warning_messagebox,show_question_messagebox,
+from .pyqtgui import (show_warning_messagebox,show_yesno_messagebox,
     show_error_messagebox)
 from .experiment_info import ExperimentInfo
 from .device_settings import TriosDeviceSettings

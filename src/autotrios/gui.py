@@ -7,8 +7,11 @@
 #STL modules
 from __future__ import annotations
 from typing import List,NamedTuple,Dict,Any
-import sys
 import logging
+
+logging.basicConfig(level=logging.INFO)
+
+import sys
 from pathlib import Path
 import threading
 import sys
@@ -93,11 +96,18 @@ def run_gui(settings:Settings):
     '''run autotrios'''
     logging.getLogger().addHandler(default_file_logger)
 
+    app = QApplication(sys.argv)
+
     logger.info('connecting to TRIOS')
-    trios_app = TRIOS.connect(settings.trios_windowname,
-        settings.trios_paths,
-        start_if_not_open=settings.trios_start_if_not_open,
-        settings=settings)
+    try:
+        trios_app = TRIOS.connect(settings.trios_windowname,
+            settings.trios_paths,
+            start_if_not_open=settings.trios_start_if_not_open,
+            settings=settings)
+    except Exception as e:
+        logger.exception("could not connect to TRIOS")
+        show_error_messagebox("could not connect to TRIOS","autotrios error")
+        raise e
 
     experiment_thread = None
     def run_experiment(experiment_info:ExperimentInfo):
@@ -119,7 +129,7 @@ def run_gui(settings:Settings):
 
     metaprotocols = get_metaprotocols(settings.protocol_dir)
 
-    app = QApplication(sys.argv)
+  
     autotrios_gui = AutoTriosGui(
         metaprotocols,
         callback_start_experiment=run_experiment,

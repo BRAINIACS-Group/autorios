@@ -10,8 +10,8 @@ from pywinauto import application,keyboard,Desktop, base_wrapper
 from pywinauto.application import Application,ProcessNotFoundError
 
 #local imports
-from autotrios.application import MyApplication
-from pyqtgui import show_yesno_messagebox
+from .application import MyApplication
+from .pyqtgui import show_yesno_messagebox
 
 logger = logging.getLogger(__name__)
 

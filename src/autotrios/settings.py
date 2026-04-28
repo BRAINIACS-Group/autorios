@@ -26,7 +26,8 @@ def get_settings(
 )->Settings:
     '''get settings by loading system settings and then updating with user 
     settings if it exists'''
-    settings = Settings.from_file(system_settings_file)
+    settings = get_settings_default()
+    settings.update_from_file(system_settings_file)
     settings.update_from_file(user_settings_file)
     return settings
 
@@ -100,8 +101,6 @@ class Settings(Updateable):
         data = yaml.load(fh,yaml.SafeLoader)
         assert isinstance(data,dict),"expected dict object from settings yaml"
     
-    logger.info("setting protocol_config_path to %s", data['protocol_config_path'])
-
     return Settings(**data)
 
   def empty(self)->bool:

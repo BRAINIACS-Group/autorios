@@ -96,12 +96,11 @@ class Evaluatable(DataclassBaseHelper):
 
     def __post_init__(self):
         '''sanitize and internal variables'''
-        self.evaluated = False
+        
         super().__post_init__()
 
     def __getattribute__(self, name):
-        if (name in asdict(self).keys()  and
-           isinstance(super().__getattribute__(name),EvaluatableField) and
+        if (isinstance(super().__getattribute__(name),EvaluatableField) and
            not self.evaluated):
             raise ValueError(f'cannot access field {name} before evaluation')
 

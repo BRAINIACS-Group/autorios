@@ -33,6 +33,10 @@ assert __DEFAULT_SYSTEM_SETINGS_DIR.is_dir(), f"could not find {__DEFAULT_SYSTEM
 __DEFAULT_USER_SETINGS_DIR=__cur_dir / "data/settings/user"
 assert __DEFAULT_USER_SETINGS_DIR.is_dir(), f"could not find {__DEFAULT_USER_SETINGS_DIR}"
 
+if not USER_LOGFILE.parent.is_dir():
+    logger.info("could not find user log dir, now creating %s",USER_LOGFILE.parent)
+    USER_LOGFILE.parent.mkdir()
+
 if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
     logger.info("could not find system settings, now creating %s", SYSTEM_SETTINGS_DIR_PATH)
     shutil.copytree(__DEFAULT_SYSTEM_SETINGS_DIR,SYSTEM_SETTINGS_DIR_PATH)
