@@ -14,8 +14,8 @@ warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
 
 #3rd party modules
+from pywinauto import application
 from pywinauto.application import Application,ProcessNotFoundError
-
 
 #local imports
 from .utility import write_to_input,write_float_to_input,is_button

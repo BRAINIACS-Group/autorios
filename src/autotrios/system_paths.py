@@ -10,12 +10,19 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_SETTINGS_DIR_PATH = Path(platformdirs.site_config_dir()) / "autotrios"
 USER_SETTINGS_DIR_PATH = Path(platformdirs.user_config_dir()) / "autotrios"
-USER_LOGFILE = Path(platformdirs.user_log_dir()/"autotrios.log")
+USER_LOGFILE = Path(platformdirs.user_log_dir()) / "autotrios.log"
 
 SYSTEM_SETTINGS_FILE_PATH = SYSTEM_SETTINGS_DIR_PATH / "settings.yaml"
 USER_SETTINGS_FILE_PATH   = USER_SETTINGS_DIR_PATH / "settings.yaml"
 
 PROTOCOL_CONFIG_DIR_PATH = USER_SETTINGS_DIR_PATH / "protocols"
+
+logger.info("SYSTEM_SETTINGS_DIR_PATH=%s",str(SYSTEM_SETTINGS_DIR_PATH))
+logger.info("USER_SETTINGS_DIR_PATH=%s",str(USER_SETTINGS_DIR_PATH))
+logger.info("USER_LOGFILE=%s",str(USER_LOGFILE))
+logger.info("SYSTEM_SETTINGS_FILE_PATH=%s",str(SYSTEM_SETTINGS_FILE_PATH))
+logger.info("USER_SETTINGS_FILE_PATH=%s",str(USER_SETTINGS_FILE_PATH))
+logger.info("PROTOCOL_CONFIG_DIR_PATH=%s",str(PROTOCOL_CONFIG_DIR_PATH))
 
 # ensure that settings directories and files exist, if not create them by 
 # copying from the default settings shipped with the codebase
