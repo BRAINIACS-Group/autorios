@@ -8,7 +8,7 @@ import logging
 from pynput import keyboard, mouse
 
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt,pyqtSignal
+from PyQt5.QtCore import Qt,pyqtSignal,QThread
 from PyQt5.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
 
 from .utility import StoppableThread
@@ -131,7 +131,7 @@ class CountdownWindow(QWidget):
         #self.subtitle.setText("Time's up. Well done.")
         #self.heading.setText("SESSION COMPLETE")
 
-class CountdownTimer(StoppableThread):
+class CountdownTimer(QThread):
     '''thread to run the countdown window'''
 
     def __init__(self, seconds: float, show_window: bool = True):
@@ -144,16 +144,15 @@ class CountdownTimer(StoppableThread):
             self.countdown_window = CountdownWindow()
             self.countdown_window.connect_update_function(self._update_signal)
             self.countdown_window.show()
-            self.countdown_window.update_remaining(5)
             QApplication.processEvents()
 
     def run(self):
         logger.debug("CountdownTimer run called")
         time_start = time.time()
         remaining = self.seconds
-        while remaining > 0:    
+        while remaining > 0:
             logger.debug("CountdownTimer tick remaining %d",remaining)
-            if self._stop_event.is_set():
+            if self.isInterruptionRequested():
                 break
             if self.countdown_window is not None:
                 self._update_signal.emit(remaining)
@@ -202,11 +201,12 @@ class InputBlocker(object):
         self.keyboard_listener.stop()
         self.mouse_listener.stop()
         if self.timer:
-            self.timer.stop()
+            self.timer.requestInterruption()
             self.timer = None
 
     def __enter__(self):
-        logger.info(f"blocking all user input for max {self.timeout} seconds. Press ctrl+c to exit")
+        logger.info("blocking all user input for max %s seconds. Press ctrl+c"
+                    " to exit", self.timeout)
         self.timer = CountdownTimer(self.timeout, self.show_window)
         self.timer.start()
         self.keyboard_listener.start()
