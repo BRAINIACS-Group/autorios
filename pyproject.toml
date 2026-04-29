@@ -46,7 +46,7 @@ dependencies = [
   "pydantic==2.13.2",
   "PyAutoGUI==0.9.54",
   "pywinauto==0.6.6",
-  "PyQt5",
+  "PySide6",
   "pyyaml",
   "pywin32",
   "platformdirs"

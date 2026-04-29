@@ -7,9 +7,9 @@ import logging
 #3rd party imports
 from pynput import keyboard, mouse
 
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt,pyqtSignal,QThread
-from PyQt5.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt,Signal,QThread,QDeadlineTimer,Slot,QObject
+from PySide6.QtGui import QFont, QFontDatabase, QPalette, QColor, QPainter, QLinearGradient
 
 from .utility import StoppableThread
 
@@ -38,7 +38,7 @@ class CountdownWindow(QWidget):
 
         # ── Label: small heading ──────────────────────────────────────────────
         self.heading = QLabel("TIME REMAINING")
-        self.heading.setAlignment(Qt.AlignCenter)
+        self.heading.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.heading.setStyleSheet("""
             color: #ff4f2b;
             font-family: 'Courier New', monospace;
@@ -50,7 +50,7 @@ class CountdownWindow(QWidget):
 
         # ── Label: countdown digits ───────────────────────────────────────────
         self.countdown_label = QLabel(self.format_time(self.remaining))
-        self.countdown_label.setAlignment(Qt.AlignCenter)
+        self.countdown_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.countdown_label.setStyleSheet("""
             color: #f0ece4;
             font-family: 'Courier New', monospace;
@@ -72,7 +72,7 @@ class CountdownWindow(QWidget):
         self.subtitle = QLabel(
             "Mouse and keyboard input are ignored. Only Ctrl+C cancels the "
             "blocking early. Otherwise block will end after timeout")
-        self.subtitle.setAlignment(Qt.AlignCenter)
+        self.subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.subtitle.setWordWrap(True)
         self.subtitle.setStyleSheet("""
             color: #6b6b72;
@@ -87,7 +87,7 @@ class CountdownWindow(QWidget):
 
         # ── Label: status bar ─────────────────────────────────────────────────
         self.status = QLabel("● RUNNING")
-        self.status.setAlignment(Qt.AlignCenter)
+        self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status.setStyleSheet("""
             color: #ff4f2b;
             font-family: 'Courier New', monospace;
@@ -100,10 +100,11 @@ class CountdownWindow(QWidget):
         m, s = divmod(secs, 60)
         return f"{m:02d}:{s:02d}"
 
-    def connect_update_function(self,update_signal:pyqtSignal):
-        update_signal.connect(self.update_remaining)
+    def connect_update_function(self,update_signal:Signal):
+        update_signal.connect(lambda s: self.update_remaining(s))
 
-    def update_remaining(self, seconds):
+    @Slot(int)
+    def update_remaining(self, seconds:int):
         self.remaining = seconds
         countdown_str = self.format_time(self.remaining)
         logger.debug(f"countdown text {countdown_str}")
@@ -118,6 +119,11 @@ class CountdownWindow(QWidget):
                 letter-spacing: -2px;
             """)
         
+    @Slot(bool)
+    def close_slot(self,close:bool)->bool:
+        if close:
+            return self.close()
+        return False
 
     def finish(self):
         self.countdown_label.setText("00:00")
@@ -131,31 +137,38 @@ class CountdownWindow(QWidget):
         #self.subtitle.setText("Time's up. Well done.")
         #self.heading.setText("SESSION COMPLETE")
 
+
+class TimeSignal(QObject):
+    _update_signal = Signal(int)
+    _close_signal = Signal(bool)
+
 class CountdownTimer(QThread):
     '''thread to run the countdown window'''
 
-    def __init__(self, seconds: float, show_window: bool = True):
+    def __init__(self, seconds: int,window:CountdownWindow=None):
         super().__init__()
-        self.seconds = seconds
-        self.countdown_window = None
-        self._update_signal =None
-        if show_window:
-            self._update_signal = pyqtSignal(int,name="update_remaining")
-            self.countdown_window = CountdownWindow()
-            self.countdown_window.connect_update_function(self._update_signal)
-            self.countdown_window.show()
-            QApplication.processEvents()
+        self.seconds = int(seconds)
+        self.countdown_window = window
+        if self.countdown_window is not None:
+            #self.countdown_window.connect_update_function(self._update_signal)
+            self._time_signal = TimeSignal()        
+            self._time_signal._update_signal.connect(self.countdown_window.update_remaining)
+            self._time_signal._close_signal.connect(self.countdown_window.close_slot)
+            self._time_signal._update_signal.emit(self.seconds)
 
     def run(self):
         logger.debug("CountdownTimer run called")
         time_start = time.time()
-        remaining = self.seconds
+        remaining = int(self.seconds)
         while remaining > 0:
             logger.debug("CountdownTimer tick remaining %d",remaining)
             if self.isInterruptionRequested():
+                if self.countdown_window is not None:
+                    self._time_signal._close_signal.emit(True)
                 break
             if self.countdown_window is not None:
-                self._update_signal.emit(remaining)
+                logger.debug("emitting signal")
+                self._time_signal._update_signal.emit(remaining)
             time.sleep(1)
             remaining = int(self.seconds - (time.time() - time_start))
 
@@ -167,7 +180,10 @@ class InputBlocker(object):
         '''initialize the input blocker timeout in seconds'''
         self.timeout = timeout
         self.timer = None
-        self.show_window = show_window
+        self.countdown_window=None
+        self._stopped = False
+        if show_window:
+            self.countdown_window = CountdownWindow()
 
         hotkey = keyboard.HotKey(
             keyboard.HotKey.parse('<ctrl>+c'),
@@ -182,32 +198,42 @@ class InputBlocker(object):
             suppress=True
         )
 
+    def show(self):
+        if self.countdown_window:
+            self.countdown_window.show()
+
     def _for_canonical(self, func):
         '''wrap a function to be called with the canonical form of the event'''
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-        return wrapper        
+        def wrapper(key):
+            return func(self.keyboard_listener.canonical(key))
+        return wrapper
 
     def _on_hotkey(self):
-        self.keyboard_listener.stop()
-        self.mouse_listener.stop()
+        logger.info("cancelled block")
+        self._stop_listeners()
+        self._stopped=True
         return False
 
     def __exit__(self, exc_type, exc_val, exc_tb):#
         logger.info("unblocking user input")
+        if self._stopped:
+            return
         self._stop_listeners()
+        
 
     def _stop_listeners(self):
         self.keyboard_listener.stop()
         self.mouse_listener.stop()
         if self.timer:
             self.timer.requestInterruption()
+            if not self.timer.wait(QDeadlineTimer(5000)):
+                raise TimeoutError("timeout of inputblocker thread")
             self.timer = None
 
     def __enter__(self):
         logger.info("blocking all user input for max %s seconds. Press ctrl+c"
                     " to exit", self.timeout)
-        self.timer = CountdownTimer(self.timeout, self.show_window)
+        self.timer = CountdownTimer(self.timeout, self.countdown_window)
         self.timer.start()
         self.keyboard_listener.start()
         self.mouse_listener.start()
