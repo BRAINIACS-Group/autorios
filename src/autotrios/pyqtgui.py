@@ -11,9 +11,9 @@ from typing import Callable,Tuple
 
 #3rd party imports
 import yaml
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QFont, QColor, QPalette, QIcon
-from PyQt5.QtWidgets import (
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QFont, QColor, QPalette, QIcon
+from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QLineEdit, QComboBox, QPushButton, QFileDialog,
     QFrame, QSizePolicy, QSpacerItem, QWidget,QMessageBox
@@ -24,6 +24,7 @@ from .experiment_info import ExperimentInfo
 from ._version import __version__
 from .utility import open_filexplorer
 from .system_paths import USER_SETTINGS_FILE_PATH,SYSTEM_SETTINGS_FILE_PATH
+from .dialog_default import DialogDefault
 
 logger = logging.getLogger('autotrios')
 
@@ -32,18 +33,30 @@ logger = logging.getLogger('autotrios')
 # ---------------------------------------------------------------------------
 
 def show_yesno_messagebox(question, title="Question")->bool:
-    ret = QMessageBox.question(title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
+    ret = QMessageBox.question(None,title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
     yes_clicked = ret == QMessageBox.StandardButton.Yes
     return yes_clicked
 
 def show_info_messagebox(message, title="Information")->None:
-    QMessageBox.information(None, title, message)
+    #QMessageBox.information(None, title, message) segfaults with pySide6
+    dlg = QMessageBox(None)
+    dlg.setWindowTitle(title)
+    dlg.setText(message)
+    dlg.exec()
 
 def show_warning_messagebox(message, title="Warning")->None:
-    QMessageBox.warning(None, title, message)
+    #QMessageBox.warning(None, title, message)
+    dlg = QMessageBox(None)
+    dlg.setWindowTitle("Warning!")
+    dlg.setText(message)
+    dlg.exec()
 
 def show_error_messagebox(message, title="Error")->None:
-    QMessageBox.critical(None, title, message)
+    #QMessageBox.critical(None, title, message)
+    dlg = QMessageBox(None)
+    dlg.setWindowTitle("Error!")
+    dlg.setText(message)
+    dlg.exec()
 
 # ---------------------------------------------------------------------------
 # Stylesheet
@@ -287,7 +300,8 @@ class AutoTriosGui(QWidget):
                  meta_protocols:List[Tuple[Path, MetaProtocol]],
                  callback_start_experiment:Callable[[ExperimentInfo],None],
                  callback_stop_experiment:Callable[[],None],
-                 exception_as_messsagebox:bool=True):
+                 exception_as_messsagebox:bool=True,
+                 dialog_default:DialogDefault=None):
         super().__init__()
         self._meta_protocols = meta_protocols
 
@@ -295,6 +309,7 @@ class AutoTriosGui(QWidget):
         self._callback_stop_experiment  = callback_stop_experiment
 
         self._exception_as_messagebox = exception_as_messsagebox
+        self._experiment_thread = None
 
         # Widgets declared here so other methods can reference them
         self.sample_name_edit = QLineEdit()
@@ -302,7 +317,28 @@ class AutoTriosGui(QWidget):
         self.protocol_combo = QComboBox()
         self.directory_label = QLabel("No directory selected")
 
+        self._start_btn = None
+        self._stop_btn = None
+        self._status_dot = None
+
         self._initUI()
+
+        if dialog_default is not None:
+            self.set_defaults(dialog_default)
+
+    def set_default_protocol(self,default_protocol:str)->None:
+        for e in self._meta_protocols:
+            protocol_name = e[0].stem
+            if protocol_name == default_protocol:
+                self.protocol_combo.setCurrentText(default_protocol)
+                return
+        raise KeyError(f'default metaprotocol name {default_protocol} not found')
+
+    def set_defaults(self,dialog_default:DialogDefault):
+        self.sample_name_edit.setText(dialog_default.sample_name)
+        self.operator_name_edit.setText(dialog_default.operator_name)
+        self.set_default_protocol(dialog_default.meta_protocol_name)
+        self.directory_label.setText(str(dialog_default.save_dir))
 
     # ------------------------------------------------------------------
     # UI construction
@@ -419,11 +455,14 @@ class AutoTriosGui(QWidget):
         start_btn.setObjectName("start_btn")
         start_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         start_btn.clicked.connect(lambda _:self._start_experiment())
+        self._start_btn = start_btn
 
         stop_btn = QPushButton("■  STOP")
         stop_btn.setObjectName("stop_btn")
         stop_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         stop_btn.clicked.connect(lambda _: self._callback_stop_experiment())
+        self._stop_btn = stop_btn
+
         layout.addWidget(start_btn)
         layout.addWidget(stop_btn)
         return layout
@@ -448,6 +487,7 @@ class AutoTriosGui(QWidget):
         status_dot = QLabel("● READY")
         status_dot.setObjectName("status_dot")
         status_dot.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._status_dot = status_dot
 
         layout.addWidget(settings_btn)
         layout.addWidget(settings_system_btn)
@@ -464,6 +504,16 @@ class AutoTriosGui(QWidget):
             )
         return expinfo
 
+    def _experiment_buttons_finished(self):
+        self._start_btn.setEnabled(True)
+        self._stop_btn.setEnabled(False)
+        self._status_dot.setText("● READY")
+
+    def _experiment_buttons_started(self):
+        self._start_btn.setEnabled(False)
+        self._stop_btn.setEnabled(True)
+        self._status_dot.setText("● RUNNING")
+
     def _start_experiment(self):
         try:
            experiment_info = self.get_experiment_info()
@@ -473,7 +523,9 @@ class AutoTriosGui(QWidget):
                 return
             raise e
         try:
-            self._callback_start_experiment(experiment_info)
+            self._experiment_thread = self._callback_start_experiment(experiment_info)
+            self._experiment_thread.finished.connect(self._experiment_buttons_finished)
+            self._experiment_buttons_started()
         except Exception as e:
             if self._exception_as_messagebox:
                 show_error_messagebox(str(e), "Error Starting Experiment")

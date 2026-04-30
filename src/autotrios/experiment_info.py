@@ -1,10 +1,10 @@
 
 #STL import
-#from dataclasses import dataclass
+from dataclasses import fields
 from pydantic.dataclasses import dataclass
 from pydantic import computed_field
 from pathlib import Path
-from typing import List
+from typing import List,Any
 
 #local import
 from .protocol import MetaProtocol
@@ -42,5 +42,18 @@ class ExperimentInfo():
         self._save_dir_logfile = self.save_dir / "log"
         if not self._save_dir_logfile.is_dir():
             self._save_dir_logfile.mkdir()
+
+    @classmethod
+    def parse_field(cls,key:str,value:Any,ignore_unknown:bool=True)->Any:
+        for f in fields(cls):
+            if f.name == key:
+                try:
+                    return f.type(value)
+                except ValueError as e:
+                    raise ValueError(f"cannot parse value {value} for field {key} in ExperimentInfo") from e
+        if ignore_unknown:
+            return value
+        raise KeyError(f"field {key} not found in ExperimentInfo")
+
 
        

@@ -18,7 +18,11 @@
             "request": "launch",
             "module": "autotrios",
             "args": [
-                "--debug"
+                "--verbosity","DEBUG",
+                "-d", "sample_name=TestSample",
+                "-d","operator_name=Peter Pan",
+                "-d","meta_protocol_name=Reduced_HBE_2a2bfreq_const_strainrate",
+                "-d","save_dir=\\\\home.rrze.uni-erlangen.de\\my04vule\\Documents\\autotrios_test",
             ],
             "console": "integratedTerminal",
             "justMyCode": true

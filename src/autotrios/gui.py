@@ -20,22 +20,29 @@ warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
 from datetime import date,datetime
 import itertools
+from contextlib import nullcontext
+from typing import Iterable
+from dataclasses import fields
+import time
 
 #3rd party modules
 import click
 import platformdirs
 import click_logging
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication,QMessageBox,QMainWindow
+from PySide6.QtCore import QThread
+from pydantic.dataclasses import dataclass
 
 #local imports
 from .protocol import MetaProtocol
 from .settings import get_settings,Settings
 from ._version import __version__
-from .block_user_input import block_user_input
-from .pyqtgui import show_info_messagebox,AutoTriosGui,show_error_messagebox
+from .block_user_input import InputBlocker
+from .pyqtgui import show_info_messagebox,AutoTriosGui,show_error_messagebox,show_yesno_messagebox
 from .system_paths import USER_LOGFILE
 from .trios import TRIOS
 from .experiment_info import ExperimentInfo
+from .dialog_default import DialogDefault,parse_dialog_default
 
 #@jan: try to follow the google python style guide:
 #https://google.github.io/styleguide/pyguide.html
@@ -79,24 +86,32 @@ class ExperimentLogger(object):
     def __exit__(self, exc_type, exc, tb):
         logging.getLogger().removeHandler(self._logfile_handler)
 
-class ExperimentThread(threading.Thread):
+class ExperimentThread(QThread):
 
-    def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo):
+    def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo,input_blocker:InputBlocker=None):
         super().__init__()
         self._trios_app = trios_app
         self._experiment_info = experiment_info
+        self._input_blocker = input_blocker
+        self.filepath_logfile = None
 
     def run(self):
-        with block_user_input(timeout=30*60), ExperimentLogger(self._experiment_info):
-            logger.info("starting the exepriment")
-            self._trios_app.run_experiment(self._experiment_info,blocking=True)
+        input_blocker = self._input_blocker if self._input_blocker is not None else nullcontext()
+        explog = ExperimentLogger(self._experiment_info)
+        with input_blocker,explog:
+                self.logfilepath = explog.filepath_logfile
+                logger.info("starting the experiment")
+                logger.info("logging to %s",str(self.logfilepath))
+                time.sleep(5)
+                #self._trios_app.run_experiment(self._experiment_info)
+                logger.info("fínished experiment")
 
-def run_gui(settings:Settings):
+def run_gui(settings:Settings,dialog_default:DialogDefault):
     '''run autotrios'''
     logging.getLogger().addHandler(default_file_logger)
 
     app = QApplication(sys.argv)
-
+  
     logger.info('connecting to TRIOS')
     try:
         trios_app = TRIOS.connect(settings.trios_windowname,
@@ -109,24 +124,33 @@ def run_gui(settings:Settings):
         raise e
 
     experiment_thread = None
-    def run_experiment(experiment_info:ExperimentInfo):
+
+    def delete_experiment():
+        nonlocal experiment_thread
+        experiment_thread = None
+
+    def run_experiment(experiment_info:ExperimentInfo)->QThread:
         nonlocal experiment_thread
         if experiment_thread is not None:
             show_error_messagebox("An experiment is already running. Stop the "
                                "current experiment before starting a new one.")
-            return
+            raise RuntimeError("run_experiment called while experiment still running")
         logger.info('running experiment %s',repr(experiment_info))
         experiment_thread = ExperimentThread(trios_app,experiment_info)
+        experiment_thread.finished.connect(delete_experiment)
         experiment_thread.start()
+        return experiment_thread
 
     def stop_experiment():
         nonlocal experiment_thread
         logger.info('stopping current experiment')
         trios_app.stop_experiment()
-        experiment_thread.join()
+        experiment_thread.wait()
         experiment_thread = None
 
     metaprotocols = get_metaprotocols(settings.protocol_config_path)
+
+    dialog_default.validate_metaprotocol_name(metaprotocols)
 
     if not metaprotocols:
         logger.error("no metaprotocol .yml files under: %s",settings.protocol_config_path)
@@ -136,7 +160,8 @@ def run_gui(settings:Settings):
     autotrios_gui = AutoTriosGui(
         metaprotocols,
         callback_start_experiment=run_experiment,
-        callback_stop_experiment=stop_experiment
+        callback_stop_experiment=stop_experiment,
+        dialog_default=dialog_default
     )
     autotrios_gui.show()
     return(app.exec())
@@ -145,7 +170,8 @@ def run_gui(settings:Settings):
 @click_logging.simple_verbosity_option(logging.getLogger())
 @click.version_option(__version__)
 @click.option('--settings_file_path',default=None)
-def gui(settings_file_path:str):
+@click.option('--dialog_default', '-d', multiple=True)
+def gui(settings_file_path:str,dialog_default:Iterable):
     '''comand line interface entry point
     Args:
     start: 
@@ -154,13 +180,15 @@ def gui(settings_file_path:str):
 
     logger.info("running autotrios %s", __version__)
 
+    dialog_default = parse_dialog_default(dialog_default)
+
     settings = get_settings()
 
     if settings_file_path is not None:
         settings.update_from_file(settings_file_path)
 
     try:
-        run_gui(settings)
+        run_gui(settings,dialog_default=dialog_default)
     except Exception as exc:
         logger.exception('autotrios got an exception: error has been logged'
                          ' to %s', str(USER_LOGFILE))

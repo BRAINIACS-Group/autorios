@@ -17,30 +17,26 @@ warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
 
 #3rd party imports
-from pywinauto import application,keyboard,Desktop, base_wrapper
-from pywinauto.application import Application,ProcessNotFoundError
-from pywinauto.keyboard import send_keys
+from pywinauto import keyboard,Desktop, base_wrapper
+from pywinauto.application import Application
 import pywinauto.timings
-from PyQt5.QtWidgets import QApplication
 
 #local imports
 from .application import MyApplication
-from .protocol import Protocol,STEP_TYPE,Step,MetaProtocol
+from .protocol import Protocol,STEP_TYPE
 from .pyqtgui import (show_warning_messagebox,show_yesno_messagebox,
-    show_error_messagebox)
+                      show_error_messagebox)
 from .experiment_info import ExperimentInfo
 from .device_settings import TriosDeviceSettings
 from .settings import Settings
 from .specimen import Specimen
 from .utility import write_float_to_input,write_to_input,is_button
-
+from .datalogger import DataLogger
 
 logger = logging.getLogger(__name__)
 
 class StopException(Exception):
     pass
-
-
 
 class TRIOS(MyApplication):
     '''Acts as wrapper for TA Instrument TRIOS application. Utilized pywinauto 
@@ -534,6 +530,9 @@ class TRIOS(MyApplication):
 
         if self._settings.idle_velocity is not None:
             self._set_idle_velocity(self._settings.idle_velocity)
+
+    def stop_experiment(self)->None:
+        self._event_stop.set()
 
     def _set_idle_velocity(self,velocity:float):
 

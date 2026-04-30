@@ -56,3 +56,10 @@ def write_float_to_input(element,input_value:float,press_tab:bool=False, draw_ou
 
 def open_filexplorer(filepath:Path)->None:
     subprocess.Popen(fr'explorer /select,"{str(filepath.resolve())}"')
+
+def combined_decorator(*decorators):
+    def decorator(f):
+        for decorator in reversed(decorators):
+            f = decorator(f)
+        return f
+    return decorator
