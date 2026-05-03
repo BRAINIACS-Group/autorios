@@ -5,19 +5,18 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import asdict, is_dataclass,Field,fields
 import random
-from typing import Annotated, Any, Callable, Type, List
+from typing import List,Generic,TypeVar,Union
 
 #3rd party imports
 from pydantic.dataclasses import dataclass
 from pydantic import (
     BaseModel,
-    GetCoreSchemaHandler,
-    ValidationError,
-    ValidationInfo,
     computed_field,
 )
 from pydantic_core import core_schema
 from pydantic import BaseModel
+
+#local import
 from .exp_parser import eval_expr
 from .specimen import Specimen
 
@@ -70,16 +69,21 @@ class EvalException(Exception):
     '''exception class for evaluation errors'''
     pass
 
-class EvaluatableField(BaseModel):
+DataT = TypeVar('DataT')
+
+class EvaluatableField(BaseModel,Generic[DataT]):
     '''dataclass field class for fields that can be evaluated'''
     eval_str:str = None 
-    value_type:Type = float
+    #value_type:Type = float
     _evaluated:bool = False
-    _value: float = None
+    _value: DataT = None
     
+    class Config:
+        validate_assignment = True
+
     @computed_field
     @property
-    def value(self)->Any:
+    def value(self)->DataT:
         if not self.evaluated:
             raise ValueError("field not evaluated yet")
         return self._value
@@ -89,16 +93,16 @@ class EvaluatableField(BaseModel):
     def evaluated(self)->bool:
         return self._evaluated
 
-    def __set__(self, instance, value):
-        if isinstance(value,self.value_type):
-            self._evaluated = True
-            self.value = value
+    def __set__(self, instance, value:DataT|str):
         if isinstance(value,str):
+            self._evaluated = False
             self.eval_str = value
-        raise ValueError(f'expected value of type {self.value_type} or str, '
-                         f'got {type(value)}')
+            self._value = None
+        else:
+            self._evaluated = True
+            self._value = value
 
-    def eval(self,**eval_args)->Any:
+    def eval(self,**eval_args)->DataT:
         '''evaluate the field with the given arguments'''
         if self.eval_str is None:
             raise ValueError("eval string is None for evaluatable field")
@@ -111,52 +115,82 @@ class EvaluatableField(BaseModel):
         self._value = eval_res
         return eval_res
 
+EvaluatableFieldType = Union[EvaluatableField[DataT]|str]
+
 class Evaluatable(DataclassBaseHelper):
 
     @property
     def evaluated(self)->bool:
         '''return true if all evaluatable fields have been evaluated'''
         for field in fields(self):
-            if field.type=="Union[EvaluatableField | str]":
+            if self._is_evaluatable_field(field):
                 field_value = super().__getattribute__(field.name)
                 if not field_value.evaluated:
-                    return False   
+                    return False
         return True
 
     def __post_init__(self):
         '''sanitize and internal variables'''
+        self._evaluatable_fields = []
         for field in fields(self):
-            if field.type=="Union[EvaluatableField | str]":
+            if Evaluatable._is_evaluatable_field(field):
                 field_value = super().__getattribute__(field.name)
-                if isinstance(field_value,str):
-                    field_value = EvaluatableField(eval_str=field_value)
-                    setattr(self,field.name,field_value)
+                if not isinstance(field_value,EvaluatableField):
+                    if isinstance(field_value,str):
+                        field_value = EvaluatableField(eval_str=field_value)
+                        super().__setattr__(field.name,field_value)
+                    else:
+                        value = field_value
+                        field_value = EvaluatableField()
+                        field_value.__set__(None,value)
+                        super().__setattr__(field.name,field_value)
+                self._evaluatable_fields.append(field.name)
 
         super().__post_init__()
 
+    @staticmethod
+    def _is_evaluatable_field(field:Field|str)->bool:
+        return field.type.startswith("EvaluatableFieldType")
+
     def __getattribute__(self, name):
         value = super().__getattribute__(name)
-        if isinstance(value,EvaluatableField):
+        try:
+            evaluatable_fields = super().__getattribute__("_evaluatable_fields")
+        except AttributeError:
+            return value
+        if name in evaluatable_fields:
             if not value.evaluated:
                 raise ValueError(f'cannot access field {name} before evaluation')
             return value.value
         return value
+    
+    def __setattr__(self, name, value):
+        try:
+            evaluatable_fields = super().__getattribute__("_evaluatable_fields")
+        except AttributeError:
+            super().__setattr__(name, value)
+            return 
+        if name in evaluatable_fields and not isinstance(value,EvaluatableField):
+            super().__getattribute__(name).__set__(None,value)
+        else:
+            super().__setattr__(name, value)
 
     def eval(self,**eval_args)->None:
         '''evaluate fields that contain strings and therefore potential
         expressions. All key-value arguments are interpreted as dict
         for the expression evaluation'''
         for field in fields(self):
-            if field.type=="Union[EvaluatableField | str]":
+            field_value = super().__getattribute__(field.name)
+            if isinstance(field_value,EvaluatableField):
+                if field_value.evaluated:
+                    continue
                 try:
-                    field_value = super().__getattribute__(field.name)
                     field_value.eval(**eval_args)
                     setattr(self,field.name,field_value)
                 except EvalException as exc:
                     raise ValueError('received exception evaluating field '
                                      f'{field.name}') from exc
         
-    
     def test_eval(self):
         '''dynamic test evaluation of expressions given by the user to 
         prevent errors during the experiment. This is done by evaluating the

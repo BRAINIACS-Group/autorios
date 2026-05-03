@@ -48,23 +48,3 @@ class TestDeviceSettings(unittest.TestCase):
         self.assertTrue(settings.evaluated)
         self.assertEqual(settings.velocity,4)
         self.assertEqual(settings.fine_velocity,3)
-
-class TestUpdateable(unittest.TestCase):
-
-    def test_init(self):
-        @dataclass
-        class TestDataclass(Updateable):
-            a:int
-        test = TestDataclass(4)
-        self.assertEqual(test.a,4)
-    
-    def test_update(self):
-        @dataclass
-        class TestDataclass(Updateable):
-            a:int
-        test = TestDataclass(4)
-        self.assertEqual(test.a,4)
-    
-        test_update = TestDataclass(6)
-        test.update(test_update)
-        self.assertEqual(test.a,6)

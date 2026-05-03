@@ -14,9 +14,10 @@ from pydantic.dataclasses import dataclass
 
 #local imports
 from .specimen import Specimen
-from .dataclass_helpers import Updateable,Evaluatable,EvaluatableField
+from .dataclass_helpers import (Updateable,Evaluatable,
+                                EvaluatableField,EvaluatableFieldType)
 
 @dataclass
 class TriosDeviceSettings(Updateable,Evaluatable):
-    velocity:      Union[EvaluatableField|str] = field(default_factory=lambda: EvaluatableField())
-    fine_velocity: Union[EvaluatableField|str] = field(default_factory=lambda: EvaluatableField())
+    velocity:      EvaluatableFieldType = field(default_factory=lambda: EvaluatableField())
+    fine_velocity: EvaluatableFieldType = field(default_factory=lambda: EvaluatableField())
