@@ -141,7 +141,7 @@ class TRIOS(MyApplication):
         except:
             sample_dropdown_button.click_input()
             logger.info('sample dropdown expanded')
-
+        sample_edit.wait("visible",timeout=5)
         write_to_input(sample_edit,
             experiment_info.sample_name)
     
@@ -153,30 +153,23 @@ class TRIOS(MyApplication):
         file_name_ctrl = self.window_main.child_window(title="File Name:", control_type="Text")
         file_name_ctrl.draw_outline()
         file_name_ctrl.click_input()
-        keyboard.send_keys("{TAB}^a"+str(experiment_info.save_dir_trios))
+        keyboard.send_keys("{TAB}^a"+str(experiment_info.savedir_trios))
         file_name_ctrl.click_input()
 
     def _read_control_panel(self)->Dict[str,Any]:
         #self.window_main.Control_panel.draw_outline()
         logger.info('reading control panel')
         val_dict = {}
-        #DHR3
-        # for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").children():
-        #     #child.draw_outline()
-        #     texts = child.texts()
-        #     if len(texts) < 3: continue
-        #     name,value,unit = texts[:3]
-        #     try:
-        #         val_dict[name] = float(value.replace(',','.'))
-        #     except ValueError:
-        #         val_dict[name] = None
-        # return val_dict
         
-        #HR30
+        control_panel = self.window_main.child_window(title="Control panel", control_type="Pane")
+        control_panel.exists(2)
+        grid = control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid")
+        grid.exists(2)
+
         retries = 50
         for trial in range(retries):
             try:
-                for child in self.window_main.Control_panel.child_window(auto_id="RealTimeGrid", control_type="DataGrid").iter_children():
+                for child in grid.iter_children():
                     #child.draw_outline()
                     texts = child.texts()
                     if len(texts) < 3: continue
@@ -341,12 +334,12 @@ class TRIOS(MyApplication):
                 
                 step_gap_control = step_top_parent.descendants(title="Gap Control", control_type="Group")[0]
                 step_gap_control.draw_outline("red")
-                if self._trios_workaround:
+                #if self._trios_workaround:
                      #HR30
-                    gap_edit = step_gap_control.children()[3].children()[1]
-                else:
-                    #DHR3
-                    gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
+                gap_edit = step_gap_control.children()[3].children()[1]
+                #else:
+                #    #DHR3
+                #    gap_edit = next(filter(lambda e: e.automation_id() == "Link_ProcedureGapEnd_E",step_gap_control.children(control_type="Edit")))
                
                 gap_edit.draw_outline()
                 gap_value = step.eval(specimen=specimen)
@@ -370,16 +363,12 @@ class TRIOS(MyApplication):
             elif step.type_ == STEP_TYPE.WAIT_FOR_TEMPERATURE:
                 step_env_control = step_top_parent.descendants(title="Environmental Control", control_type="Group")[0]
                 step_env_control.draw_outline("red")
-                if self._trios_workaround:
-                    #HR30 [0].children()
-                    # for i,child in enumerate(step_env_control.children(control_type="CheckBox")):
-                    #     print(i)
-                    #     child.draw_outline()
-                    temp_checkbox = next(filter(lambda e: e.element_info.name ==  'Wait For Temperature',
-                        step_env_control.children(control_type="CheckBox")))
-                else:
-                    #DHR 3
-                    temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
+                #if self._trios_workaround:
+                temp_checkbox = next(filter(lambda e: e.element_info.name ==  'Wait For Temperature',
+                    step_env_control.children(control_type="CheckBox")))
+                #else:
+                #DHR 3
+                #    temp_checkbox = next(filter(lambda e: e.automation_id() == "Link_ProcedureWaitForTemperature_E",step_env_control.children(control_type="CheckBox")))
                 
                 temp_checkbox.draw_outline()
                 checkbox_state = temp_checkbox.get_toggle_state()
@@ -418,7 +407,9 @@ class TRIOS(MyApplication):
         self._type_protocol_values(protocol,specimen)
 
         self._check_for_stop_event()
-        device_settings_evaluated = settings.device_settings.eval(specimen=specimen)
+        
+        device_settings_evaluated = copy.deepcopy(settings.device_settings)
+        device_settings_evaluated.eval(specimen=specimen)
         self.set_device_settings(device_settings_evaluated)
 
         if settings.datalogger_restart:
@@ -491,8 +482,6 @@ class TRIOS(MyApplication):
         self.window_main.set_focus() # brings the window to top
         self._focus_experiment_tab()
 
-        self._input_experiment_names(experiment_info)
-       
         #now run the protocol etc.
         height = self._get_gap_value()
         logger.info('found specimen height: %g',height)
@@ -500,6 +489,8 @@ class TRIOS(MyApplication):
 
         self._set_geometry(specimen)
 
+        self._input_experiment_names(experiment_info)
+       
         experiment_settings = (
             copy.deepcopy(self._settings)
             .update(experiment_info.meta_protocol.settings_update)
@@ -560,11 +551,14 @@ class TRIOS(MyApplication):
         # Enters the gap value in Geometry dropdown section
         #self.window_main.Button5.click_input()
         
-        geometry_dropdown_button = self._get_experiment_tab_buttons("Geometry: .*")[0]
-        geometry_dropdown_button.draw_outline()
-        geometry_dropdown_button.click_input()
-
         gap_edit = self.window_main.child_window(auto_id="Link_Gap_E",control_type="Edit")
+        try:
+            gap_edit.wait("visible",1)
+        except pywinauto.timings.TimeoutError: 
+            geometry_dropdown_button = self._get_experiment_tab_buttons("Geometry: .*")[0]
+            geometry_dropdown_button.draw_outline()
+            geometry_dropdown_button.click_input()
+        gap_edit.wait("visible",1)
         gap_edit.draw_outline()
         write_float_to_input(gap_edit,specimen.height)
 

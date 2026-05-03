@@ -5,9 +5,9 @@ import logging
 from abc import ABC
 
 #from dataclasses import dataclass
-from typing import Union
+from typing import Union,List
 from pathlib import Path
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass,fields
 
 #3rd party imports
 import yaml
@@ -16,7 +16,7 @@ from pydantic.dataclasses import dataclass
 #local imports
 from .system_paths import (SYSTEM_SETTINGS_FILE_PATH,USER_SETTINGS_FILE_PATH,PROTOCOL_CONFIG_DIR_PATH)
 from .device_settings import TriosDeviceSettings
-from .dataclass_helpers import Updateable
+from .dataclass_helpers import Updateable,DataclassBaseHelper
 
 logger = logging.getLogger(__name__)
 
@@ -35,19 +35,21 @@ def get_settings_default()->Settings:
    
    return Settings(
       protocol_config_path=PROTOCOL_CONFIG_DIR_PATH,
-      datalogger_restart=False,
       trios_workaround=False,
       trios_windowname="TA Instruments Trios",
       trios_paths=[
          Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\Trios.exe"),
          Path(r"C:\Program Files\TA Instruments\TRIOS\Trios.exe"),
       ],
+      trios_start_if_not_open=False,
       datalogger_windowname="ARG2AuxiliarySample",
       datalogger_paths=[
         Path(r"C:\Program Files (x86)\TA Instruments\TRIOS\ARG2AuxiliarySample.exe"),
         Path(r"C:\Program Files\TA Instruments\TRIOS\ARG2AuxiliarySample.exe")
       ],
+      datalogger_restart=True,
       idle_velocity=1e4,
+      freqsweep_timeout=20*60,
       device_settings=TriosDeviceSettings()
    )
 
@@ -82,6 +84,8 @@ class Settings(Updateable):
   def __post_init__(self):
      if isinstance(self.protocol_config_path,str):
         self.protocol_config_path = Path(self.protocol_config_path)
+
+ 
 
   @staticmethod
   def from_file(settings_file:Union[str,Path])->Settings:

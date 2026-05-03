@@ -107,7 +107,7 @@ class CountdownWindow(QWidget):
     def update_remaining(self, seconds:int):
         self.remaining = seconds
         countdown_str = self.format_time(self.remaining)
-        logger.debug(f"countdown text {countdown_str}")
+        #logger.debug(f"countdown text {countdown_str}")
         self.countdown_label.setText(countdown_str)
 
         if self.remaining <= 10:
@@ -150,28 +150,26 @@ class CountdownTimer(QThread):
         self.seconds = int(seconds)
         self.countdown_window = window
         if self.countdown_window is not None:
-            #self.countdown_window.connect_update_function(self._update_signal)
             self._time_signal = TimeSignal()        
             self._time_signal._update_signal.connect(self.countdown_window.update_remaining)
             self._time_signal._close_signal.connect(self.countdown_window.close_slot)
             self._time_signal._update_signal.emit(self.seconds)
 
     def run(self):
-        logger.debug("CountdownTimer run called")
+        #logger.debug("CountdownTimer run called")
         time_start = time.time()
         remaining = int(self.seconds)
         while remaining > 0:
-            logger.debug("CountdownTimer tick remaining %d",remaining)
+            #logger.debug("CountdownTimer tick remaining %d",remaining)
             if self.isInterruptionRequested():
                 if self.countdown_window is not None:
                     self._time_signal._close_signal.emit(True)
                 break
             if self.countdown_window is not None:
-                logger.debug("emitting signal")
+                #logger.debug("emitting signal")
                 self._time_signal._update_signal.emit(remaining)
             time.sleep(1)
             remaining = int(self.seconds - (time.time() - time_start))
-
 
 class InputBlocker(object):
     '''context manager to block user input'''
@@ -190,13 +188,33 @@ class InputBlocker(object):
             self._on_hotkey
         )
         self.keyboard_listener = keyboard.Listener(
-            suppress=True,
+            win32_event_filter=self._keyboard_filter,
             on_press=self._for_canonical(hotkey.press),
             on_release=self._for_canonical(hotkey.release)
         )
         self.mouse_listener = mouse.Listener(
-            suppress=True
+            win32_event_filter=self._mouse_filter
         )
+
+    def _mouse_filter(self,msg,data):
+        '''allow all injected events'''
+        injected = data.flags & (0
+            | 0x00000001
+            | 0x00000002
+            ) != 0
+        if injected:
+            return True
+        return False
+
+    def _keyboard_filter(self,msg,data):
+        '''allow all injected events'''
+        injected = data.flags & (0
+            | 0x00000010
+            | 0x00000002
+            ) != 0
+        if injected:
+            return True
+        return False
 
     def show(self):
         if self.countdown_window:

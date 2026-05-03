@@ -19,13 +19,13 @@
             "module": "autotrios",
             "args": [
                 "--verbosity","DEBUG",
-                "-d", "sample_name=TestSample",
+                "-d", "sample_name=Tes.sämplöü  ..$§-~0Sample",
                 "-d","operator_name=Peter Pan",
                 "-d","meta_protocol_name=Reduced_HBE_2a2bfreq_const_strainrate",
                 "-d","save_dir=\\\\home.rrze.uni-erlangen.de\\my04vule\\Documents\\autotrios_test",
             ],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "autotrios_main",
@@ -39,9 +39,9 @@
             "name": "print controls",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/autotrios/__main__.py",
+            "program": "${workspaceFolder}/scripts/print_controls.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "test settings",

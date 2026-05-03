@@ -63,13 +63,15 @@ def setup_console_logging()->None:
     logging.getLogger().addHandler(stream_handler)
     logging.getLogger().setLevel(logging.DEBUG)
 
-def get_metaprotocols(protocol_dir:Path)->Tuple[str,MetaProtocol]:
+def get_metaprotocols(protocol_dir:Path,settings:Settings)->Tuple[str,MetaProtocol]:
     '''
     '''
     protocols = [
         (fp, MetaProtocol.from_file(fp)) for fp in
             itertools.chain(protocol_dir.glob('*.yml'),protocol_dir.glob('*.yaml'))
     ]
+    for _,protocol in protocols:
+        protocol.validate(settings)
     return protocols
 
 class ExperimentLogger(object):
@@ -103,7 +105,7 @@ class ExperimentThread(QThread):
                 logger.info("starting the experiment")
                 logger.info("logging to %s",str(self.logfilepath))
                 time.sleep(5)
-                #self._trios_app.run_experiment(self._experiment_info)
+                self._trios_app.run_experiment(self._experiment_info)
                 logger.info("fínished experiment")
 
 def run_gui(settings:Settings,dialog_default:DialogDefault):
@@ -112,6 +114,14 @@ def run_gui(settings:Settings,dialog_default:DialogDefault):
 
     app = QApplication(sys.argv)
   
+    try:
+        metaprotocols = get_metaprotocols(settings.protocol_config_path,settings)
+    except Exception as e:
+        logger.exception("error loading metaprotocols")
+        show_error_messagebox(f"error loading metaprotocols:\n{str(e)}")
+        raise e
+
+
     logger.info('connecting to TRIOS')
     try:
         trios_app = TRIOS.connect(settings.trios_windowname,
@@ -136,7 +146,9 @@ def run_gui(settings:Settings,dialog_default:DialogDefault):
                                "current experiment before starting a new one.")
             raise RuntimeError("run_experiment called while experiment still running")
         logger.info('running experiment %s',repr(experiment_info))
-        experiment_thread = ExperimentThread(trios_app,experiment_info)
+        input_blocker = InputBlocker(timeout=20,show_window=True)
+        input_blocker.show()
+        experiment_thread = ExperimentThread(trios_app,experiment_info,input_blocker=input_blocker)
         experiment_thread.finished.connect(delete_experiment)
         experiment_thread.start()
         return experiment_thread
@@ -148,7 +160,7 @@ def run_gui(settings:Settings,dialog_default:DialogDefault):
         experiment_thread.wait()
         experiment_thread = None
 
-    metaprotocols = get_metaprotocols(settings.protocol_config_path)
+   
 
     dialog_default.validate_metaprotocol_name(metaprotocols)
 

@@ -508,11 +508,14 @@ class AutoTriosGui(QWidget):
         self._start_btn.setEnabled(True)
         self._stop_btn.setEnabled(False)
         self._status_dot.setText("● READY")
+        self._status_dot.setStyleSheet("QLabel { color :  #22c55e; }")
 
     def _experiment_buttons_started(self):
         self._start_btn.setEnabled(False)
         self._stop_btn.setEnabled(True)
         self._status_dot.setText("● RUNNING")
+        self._status_dot.setStyleSheet("QLabel { color : yellow; }")
+        
 
     def _start_experiment(self):
         try:

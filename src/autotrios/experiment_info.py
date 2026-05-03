@@ -29,6 +29,10 @@ class ExperimentInfo():
     def filepath_logfile(self) -> Path:
         return self._save_dir_logfile / f'{self.sample_name}.log'
 
+    @property
+    def savedir_trios(self) -> Path:
+        return self._save_dir_trios
+
     def __post_init__(self):
         '''sanity checks'''
         if not self.save_dir.is_dir():
@@ -42,6 +46,20 @@ class ExperimentInfo():
         self._save_dir_logfile = self.save_dir / "log"
         if not self._save_dir_logfile.is_dir():
             self._save_dir_logfile.mkdir()
+
+        self._save_dir_trios = self.save_dir / "trios"
+        if not self._save_dir_trios.is_dir():
+            self._save_dir_trios.mkdir()
+
+        if self.filepath_datalogger.exists():
+            raise FileExistsError(f"datalogger file {self.filepath_datalogger} exists already!")
+
+        if self.filepath_logfile.exists():
+            raise FileExistsError(f"logfile {self.filepath_logfile} exists already!")
+        
+        if self.filepath_timelog.exists():
+            raise FileExistsError(f"timelog file {self.filepath_timelog} exists already")
+
 
     @classmethod
     def parse_field(cls,key:str,value:Any,ignore_unknown:bool=True)->Any:

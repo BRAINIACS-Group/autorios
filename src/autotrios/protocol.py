@@ -18,6 +18,7 @@ import yaml
 from .exp_parser import eval_expr
 from .settings import Settings
 from .specimen import Specimen
+from .device_settings import TriosDeviceSettings
 
 class STEP_TYPE(Enum):
     GAP = auto()
@@ -74,6 +75,8 @@ class Protocol:
         '''Data sanity checks'''
         if not self.procedure_file_path.is_file():
             raise FileNotFoundError(f'could not locate {self.procedure_file_path}')
+        
+       
         for field in self.settings_update.get_update_fields():
             if field.name not in ['protocol_settings','device_settings']:
               raise ValueError(f'settings_update for protocol can only contain'
@@ -88,6 +91,16 @@ class MetaProtocol:
     '''
     protocols: List[Protocol]
     settings_update: Settings
+
+    def validate(self,settings:Settings)->None:
+        settings_tmp = deepcopy(settings)
+        settings_tmp.update(self.settings_update)
+        for p,protocol in enumerate(self.protocols):
+            settings_protocol = deepcopy(settings_tmp)
+            settings_protocol.update(protocol.settings_update)
+            empty_fields = settings_protocol.get_empty_fields()
+            if empty_fields:
+                raise ValueError(f"empty field(s) {empty_fields} remaining in protocol {p} after setting update")
 
     @staticmethod
     def from_file(filepath:Path)->Protocol:
@@ -126,10 +139,21 @@ class MetaProtocol:
             if not procedure_file_path.is_absolute():
                 procedure_file_path = filepath.parent / procedure_file_path
 
-            #device_settings_dict = protocol_dict.pop('device_settings',dict())
-            #device_settings = TriosDeviceSettings(**device_settings_dict)
-
+            device_settings_dict = protocol_dict.pop('device_settings',dict())
+            
             settings_update = Settings(**(protocol_dict.pop('settings',dict())))
+
+            #FIXME: quick hack to prevent pydantic errors
+            device_settings_dict = {k:str(v) for k,v in device_settings_dict.items()}
+
+            if settings_update.device_settings is None:
+                if device_settings_dict:
+                   settings_update.device_settings = TriosDeviceSettings(**device_settings_dict)
+                else:
+                   raise ValueError(f"no device settings found in protocols in {filepath}")
+            else:
+               if device_settings_dict:
+                  raise ValueError(f"got two times device settings in protocol {filepath}")
 
             protocol = Protocol(
                 **protocol_dict,
