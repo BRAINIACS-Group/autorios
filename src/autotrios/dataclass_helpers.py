@@ -6,6 +6,7 @@ from abc import ABC
 from dataclasses import asdict, is_dataclass,Field,fields
 import random
 from typing import List,Generic,TypeVar,Union
+import logging
 
 #3rd party imports
 from pydantic.dataclasses import dataclass
@@ -19,6 +20,8 @@ from pydantic import BaseModel
 #local import
 from .exp_parser import eval_expr
 from .specimen import Specimen
+
+logger = logging.getLogger(__name__)
 
 class DataclassBaseHelper(ABC):
     '''empty base class to enable multiple inheritance'''
@@ -115,7 +118,9 @@ class EvaluatableField(BaseModel,Generic[DataT]):
         self._value = eval_res
         return eval_res
 
-EvaluatableFieldType = Union[EvaluatableField[DataT]|str]
+        
+
+EvaluatableFieldType = Union[EvaluatableField[DataT]|str|DataT]
 
 class Evaluatable(DataclassBaseHelper):
 
@@ -160,7 +165,9 @@ class Evaluatable(DataclassBaseHelper):
             return value
         if name in evaluatable_fields:
             if not value.evaluated:
-                raise ValueError(f'cannot access field {name} before evaluation')
+                logger.warning(f'accessing field {name} before evaluation')
+                return None
+                #raise ValueError(f'cannot access field {name} before evaluation')
             return value.value
         return value
     
@@ -174,6 +181,17 @@ class Evaluatable(DataclassBaseHelper):
             super().__getattribute__(name).__set__(None,value)
         else:
             super().__setattr__(name, value)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        repr_str = f"{self.__class__.__name__}("
+        for field in fields(type(self)):
+            value = super().__getattribute__(field.name)
+            repr_str += f"{field.name}={repr(value)}"
+        repr_str += ")"
+        return super().__repr__()
 
     def eval(self,**eval_args)->None:
         '''evaluate fields that contain strings and therefore potential

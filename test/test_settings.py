@@ -34,8 +34,26 @@ class TestDeviceSettings(unittest.TestCase):
             velocity=EvaluatableField(eval_str="{specimen.height}**2"),
             fine_velocity=EvaluatableField(eval_str="{specimen.height}+1")
         )
-    
-    def test_eval_settings(self):
+
+    def test_init_device_settings(self):
+        @dataclass
+        class Specimen:
+            height:int
+        specimen = Specimen(2)
+
+        settings = TriosDeviceSettings(
+            velocity=EvaluatableField(eval_str="{specimen.height}**2"),
+            fine_velocity=5
+        )
+        settings.eval(specimen=specimen)
+        settings = TriosDeviceSettings(
+            velocity="{specimen.height}**2",
+            fine_velocity=5
+        )
+        settings.eval(specimen=specimen)
+
+
+    def test_eval_device_settings(self):
         settings = TriosDeviceSettings(
             velocity=EvaluatableField(eval_str="{specimen.height}**2"),
             fine_velocity=EvaluatableField(eval_str="{specimen.height}+1")

@@ -101,12 +101,15 @@ class ExperimentThread(QThread):
         input_blocker = self._input_blocker if self._input_blocker is not None else nullcontext()
         explog = ExperimentLogger(self._experiment_info)
         with input_blocker,explog:
-                self.logfilepath = explog.filepath_logfile
-                logger.info("starting the experiment")
-                logger.info("logging to %s",str(self.logfilepath))
-                time.sleep(5)
+            self.logfilepath = explog.filepath_logfile
+            logger.info("starting the experiment")
+            logger.info("logging to %s",str(self.logfilepath))
+            try:
                 self._trios_app.run_experiment(self._experiment_info)
-                logger.info("fínished experiment")
+            except Exception as e:
+                logger.exception("Exception running experiment")
+                raise e
+            logger.info("fínished experiment")
 
 def run_gui(settings:Settings,dialog_default:DialogDefault):
     '''run autotrios'''

@@ -47,14 +47,14 @@ def show_info_messagebox(message, title="Information")->None:
 def show_warning_messagebox(message, title="Warning")->None:
     #QMessageBox.warning(None, title, message)
     dlg = QMessageBox(None)
-    dlg.setWindowTitle("Warning!")
+    dlg.setWindowTitle(title)
     dlg.setText(message)
     dlg.exec()
 
 def show_error_messagebox(message, title="Error")->None:
     #QMessageBox.critical(None, title, message)
     dlg = QMessageBox(None)
-    dlg.setWindowTitle("Error!")
+    dlg.setWindowTitle(title)
     dlg.setText(message)
     dlg.exec()
 
@@ -418,7 +418,7 @@ class AutoTriosGui(QWidget):
         layout.addWidget(_field_label("PROTOCOL"))
 
         file_names = [e[0].stem for e in self._meta_protocols]
-        logger.debug("file names for protocol combo box %s",repr(file_names))
+        #logger.debug("file names for protocol combo box %s",repr(file_names))
         self.protocol_combo.addItems(file_names)
         self.protocol_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout.addWidget(self.protocol_combo)
@@ -522,6 +522,7 @@ class AutoTriosGui(QWidget):
            experiment_info = self.get_experiment_info()
         except Exception as e:
             if self._exception_as_messagebox:
+                logger.exception("Error creating ExperimentINfo object form dialog")
                 show_error_messagebox(str(e), "Error ExperimentInfo")
                 return
             raise e
@@ -531,6 +532,7 @@ class AutoTriosGui(QWidget):
             self._experiment_buttons_started()
         except Exception as e:
             if self._exception_as_messagebox:
+                logger.exception("Error starting experiment")
                 show_error_messagebox(str(e), "Error Starting Experiment")
                 return
             raise e

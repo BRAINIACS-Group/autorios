@@ -10,8 +10,9 @@ from pywinauto import application,keyboard,Desktop, base_wrapper
 from pywinauto.application import Application,ProcessNotFoundError
 
 #local imports
-from .application import MyApplication
+from .application import MyApplication,qt_is_running
 from .pyqtgui import show_yesno_messagebox
+from .utility import escape_keyboard_string
 
 logger = logging.getLogger(__name__)
 
@@ -105,16 +106,18 @@ class DataLogger(MyApplication):
         '''
         
         '''
-        path = path.with_suffix('.txt')
+        path = path.absolute()
+        if not path.name.endswith(".txt"):
+            path = path.with_name(path.name + ".txt")
         self._path = path
         if path.is_file():
             logger.warning('file %s already exists', str(path))
           
-            if show_yesno_messagebox(question=f'File {path} already exists."\
+            if qt_is_running() and show_yesno_messagebox(question=f'File {path} already exists."\
                                 " Do you want to overwrite it?'):
                 path.unlink()
             else:
-                raise RuntimeError('File already exists and user chose not to overwrite it')
+                raise FileExistsError('File already exists and user chose not to overwrite it')
 
         logger.info("datalogger setting path %s", str(path))
         self.window_main.set_focus()
@@ -125,7 +128,9 @@ class DataLogger(MyApplication):
         coords_path = (int(150/419*window_width),int(165/288*window_height))
         self.window_main.click_input(coords=coords_path,double=True,use_log=True,absolute=False)
         Desktop(backend='uia')["Save As"].wait('exists')
-        keyboard.send_keys(str(path)+"{ENTER}")
+        key_string = escape_keyboard_string(str(path)+"{ENTER}")
+        logger.debug(f"typing {key_string}")
+        keyboard.send_keys(key_string,with_spaces=True)
 
     def check_file_exists(self)->bool:
         '''check if the output file has been created'''
@@ -138,3 +143,5 @@ class DataLogger(MyApplication):
         self.window_main.set_focus()
         self.window_main.Exit.draw_outline()
         self.window_main.Exit.click_input()
+
+   

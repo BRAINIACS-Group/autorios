@@ -28,52 +28,13 @@
             "justMyCode": false
         },
         {
-            "name": "autotrios_main",
+            "name": "Python: Debug Tests",
             "type": "debugpy",
             "request": "launch",
-            "module": "autotrios",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "print controls",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/scripts/print_controls.py",
+            "program": "${file}",
+            "purpose": ["debug-test"],
             "console": "integratedTerminal",
             "justMyCode": false
-        },
-        {
-            "name": "test settings",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/test_settings.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "test run protocol",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/test_run_protocol.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "test set geometry",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/test_set_geometry.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "test start datalogger",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/test_start_datalogger.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
         }
     ]
 }

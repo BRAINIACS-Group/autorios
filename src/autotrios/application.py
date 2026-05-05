@@ -16,6 +16,7 @@ sys.coinit_flags = 2
 #3rd party modules
 from pywinauto import application
 from pywinauto.application import Application,ProcessNotFoundError
+from PySide6 import QtWidgets
 
 #local imports
 from .utility import write_to_input,write_float_to_input,is_button
@@ -29,6 +30,9 @@ from .settings import Settings
 from .specimen import Specimen
 
 logger = logging.getLogger(__name__)
+
+def qt_is_running()->bool:
+    return QtWidgets.QApplication.instance() is not None
 
 def get_valid_app_path(paths:List[Union[str,Path]])->Path:
     '''get the first valid path pointing to an executable from the list of paths'''
@@ -104,7 +108,7 @@ class MyApplication(ABC):
             logger.error('could not connect to %s',path)
             logger.info('trying to start %s',path)
             if start_if_not_open:
-                return cls.start(paths=paths, backend=backend, **kwargs)
+                return cls.start(window_name=window_name,paths=paths, backend=backend, **kwargs)
             raise ProcessNotFoundError(f'could not connect to {path}') from te
         logger.info("connected to %s",path)
         #@jan: Do we need this? maybe there is some event to wait for...

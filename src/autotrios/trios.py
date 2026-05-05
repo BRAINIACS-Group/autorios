@@ -143,12 +143,12 @@ class TRIOS(MyApplication):
             logger.info('sample dropdown expanded')
         sample_edit.wait("visible",timeout=5)
         write_to_input(sample_edit,
-            experiment_info.sample_name)
+            experiment_info.sample_name,escape_special_chars=True)
     
         operator_edit = self.window_main\
             .child_window(auto_id="Link_Operator_E", control_type="Edit")
         write_to_input(operator_edit,
-            experiment_info.operator_name)
+            experiment_info.operator_name,escape_special_chars=True)
 
         file_name_ctrl = self.window_main.child_window(title="File Name:", control_type="Text")
         file_name_ctrl.draw_outline()
@@ -444,7 +444,7 @@ class TRIOS(MyApplication):
                 self._wait_for_point_countdown()
                 self._wait_for_time_pane(settings.freqsweep_timeout)
             datalogger_file_found = False
-            for _ in range(500):
+            for _ in range(10):
                 self.datalogger.start_recording()
                 #give the system time to create datalogger file
                 time.sleep(.01)
@@ -455,7 +455,7 @@ class TRIOS(MyApplication):
                 logger.error('Could not find datalogger file: %s',self.datalogger.get_path())
 
             if not datalogger_file_found:
-                show_error_messagebox("datalogger file not found after 500 tries")
+                show_error_messagebox("datalogger file not found after 10 tries")
                 raise RuntimeError(
                     f'datalogger file {self.datalogger.get_path()} not found')
 

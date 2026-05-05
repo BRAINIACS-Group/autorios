@@ -26,7 +26,12 @@ class StoppableThread(threading.Thread):
 def is_button(ctrl)->bool:
     return ctrl.element_info.class_name == "Button"
 
-def write_to_input(element,input_str:str,press_tab:bool=False):
+def escape_keyboard_string(keyboard_string:str)->str:
+    for escape_char in ["%","^","+","~"]:
+        keyboard_string = keyboard_string.replace(escape_char,f"{{{escape_char}}}")
+    return keyboard_string
+
+def write_to_input(element,input_str:str,press_tab:bool=False,escape_special_chars:bool=False):
     '''Type string to input field
     Args:
         element: element object from pywinauto
@@ -36,6 +41,8 @@ def write_to_input(element,input_str:str,press_tab:bool=False):
     '''
     
     element.click_input()
+    if escape_special_chars:
+        input_str = escape_keyboard_string(input_str)
     type_str = '^a'+input_str
     if press_tab: type_str += "{TAB}"
     send_keys(type_str)

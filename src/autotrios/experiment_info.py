@@ -32,7 +32,7 @@ class ExperimentInfo():
     @property
     def savedir_trios(self) -> Path:
         return self._save_dir_trios
-
+    
     def __post_init__(self):
         '''sanity checks'''
         if not self.save_dir.is_dir():
