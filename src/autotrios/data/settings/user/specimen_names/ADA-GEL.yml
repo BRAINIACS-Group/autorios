@@ -1,0 +1,36 @@
+#"B(?P<batchId>[0-9p\+]+)"
+#           "-S(?P<specimenId>[0-9p\+]+)"
+##           "-P(?P<protocolId>[0-9p\+]+)((?P<protocolPart>[a-zp]+))?"
+#           "-ADA(?P<adaRatio>[0-9p\+]+)"
+#           "-GEL(?P<gelRatio>[0-9p\+]+)"
+#           "(-PH(?P<algType>[0-9p\+]+))?"
+#           "(-DO(?P<oxidation>[0-9p\+]+))?"
+#           "(-CaCl(?P<caClRatio>[0-9p\+]+))?"
+#           "(-mTG(?P<mtgRatio>[0-9p\+]+))?"
+#           "(-(?P<process>(printed)|(molded)))?"
+#           "(-temp(?P<temp>[0-9\+]+))?",
+
+name: ADA-GEL
+fields:
+-  B<batchId:int>
+-  S<specimenId:int>
+-  <protocol:protocol>
+-  ADA<adaRatio:float>
+-  GEL<gelRatio:float>
+-  pattern: PH<algType:float>
+   optional: False
+-  pattern: DO<oxidation:float>
+   optional: False
+-  pattern: CaCl<caClRatio:float>
+   optional: False
+-  pattern: mTG<mtgRatio:float>
+   optional: False
+-  pattern: <process:selection(printed|molded)>
+   optional: True
+-  pattern: temp<temp:float>
+   optional: True
+   
+examples:
+-  B1-S1-P2-ADA0p025-GEL0p0375-PH163-DO0p25.txt"
+-  B1-S3-P2-ADA0p025-GEL0p0375-PH163-DO0p06-printed.txt"
+

@@ -1,0 +1,11 @@
+name: HBE
+fields:
+-  pattern: B<BrainId:int>
+   optional: False
+-  S<SpecimenId:int>
+-  <Protocol:protocol>  #special field type <protcolId><protocolPart>
+-  <Region>
+
+examples:
+-  B1-S2-P2a
+-  B2-S3-P2-CR
