@@ -491,6 +491,10 @@ class TRIOS(MyApplication):
         Raises:
         '''
 
+        if self.datalogger_is_open():
+            raise RuntimeError("datalogger is already open, please close it"
+                               " before starting the experiment")
+
         self.window_main.set_focus() # brings the window to top
         self._focus_experiment_tab()
 
@@ -550,6 +554,12 @@ class TRIOS(MyApplication):
             paths=self._settings.datalogger_paths,
             start_if_not_open=True
         )
+
+    def datalogger_is_open(self)->bool:
+        ''''''
+        return DataLogger.is_open(
+            window_name=self._settings.datalogger_windowname,
+            paths=self._settings.datalogger_paths)
 
     def detach_datalogger(self):
         if self.datalogger is not None:

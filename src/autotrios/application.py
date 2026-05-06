@@ -77,8 +77,12 @@ class MyApplication(ABC):
         self.backend = backend
         for window in app.windows():
             logging.debug("app window: %s",repr(window))
-        self.window_main.wait('exists',timeout=2)
-      
+        try:
+            self.window_main.wait('exists',timeout=2)
+        except TimeoutError as te:
+            logger.error('window with name %s not found',window_name)
+            raise ProcessNotFoundError(f'window with name {window_name} not found') from te
+
     @classmethod
     def start(cls,window_name:str,paths:List[Union[str,Path]],backend="uia",
               **kwargs):
@@ -126,3 +130,18 @@ class MyApplication(ABC):
         #@jan: Do we need this? maybe there is some event to wait for...
   
         return cls(app,window_name,backend,**kwargs)
+
+    @classmethod
+    def is_open(cls,window_name:str,paths: List[Union[str,Path]] = None,
+                backend="uia",**kwargs)->bool:
+        '''Check if Application is open by trying to connect to it
+        Args:
+        Returns:
+            bool: True if Application is open, False otherwise
+        '''
+        try:
+            cls.connect(window_name=window_name, paths=paths, backend=backend,
+                **kwargs)
+            return True
+        except ProcessNotFoundError:
+            return False
