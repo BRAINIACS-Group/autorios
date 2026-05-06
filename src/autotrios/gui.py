@@ -92,10 +92,13 @@ class ExperimentLogger(object):
 
     def __exit__(self, exc_type, exc, tb):
         logging.getLogger().removeHandler(self._logfile_handler)
+        self._logfile_handler.close()
+        self._logfile_handler = None
 
 class ExperimentThread(QThread):
 
-    def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo,input_blocker:InputBlocker=None):
+    def __init__(self,trios_app:TRIOS,experiment_info:ExperimentInfo,
+                 input_blocker:InputBlocker=None):
         super().__init__()
         self._trios_app = trios_app
         self._experiment_info = experiment_info
@@ -103,16 +106,22 @@ class ExperimentThread(QThread):
         self.filepath_logfile = None
 
     def run(self):
-        input_blocker = self._input_blocker if self._input_blocker is not None else nullcontext()
+        input_blocker = (self._input_blocker
+                         if self._input_blocker is not None else nullcontext())
+        input_blocker.connect_on_interrupt(self._trios_app.stop_experiment)
         explog = ExperimentLogger(self._experiment_info)
         with input_blocker,explog:
-            self.logfilepath = explog.filepath_logfile
+            self.filepath_logfile = explog.filepath_logfile
             logger.info("starting the experiment")
-            logger.info("logging to %s",str(self.logfilepath))
+            logger.info("logging to %s",str(self.filepath_logfile))
             try:
                 self._trios_app.run_experiment(self._experiment_info)
             except Exception as e:
                 logger.exception("Exception running experiment")
+                show_error_messagebox(f"An error occurred while running the"
+                                      f" experiment:\n{str(e)}\n"
+                                      f"check the logfile for details:\n"
+                                      f"{str(self.filepath_logfile)}")
                 raise e
             logger.info("fínished experiment")
 

@@ -183,6 +183,9 @@ class CountdownTimer(QThread):
             time.sleep(1)
             remaining = int(self.seconds - (time.time() - time_start))
 
+class BlockerSignals(QObject):
+    interrupted = Signal()
+
 class InputBlocker(object):
     '''context manager to block user input'''
 
@@ -192,6 +195,7 @@ class InputBlocker(object):
         self.timer = None
         self.countdown_window=None
         self._stopped = False
+        self._signals = BlockerSignals()
         if show_window:
             self.countdown_window = CountdownWindow()
 
@@ -232,6 +236,9 @@ class InputBlocker(object):
         if self.countdown_window:
             self.countdown_window.show()
 
+    def connect_on_interrupt(self,slot):
+        self._signals.interrupted.connect(slot)
+
     def _for_canonical(self, func):
         '''wrap a function to be called with the canonical form of the event'''
         def wrapper(key):
@@ -240,9 +247,12 @@ class InputBlocker(object):
 
     def _on_hotkey(self):
         logger.info("cancelled block")
+        self._interrupt()
+        return False
+    
+    def _interrupt(self):
         self._stop_listeners()
         self._stopped=True
-        return False
 
     def __exit__(self, exc_type, exc_val, exc_tb):#
         logger.info("unblocking user input")
