@@ -1,7 +1,18 @@
+# -----------------------------------------------------------------------------
+#
+# SPDX-License-Identifier: MIT
+#
+# This file is part of the autorios project
+#
+# Detailed license information can be found in LICENSE
+# at the top level directory.
+#
+# -----------------------------------------------------------------------------
+
+
 '''
 Code taken from: https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
 '''
-
 
 #STL imports
 import ast

@@ -1,9 +1,15 @@
-'''@Jan: This should contain a general description what this file does'''
+# -----------------------------------------------------------------------------
+#
+# SPDX-License-Identifier: MIT
+#
+# This file is part of the autorios project
+#
+# Detailed license information can be found in LICENSE
+# at the top level directory.
+#
+# -----------------------------------------------------------------------------
 
-# This script was written in  a sequential format considering the behaviour of the UI
-# Any deviations will result in errors
 
-#@Jan: sorting imports can help with an overview
 #STL modules
 from __future__ import annotations
 import logging

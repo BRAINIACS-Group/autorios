@@ -1,4 +1,15 @@
-import sys
+# -----------------------------------------------------------------------------
+#
+# SPDX-License-Identifier: MIT
+#
+# This file is part of the autorios project
+#
+# Detailed license information can be found in LICENSE
+# at the top level directory.
+#
+# -----------------------------------------------------------------------------
+
+
 #STL imports
 import logging
 from pathlib import Path

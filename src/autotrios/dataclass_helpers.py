@@ -1,3 +1,15 @@
+# -----------------------------------------------------------------------------
+#
+# SPDX-License-Identifier: MIT
+#
+# This file is part of the autorios project
+#
+# Detailed license information can be found in LICENSE
+# at the top level directory.
+#
+# -----------------------------------------------------------------------------
+
+
 '''base class to make dataclasses updateable with another dataclass of the same
 type. This is used for settings dataclasses to allow updating settings with user'''
 #STL imports

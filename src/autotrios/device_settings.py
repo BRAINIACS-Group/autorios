@@ -1,3 +1,15 @@
+# -----------------------------------------------------------------------------
+#
+# SPDX-License-Identifier: MIT
+#
+# This file is part of the autorios project
+#
+# Detailed license information can be found in LICENSE
+# at the top level directory.
+#
+# -----------------------------------------------------------------------------
+
+
 '''module for defining the trios device settings dataclass, representing
 settings in trios for the rheometer, and related functions.'''
 
