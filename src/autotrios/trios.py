@@ -34,7 +34,8 @@ from pywinauto.application import Application
 import pywinauto.timings
 
 #local imports
-from .application import MyApplication
+from .application import (MyApplication,ElementNotFoundError,
+    wait_until_element_exists)
 from .protocol import Protocol,STEP_TYPE
 from .pyqtgui import (show_warning_messagebox,show_yesno_messagebox,
                       show_error_messagebox)
@@ -116,19 +117,40 @@ class TRIOS(MyApplication):
         Raises:
         '''
 
-        show_warning_messagebox(message="Please calibrate and zero gap before"
-                        " continuing.\nPress OK when done",title="Advice")
+        show_warning_messagebox(message="Calibration will be performed. "
+            "Please ensure the device is ready before"
+            "continuing.\nPress OK when done")
+        raise NotImplementedError("calibration process not implemented yet")
         self._calibrated = True
 
-    def find_zero_gap(self):
+    def find_zero_gap(self,show_warning:bool=True):
         '''Represents gap zeroing process
         Args:
         Returns:
         Raises:
         '''
+        if show_warning:
+            show_warning_messagebox(message="Make sure that the rheometer "
+                "geometry is ready for gap zeroing\n"
+                "Press OK when done",title = "Advice")
+        self.window_main.set_focus()
+        navigation_bar = self.window_main.child_window(auto_id="navigationBarControlPanels", control_type="Pane")
+        try:
+            navigation_bar.wait("exists",timeout=1)
+        except pywinauto.timings.TimeoutError as te:
+            logger.exception("naviagation bar not found")
+            raise ElementNotFoundError("could not find navigation bar, "
+                                       "cannot set zero gap") from te
+        zero_gap_button = navigation_bar.child_window(title="Zero Gap", control_type="Button")
+        try:
+            zero_gap_button.wait("exists",timeout=1)
+        except pywinauto.timings.TimeoutError as te:
+            logger.exception("zero gap button not found")
+            raise ElementNotFoundError("could not find zero gap button, "
+                                       "cannot set zero gap") from te
 
-        show_warning_messagebox(message="Please zero gap before continuing\n"
-            "Press OK when done",title = "Advice")
+        zero_gap_button.click_input()
+        raise NotImplementedError("Waiting for zero gap success not implemented yet")
         self._zero_gap_set = True
 
     def _input_experiment_names(self,experiment_info:ExperimentInfo):
@@ -414,12 +436,12 @@ class TRIOS(MyApplication):
         specimen:Specimen,filepath_datalogger:Path):
         '''
         '''
-        
+
         self.window_main.set_focus()
         self._type_protocol_values(protocol,specimen)
 
         self._check_for_stop_event()
-        
+
         device_settings_evaluated = copy.deepcopy(settings.device_settings)
         device_settings_evaluated.eval(specimen=specimen)
         self.set_device_settings(device_settings_evaluated)
@@ -538,6 +560,28 @@ class TRIOS(MyApplication):
         if self._settings.idle_velocity is not None:
             self._set_idle_velocity(self._settings.idle_velocity)
 
+        if self._settings.idle_gap is not None:
+            self.set_gap(self._settings.idle_gap)
+
+    def set_gap(self,gap:float,ask_confirmation:bool=True):
+        if gap < 0:
+            raise ValueError('gap cannot be negative')
+        
+        if ask_confirmation and not show_yesno_messagebox(
+            f"Should the gap be set to {gap} um?"):
+            return
+
+        self.window_main.set_focus()
+
+        set_gap_edit = self.window_main.child_window(auto_id="LinkControlSetGap_E", control_type="Edit")
+        wait_until_element_exists(set_gap_edit,timeout=1)
+        set_gap_edit.draw_outline()
+        write_float_to_input(set_gap_edit,gap)
+        set_gap_button = self.window_main.child_window(auto_id="LinkControlSetGap_U", control_type="Button")
+        wait_until_element_exists(set_gap_button,timeout=1)
+        set_gap_button.draw_outline()
+        set_gap_button.click_input()
+
     def stop_experiment(self)->None:
         self._event_stop.set()
 
@@ -576,7 +620,7 @@ class TRIOS(MyApplication):
         gap_edit = self.window_main.child_window(auto_id="Link_Gap_E",control_type="Edit")
         try:
             gap_edit.wait("visible",1)
-        except pywinauto.timings.TimeoutError: 
+        except pywinauto.timings.TimeoutError:
             geometry_dropdown_button = self._get_experiment_tab_buttons("Geometry: .*")[0]
             geometry_dropdown_button.draw_outline()
             geometry_dropdown_button.click_input()

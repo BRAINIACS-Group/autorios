@@ -28,7 +28,9 @@ sys.coinit_flags = 2
 #3rd party modules
 from pywinauto import application
 from pywinauto.application import Application,ProcessNotFoundError
+from pywinauto.timings import TimeoutError
 from PySide6 import QtWidgets
+
 
 #local imports
 from .utility import write_to_input,write_float_to_input,is_button
@@ -42,6 +44,19 @@ from .settings import Settings
 from .specimen import Specimen
 
 logger = logging.getLogger(__name__)
+
+class ElementNotFoundError(Exception):
+    '''Raised when an element is not found in the application'''
+    pass
+
+def wait_until_element_exists(element,timeout:int=1)->None:
+    
+    try:
+        element.wait('exists',timeout=timeout)
+    except TimeoutError as te:
+        logger.exception("element not found")
+        raise ElementNotFoundError("could not find element, "
+                                    "operation cannot be performed") from te
 
 def qt_is_running()->bool:
     return QtWidgets.QApplication.instance() is not None

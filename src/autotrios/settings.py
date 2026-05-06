@@ -81,13 +81,16 @@ class Settings(Updateable):
   #experiment level?
 
   #restart datalogger between protocols
-  datalogger_restart:Union[bool,None] = None    
+  datalogger_restart:Union[bool,None] = None
   #velocity when no experiment is runnning so you don't have to wait unnecessary
   #long for the rheometer to raise
-  idle_velocity:Union[float,None] = None      
+  idle_velocity:Union[float,None] = None
+  #rheometer gap to be set after calibration and after the end of each
+  #experiment if confirmed by user
+  idle_gap:Union[float,None] = None
   #how long to wait for the frequency sweep to finish before raising an error,
   # in seconds
-  freqsweep_timeout:Union[int,None] = None     
+  freqsweep_timeout:Union[int,None] = None
 
   #Rheometer specific settings
   device_settings:TriosDeviceSettings = None
@@ -95,8 +98,6 @@ class Settings(Updateable):
   def __post_init__(self):
      if isinstance(self.protocol_config_path,str):
         self.protocol_config_path = Path(self.protocol_config_path)
-
- 
 
   @staticmethod
   def from_file(settings_file:Union[str,Path])->Settings:
