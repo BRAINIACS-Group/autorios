@@ -99,6 +99,42 @@ class DateFieldType:
     def __str__(self):
         return self._value
 
+class FloatFieldTypeBase:
+    pass
+
+class FloatFieldType(FloatFieldTypeBase):
+
+    @property
+    def value(self):
+        return self._value
+    
+    @property
+    def precision(self):
+        return self._precision
+
+    def __init__(self,value:str|float|FloatFieldType,precision:int|None=None,decimal_point_char:str="p"):
+        if isinstance(value,str):
+            self._value = float(value)
+            self._precision = len(value.split(".")[-1])
+        elif isinstance(value,FloatFieldType):
+            self._value = value.value
+            self._precision = value.precision
+        elif isinstance(value,float):
+            self._value = value
+        else:
+            raise ValueError(f"value of type {type(value)} not allowed")
+        if precision is not None:
+            self._precision = precision
+        self._decimal_point_char = decimal_point_char
+
+    def __str__(self):
+        if self.precision is not None:
+            print_str = f"{self.value:.{self.precision}f}"
+        else:
+            print_str = f"{self.value:f}"
+        print_str = print_str.replace(".","p")
+        return print_str
+
 FieldTypeT = TypeVar("FieldTypeT")
 
 @dataclass
@@ -108,7 +144,6 @@ class FieldSpec(Generic[FieldTypeT]):
     field_type: Type
     prefix: str =""        # literal prefix, e.g. "B"
     optional: bool = False
-    precision: Optional[int] = None  # for float fields, number of decimal places
     raw: str = ""       # original pattern fragment for debugging
 
     FIELDSPEC_RE: ClassVar[re.Pattern] = re.compile(
@@ -120,19 +155,21 @@ class FieldSpec(Generic[FieldTypeT]):
         except ValueError as ve:
             raise ValueError(f"Could not convert '{value_str}' to {self.field_type}") from ve
 
-    def print_value(self,value:FieldTypeT)->str:
+    def print_value(self,value:FieldTypeT,)->str:
+        if not isinstance(value,self.field_type):
+            try:
+                value = self.field_type(value)
+            except ValueError as ve:
+                raise ValueError(f"received {value} of type "
+                                 f"{type(value)} but field type is {self.field_type}"
+                                 "and casting failed")
+
         if isinstance(value, str):
             return value
         if isinstance(value,int):
             return f"{value}"
-        if isinstance(value, float):
-            if self.precision is not None:
-                format_str = f"{{:.{self.precision}f}}"
-                s = format_str.format(value)
-            else:
-                s = f"{value:f}"
-            s = s.replace(".", "p")
-            return s
+        if issubclass(self.field_type,FloatFieldTypeBase):
+            return str(self.field_type(value))
         if issubclass(self.field_type, SelectionFieldTypeBase):
             return self.prefix + value.value
         if issubclass(self.field_type,DateFieldType):
@@ -161,7 +198,7 @@ class FieldSpec(Generic[FieldTypeT]):
         if type_str == "int":
             return int
         if type_str == "float":
-            return float
+            return FloatFieldType
         if type_str == "date":
             return DateFieldType
         if type_str == "str":
@@ -367,7 +404,7 @@ class FieldWidget(QWidget):
         t = self.spec.field_type
         if t is str:
             w = QLineEdit()
-            w.setText("0.0")
+            w.setText("UNSET")
             w.textChanged.connect(self.value_changed)
             return w
 
@@ -376,7 +413,7 @@ class FieldWidget(QWidget):
             w.setRange(0, 999_999)
             w.valueChanged.connect(self.value_changed)
             return w
-        if t is float:
+        if issubclass(t,FloatFieldType):
             w = QLineEdit()
             w.setPlaceholderText("e.g. 0.039")
             w.setText("0.0")
@@ -528,7 +565,7 @@ class NamingDialog(QDialog):
         self._pattern_combo.currentIndexChanged.connect(self._on_pattern_changed)
         pat_row.addWidget(self._pattern_combo, 1)
         reload_btn = QPushButton("↻ Reload")
-        reload_btn.setFixedWidth(76)
+        reload_btn.setFixedWidth(110)
         reload_btn.clicked.connect(self._load_patterns)
         pat_row.addWidget(reload_btn)
         root.addWidget(pat_group)
