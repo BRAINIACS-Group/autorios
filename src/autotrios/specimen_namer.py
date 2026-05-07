@@ -10,17 +10,6 @@
 # -----------------------------------------------------------------------------
 #
 
-"""
-Naming Dialog — reads YAML pattern files and builds a PySide6 dialog
-for generating structured sample / file names.
-
-Usage:
-    python naming_dialog.py [folder_with_yaml_files]
-
-Dependencies:
-    pip install PySide6 pyyaml
-"""
-
 from __future__ import annotations
 
 import itertools
@@ -30,10 +19,12 @@ import re
 from pathlib import Path
 from typing import Any, Optional,Generic,TypeVar,ClassVar,Type
 from abc import ABC
+import datetime
+import logging
 
 from pydantic.dataclasses import dataclass
 import yaml
-from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal,QDate
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -53,8 +44,11 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QWidget,
+    QDateEdit
 )
 
+
+logger = logging.getLogger(__name__)
 
 class NamingDialogCancelledError(Exception):
     """Raised when the user cancels the naming dialog instead of accepting."""
@@ -90,20 +84,33 @@ def selection_field_type(options: list[str]):
             return self._value
     return SelectionFieldType
 
+class DateFieldType:
+    DATEFORMAT=r"%y%m%d"
+
+    def __init__(self,datetime:datetime.date):
+        self._value = datetime.strftime(self.DATEFORMAT)
+
+    @property
+    def value(self) -> str:
+        return self._value
+
+    def __str__(self):
+        return self._value
+
 FieldTypeT = TypeVar("FieldTypeT")
 
 @dataclass
 class FieldSpec(Generic[FieldTypeT]):
     """Parsed representation of one field in a naming pattern."""
     name: str           # logical name, e.g. "batchId"
-    prefix: str         # literal prefix, e.g. "B"
     field_type: Type
+    prefix: str =""        # literal prefix, e.g. "B"
     optional: bool = False
     precision: Optional[int] = None  # for float fields, number of decimal places
     raw: str = ""       # original pattern fragment for debugging
 
     FIELDSPEC_RE: ClassVar[re.Pattern] = re.compile(
-        r"(?P<prefix>[^<]+)<(?P<name>[^:>]+):(?P<type>[^>]+)>")
+        r"(?P<prefix>[^<]+)?<(?P<name>[^:>]+):(?P<type>[^>]+)>")
 
     def cast_from_str(self,value_str:str)->FieldTypeT:
         try:
@@ -114,6 +121,8 @@ class FieldSpec(Generic[FieldTypeT]):
     def print_value(self,value:FieldTypeT)->str:
         if isinstance(value, str):
             return value
+        if isinstance(value,int):
+            return f"{value}"
         if isinstance(value, float):
             if self.precision is not None:
                 format_str = f"{{:.{self.precision}f}}"
@@ -121,8 +130,11 @@ class FieldSpec(Generic[FieldTypeT]):
             else:
                 s = f"{value:f}"
             s = s.replace(".", "p")
+            return s
         if issubclass(self.field_type, SelectionFieldTypeBase):
-            return self.prefix + s
+            return self.prefix + value.value
+        if issubclass(self.field_type,DateFieldType):
+            return value.strftime(DateFieldType.DATEFORMAT)
         if isinstance(value,str):
             return value
         raise ValueError(f"Unsupported field type {self.field_type} for value {value}")
@@ -130,9 +142,11 @@ class FieldSpec(Generic[FieldTypeT]):
     def value_to_pattern(self,value:FieldTypeT|str)->str:
         """Convert a value to the pattern fragment, e.g. 39 → 'B39'"""
         if isinstance(value, str):
-            value = self.cast_from_str(value)
-        return self.prefix + str(value)
-
+            try:
+                value = self.cast_from_str(value)
+            except ValueError as ve:
+                raise ValueError(f"Error casting from string {value} in field {self.name}") from ve
+        return self.prefix + self.print_value(value)
 
     @staticmethod
     def _parse_type_str(type_str: str) -> type:
@@ -146,6 +160,8 @@ class FieldSpec(Generic[FieldTypeT]):
             return int
         if type_str == "float":
             return float
+        if type_str == "date":
+            return DateFieldType
         raise ValueError(f"Unsupported field type: '{type_str}'")
 
     @staticmethod
@@ -165,7 +181,7 @@ class FieldSpec(Generic[FieldTypeT]):
         if not m:
             raise ValueError(f"Invalid field spec: '{pattern}'")
         fieldspec_kwargs.update(
-            prefix=m.group("prefix"),
+            prefix=m.group("prefix") or "",
             name=m.group("name")
         )
         type_str = m.group("type")
@@ -181,7 +197,33 @@ class PatternSpec:
     name: str
     pattern: str        # e.g. "{date}_GelAGE_R_{fields}"
     fields: list[FieldSpec]
-    source_file: str = ""
+    source_file: Path = None
+
+    FIELD_CONCAT_CHAR:ClassVar[str]="-"
+
+    def pattern_from_field_values(self,field_values:dict[str,Any])->str:
+        logger.debug("field values: %s",str(field_values))
+        fmt_dict = dict()
+        date=field_values.pop("date",None)
+        if date is not None:
+            fmt_dict.update(date=date)
+        field_patterns = []
+        for field in self.fields:
+            value =field_values.pop(field.name,None)
+            if value is None:
+                if not field.optional and not field.name == "date":
+                    raise ValueError(f"no value for non optional field {field.name} received")
+                continue
+            field_patterns.append(field.value_to_pattern(value))
+        fields_concat = self.FIELD_CONCAT_CHAR.join(field_patterns)
+
+        if field_values:
+            raise ValueError(f"fields remaining in pattern_from_field_values: {field_values}")
+
+        fmt_dict.update(fields=fields_concat)
+
+        filled_pattern = self.pattern.format(**fmt_dict)
+        return filled_pattern
 
     @staticmethod
     def from_yaml(filepath: Path) -> PatternSpec | None:
@@ -200,6 +242,13 @@ class PatternSpec:
 
         raw_fields = data.pop("fields")
         field_specs: list[FieldSpec] = [FieldSpec.from_yaml_spec(item) for item in raw_fields]
+
+        for field in field_specs:
+            if field.name == "date":
+                raise ValueError("reserved name date cannot be used for field names")
+
+        if "{date}" in pattern:
+            field_specs.append(FieldSpec.from_yaml_spec("<date:date>"))
 
         return PatternSpec(name=name, pattern=pattern,
                         fields=field_specs, source_file=filepath)
@@ -311,14 +360,15 @@ class FieldWidget(QWidget):
 
     def _make_input(self) -> QWidget:
         t = self.spec.field_type
-        if isinstance(t,int):
-            w = QSpinBox()
+        if t is int:
+            w = QSpinBox(value=0)
             w.setRange(0, 999_999)
             w.valueChanged.connect(self.value_changed)
             return w
-        if isinstance(t,float):
+        if t is float:
             w = QLineEdit()
             w.setPlaceholderText("e.g. 0.039")
+            w.setText("0.0")
             w.textChanged.connect(self.value_changed)
             return w
         if issubclass(t,SelectionFieldTypeBase):
@@ -326,13 +376,17 @@ class FieldWidget(QWidget):
             w.addItems(t.options())
             w.currentIndexChanged.connect(self.value_changed)
             return w
+        
+        if t is DateFieldType:
+            w = QDateEdit(date=QDate.currentDate())
+            w.dateChanged.connect(self.value_changed)
+            return w
         # str | protocol | medium | unknown
-        w = QLineEdit()
-        w.setPlaceholderText(f"{self.spec.field_type}…")
-        w.textChanged.connect(self.value_changed)
-        return w
-
-    # ── slots ──────────────────────────────────────────────────────────────
+        # w = QLineEdit()
+        # w.setPlaceholderText(f"{self.spec.field_type}…")
+        # w.textChanged.connect(self.value_changed)
+        #return w
+        raise ValueError(f"unknown field type {t}")
 
     def _on_toggle(self, state: int) -> None:
         self._input.setEnabled(state == Qt.Checked)
@@ -353,6 +407,8 @@ class FieldWidget(QWidget):
             return self._input.text().strip()
         if isinstance(self._input, QComboBox):
             return self._input.currentText()
+        if isinstance(self._input,QDateEdit):
+            return self._input.date().toPython()
         raise ValueError(f"Unsupported input widget type: {type(self._input)}")
 
     def get_segment(self) -> str:
@@ -363,32 +419,31 @@ class FieldWidget(QWidget):
 
 
     def get_state(self) -> FieldState:
-        t = self.spec.field_type
-        if t == "int":
+        if isinstance(self._input, QSpinBox):
             value = self._input.value()
-        elif t == "selection":
+        if isinstance(self._input, QLineEdit):
+            value = self._input.text().strip()
+        if isinstance(self._input, QComboBox):
             value = self._input.currentText()
-        else:
-            value = self._input.text()
-        return FieldState(active=self.is_active(), value=value)
+        if isinstance(self._input,QDateEdit):
+            value = self._input.date().toPython()
+        fieldtype = self.spec.field_type
+        return FieldState(active=self.is_active(), value=fieldtype(value))
 
     def set_state(self, state: FieldState) -> None:
         if not isinstance(state, FieldState):
             raise ValueError(f"Invalid state object: {state}")
         t = self.spec.field_type
         val = state.value
-        if val is not None:
-            if t == "int":
-                try:
-                    self._input.setValue(int(val))
-                except (ValueError, TypeError):
-                    pass
-            elif t == "selection":
-                idx = self._input.findText(str(val))
-                if idx >= 0:
-                    self._input.setCurrentIndex(idx)
-            else:
-                self._input.setText(str(val))
+        if isinstance(self._input, QSpinBox):
+            self._input.setValue(val)
+        if isinstance(self._input, QLineEdit):
+            self._input.setText(val)
+        if isinstance(self._input, QComboBox):
+            self._input.setEditText(val)
+        if isinstance(self._input,QDateEdit):
+            self._input.setDate(QDate.fromString(DateFieldType.DATEFORMAT))
+       
         if self.spec.optional and self._check is not None:
             self._check.setChecked(bool(state.get("active", False)))
 
@@ -600,7 +655,7 @@ class NamingDialog(QDialog):
         if self._current is None:
             return ""
         field_values = {fw.spec.name: fw.get_value() for fw in self._field_widgets}
-        name = self._current.pattern_from_field_values(**field_values)
+        name = self._current.pattern_from_field_values(field_values)
         return name
 
     def _copy_name(self) -> None:

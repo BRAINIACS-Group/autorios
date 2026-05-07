@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 SYSTEM_SETTINGS_DIR_PATH = Path(platformdirs.site_config_dir()) / "autotrios"
 USER_SETTINGS_DIR_PATH = Path(platformdirs.user_config_dir()) / "autotrios"
 USER_LOGFILE = Path(platformdirs.user_log_dir()) / "autotrios.log"
-USER_DATA_DIR = Path(platformdirs.user_data_dir()/"autotrios")
+USER_DATA_DIR = Path(platformdirs.user_data_dir())/"autotrios_data"
 
 SYSTEM_SETTINGS_FILE_PATH = SYSTEM_SETTINGS_DIR_PATH / "settings.yaml"
 USER_SETTINGS_FILE_PATH   = USER_SETTINGS_DIR_PATH / "settings.yaml"
@@ -50,6 +50,10 @@ assert __DEFAULT_SYSTEM_SETINGS_DIR.is_dir(), f"could not find {__DEFAULT_SYSTEM
 
 __DEFAULT_USER_SETINGS_DIR=__cur_dir / "data/settings/user"
 assert __DEFAULT_USER_SETINGS_DIR.is_dir(), f"could not find {__DEFAULT_USER_SETINGS_DIR}"
+
+if not USER_DATA_DIR.is_dir():
+    logger.info("could not find user data dir, now creating %s",USER_DATA_DIR.parent)
+    USER_DATA_DIR.mkdir()
 
 if not USER_LOGFILE.parent.is_dir():
     logger.info("could not find user log dir, now creating %s",USER_LOGFILE.parent)
