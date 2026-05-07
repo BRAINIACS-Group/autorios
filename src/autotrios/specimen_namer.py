@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+#STL imports
 import itertools
 import json
 import os
@@ -22,6 +23,7 @@ from abc import ABC
 import datetime
 import logging
 
+#3rd party imports
 from pydantic.dataclasses import dataclass
 import yaml
 from PySide6.QtCore import QTimer, Qt, Signal,QDate
@@ -162,6 +164,8 @@ class FieldSpec(Generic[FieldTypeT]):
             return float
         if type_str == "date":
             return DateFieldType
+        if type_str == "str":
+            return str
         raise ValueError(f"Unsupported field type: '{type_str}'")
 
     @staticmethod
@@ -198,8 +202,7 @@ class PatternSpec:
     pattern: str        # e.g. "{date}_GelAGE_R_{fields}"
     fields: list[FieldSpec]
     source_file: Path = None
-
-    FIELD_CONCAT_CHAR:ClassVar[str]="-"
+    field_concat_char:str="-"
 
     def pattern_from_field_values(self,field_values:dict[str,Any])->str:
         logger.debug("field values: %s",str(field_values))
@@ -215,7 +218,7 @@ class PatternSpec:
                     raise ValueError(f"no value for non optional field {field.name} received")
                 continue
             field_patterns.append(field.value_to_pattern(value))
-        fields_concat = self.FIELD_CONCAT_CHAR.join(field_patterns)
+        fields_concat = self.field_concat_char.join(field_patterns)
 
         if field_values:
             raise ValueError(f"fields remaining in pattern_from_field_values: {field_values}")
@@ -250,19 +253,23 @@ class PatternSpec:
         if "{date}" in pattern:
             field_specs.append(FieldSpec.from_yaml_spec("<date:date>"))
 
-        return PatternSpec(name=name, pattern=pattern,
-                        fields=field_specs, source_file=filepath)
+        kwargs = dict()
+        if field_separator:= data.pop("field_separator",None) is not None:
+            kwargs.update(field_separator=field_separator)
 
-def load_patterns_from_folder(folder: Path|str) -> list[PatternSpec]:
+        return PatternSpec(name=name, pattern=pattern,
+                        fields=field_specs, source_file=filepath,**kwargs)
+
+def load_patterns_from_folders(folders: list[Path|str]) -> list[PatternSpec]:
     """Return all valid PatternSpec objects found in *folder* (*.yaml / *.yml)."""
-    if isinstance(folder, str):
-        folder = Path(folder)
-    if not folder.is_dir():
-        raise NotADirectoryError(f"'{folder}' is not a valid directory")
-    
+    folders = [Path(f) if isinstance(f,str) else f for f in folders ]
+    for folder in folders:
+        if not folder.is_dir():
+            raise NotADirectoryError(f"'{folder}' is not a valid directory")
+    yaml_file_iter = itertools.chain.from_iterable(
+        itertools.chain(f.glob("*.yaml"), f.glob("*.yml")) for f in folders)    
     patterns: list[PatternSpec] = [
-        PatternSpec.from_yaml(fp) for fp in 
-        itertools.chain(folder.glob("*.yaml"), folder.glob("*.yml"))
+        PatternSpec.from_yaml(fp) for fp in  yaml_file_iter
     ]
     return patterns
 
@@ -277,9 +284,7 @@ class NamingDialogState:
     memory between calls and is flushed to disk on every change.
     """
 
-    def __init__(self, state_file: str | None = None) -> None:
-        if state_file is None:
-            state_file = str(Path.home() / ".naming_dialog_state.json")
+    def __init__(self, state_file: Path) -> None:
         self._path = state_file
         self._data: dict[str, Any] = {}
         self._load()
@@ -360,6 +365,12 @@ class FieldWidget(QWidget):
 
     def _make_input(self) -> QWidget:
         t = self.spec.field_type
+        if t is str:
+            w = QLineEdit()
+            w.setText("0.0")
+            w.textChanged.connect(self.value_changed)
+            return w
+
         if t is int:
             w = QSpinBox(value=0)
             w.setRange(0, 999_999)
@@ -471,13 +482,14 @@ class NamingDialog(QDialog):
 
     def __init__(
         self,
-        patterns_folder: str,
-        state: NamingDialogState | None = None,
+        patterns_folders: list[Path]|Path,
+        statefile: Path|None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self._folder = patterns_folder
-        self._state = state or NamingDialogState()
+        self._folders = patterns_folders
+        self._state = (NamingDialogState(statefile) 
+                       if statefile is not None else None)
         self._patterns: list[PatternSpec] = []
         self._current: PatternSpec | None = None
         self._field_widgets: list[FieldWidget] = []
@@ -581,7 +593,7 @@ class NamingDialog(QDialog):
     # ── pattern loading ────────────────────────────────────────────────────
 
     def _load_patterns(self) -> None:
-        self._patterns = load_patterns_from_folder(self._folder)
+        self._patterns = load_patterns_from_folders(self._folders)
 
         self._pattern_combo.blockSignals(True)
         self._pattern_combo.clear()
@@ -590,13 +602,14 @@ class NamingDialog(QDialog):
         self._pattern_combo.blockSignals(False)
 
         # Restore last used pattern
-        last = self._state.get_last_pattern()
         restore_idx = 0
-        if last:
-            for i, p in enumerate(self._patterns):
-                if p.name == last:
-                    restore_idx = i
-                    break
+        if self._state is not None:
+            last = self._state.get_last_pattern()
+            if last:
+                for i, p in enumerate(self._patterns):
+                    if p.name == last:
+                        restore_idx = i
+                        break
 
         self._pattern_combo.setCurrentIndex(restore_idx)
         self._on_pattern_changed(restore_idx)
@@ -611,7 +624,8 @@ class NamingDialog(QDialog):
             return
 
         self._current = self._patterns[idx]
-        self._state.set_last_pattern(self._current.name)
+        if self._state is not None:
+            self._state.set_last_pattern(self._current.name)
         self._rebuild_fields(self._current)
 
     def _rebuild_fields(self, pattern: PatternSpec) -> None:
@@ -620,7 +634,9 @@ class NamingDialog(QDialog):
         while self._fields_layout.rowCount():
             self._fields_layout.removeRow(0)
 
-        saved = self._state.get_field_values(pattern.name)
+        saved = list()
+        if self._state is not None:
+            saved = self._state.get_field_values(pattern.name)
 
         for spec in pattern.fields:
             fw = FieldWidget(spec, parent=self._fields_container)
@@ -670,6 +686,8 @@ class NamingDialog(QDialog):
     def _persist_current(self) -> None:
         if self._current is None:
             return
+        if self._state is None:
+            return
         values = {fw.spec.name: fw.get_state() for fw in self._field_widgets}
         self._state.set_field_values(self._current.name, values)
 
@@ -678,29 +696,15 @@ class NamingDialog(QDialog):
         """Return the name that was built when the dialog was accepted."""
         return self._build_name()
 
-    # ── convenience class method ───────────────────────────────────────────
-
-    @classmethod
-    def get_name(
-        cls,
-        patterns_folder: str,
-        state: NamingDialogState | None = None,
-        parent: QWidget | None = None,
-    ) -> tuple[str, bool]:
+def get_name_from_dialog(
+    patterns_folders: list[Path]|Path,
+    statefile: Path,
+    parent: QWidget | None = None,
+) -> tuple[str, bool]:
         """
-        Open the dialog and return ``(generated_name, accepted)``.
-
-        Pass the same *state* object across multiple calls to preserve
-        the last-used pattern and field values between invocations.
-
-        Example
-        -------
-        state = NamingDialogState()
-        name, ok = NamingDialog.get_name("./patterns", state=state)
-        if ok:
-            save_sample(name)
+        Open the dialog and return generated name
         """
-        dlg = cls(patterns_folder, state=state, parent=parent)
+        dlg = NamingDialog(patterns_folders, statefile=statefile, parent=parent)
         accepted = dlg.exec() == QDialog.Accepted
         if accepted:
             return dlg.get_generated_name()

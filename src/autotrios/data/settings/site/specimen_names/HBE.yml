@@ -1,10 +1,13 @@
+
+pattern: "HBE_{fields}"
 name: HBE
+field_separator: "_"
 fields:
 -  pattern: B<BrainId:int>
    optional: False
 -  S<SpecimenId:int>
--  <Protocol:protocol>  #special field type <protcolId><protocolPart>
--  <Region>
+-  P<Protocol:int>
+-  <Region:str>
 
 examples:
 -  B1-S2-P2a

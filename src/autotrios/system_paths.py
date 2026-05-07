@@ -29,7 +29,8 @@ SYSTEM_SETTINGS_FILE_PATH = SYSTEM_SETTINGS_DIR_PATH / "settings.yaml"
 USER_SETTINGS_FILE_PATH   = USER_SETTINGS_DIR_PATH / "settings.yaml"
 
 PROTOCOL_CONFIG_DIR_PATH = USER_SETTINGS_DIR_PATH / "protocol_config"
-SPECIMEN_NAMES_TEMPLATE_DIR_PATH=USER_SETTINGS_DIR_PATH/ "specimen_names"
+USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH=USER_SETTINGS_DIR_PATH/ "specimen_names"
+SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH=SYSTEM_SETTINGS_DIR_PATH/ "specimen_names"
 SPECIMEN_NAMER_STATE_DIR_PATH = USER_DATA_DIR/ "specimen_namer"
 SPECIMEN_NAMER_STATE_FILE_PATH = SPECIMEN_NAMER_STATE_DIR_PATH/"state"
 
@@ -39,7 +40,8 @@ logger.info("USER_LOGFILE=%s",str(USER_LOGFILE))
 logger.info("SYSTEM_SETTINGS_FILE_PATH=%s",str(SYSTEM_SETTINGS_FILE_PATH))
 logger.info("USER_SETTINGS_FILE_PATH=%s",str(USER_SETTINGS_FILE_PATH))
 logger.info("PROTOCOL_CONFIG_DIR_PATH=%s",str(PROTOCOL_CONFIG_DIR_PATH))
-logger.info("SPECIMEN_NAMES_TEMPLATE_DIR_PATH=%s",str(SPECIMEN_NAMES_TEMPLATE_DIR_PATH))
+logger.info("SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH=%s",str(SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH))
+logger.info("USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH=%s",str(USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH))
 logger.info("SPECIMEN_NAMER_STATE_FILE_PATH=%s",str(SPECIMEN_NAMER_STATE_FILE_PATH))
 
 # ensure that settings directories and files exist, if not create them by 
@@ -63,10 +65,6 @@ if not SPECIMEN_NAMER_STATE_DIR_PATH.is_dir():
     logger.info("could not find specimen name state dir, now creating %s",SPECIMEN_NAMER_STATE_DIR_PATH)    
     SPECIMEN_NAMER_STATE_DIR_PATH.mkdir()
 
-if not SPECIMEN_NAMES_TEMPLATE_DIR_PATH.is_dir():
-    logger.info("could not find specimen name template dir, now creating %s",SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
-    SPECIMEN_NAMES_TEMPLATE_DIR_PATH.mkdir()
-
 if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
     logger.info("could not find system settings, now creating %s", SYSTEM_SETTINGS_DIR_PATH)
     shutil.copytree(__DEFAULT_SYSTEM_SETINGS_DIR,SYSTEM_SETTINGS_DIR_PATH)
@@ -74,3 +72,11 @@ if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
 if not USER_SETTINGS_DIR_PATH.is_dir():
     logger.info("could not find user settings, now creating %s", USER_SETTINGS_DIR_PATH)
     shutil.copytree(__DEFAULT_USER_SETINGS_DIR,USER_SETTINGS_DIR_PATH)
+
+if not SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH.is_dir():
+    logger.info("could not find specimen name template dir, now creating %s",SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
+    (__DEFAULT_SYSTEM_SETINGS_DIR/"specimen_names").copy(SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
+
+if not USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH.is_dir():
+    logger.info("could not find specimen name template dir, now creating %s",USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
+    (__DEFAULT_USER_SETINGS_DIR/"specimen_names").copy(USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)

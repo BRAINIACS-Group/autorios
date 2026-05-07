@@ -34,14 +34,18 @@ from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
 from ._version import __version__
 from .utility import open_filexplorer
-from .system_paths import USER_SETTINGS_FILE_PATH,SYSTEM_SETTINGS_FILE_PATH
+from .system_paths import (
+    USER_SETTINGS_FILE_PATH,
+    SYSTEM_SETTINGS_FILE_PATH,
+    USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,
+    SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,
+    SPECIMEN_NAMER_STATE_FILE_PATH
+    )
 from .dialog_default import DialogDefault
+from .specimen_namer import get_name_from_dialog
 
-logger = logging.getLogger('autotrios')
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Helpers (stubs – replace with your real implementations)
-# ---------------------------------------------------------------------------
 
 def show_yesno_messagebox(question, title="Question")->bool:
     ret = QMessageBox.question(None,title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
@@ -378,9 +382,19 @@ class AutoTriosGui(QWidget):
         fields_layout.setContentsMargins(20, 20, 20, 20)
         fields_layout.setSpacing(16)
 
-        fields_layout.addLayout(self._build_text_field(
+        #TODO putin separate function
+        sample_name_layout = QVBoxLayout()
+        sample_name_layout.setSpacing(6)
+        sample_name_layout.addLayout(self._build_text_field(
             "SAMPLE NAME", self.sample_name_edit, "e.g. sample_001"
         ))
+        specimen_name_btn = QPushButton("Naming Assistant")
+        specimen_name_btn.setObjectName("specimen_name_btn")
+        specimen_name_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        specimen_name_btn.clicked.connect(self._call_naming_assistant)
+        sample_name_layout.addWidget(specimen_name_btn)
+        fields_layout.addLayout(sample_name_layout)
+        
         fields_layout.addLayout(self._build_text_field(
             "OPERATOR NAME", self.operator_name_edit, "e.g. J. Smith"
         ))
@@ -398,6 +412,18 @@ class AutoTriosGui(QWidget):
 
         # ── Bottom bar ───────────────────────────────────────────────────
         root.addLayout(self._build_bottom_bar())
+
+    def _call_naming_assistant(self):
+        try:
+            specimen_name =get_name_from_dialog(
+                [USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH],
+                statefile=SPECIMEN_NAMER_STATE_FILE_PATH,
+                parent=self
+            )
+            self.sample_name_edit.setText(specimen_name)
+        except :
+            return
+
 
     def _build_header(self) -> QVBoxLayout:
         layout = QVBoxLayout()
