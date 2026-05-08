@@ -8,7 +8,7 @@ settings/*.yaml
 .vscode/
 
 #generated version file
-src/autotrios/_version.py
+src/autorios/_version.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

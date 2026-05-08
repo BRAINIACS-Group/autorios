@@ -3,31 +3,31 @@ requires = ["hatchling","hatch-vcs","hatch-pyinstaller"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/autotrios"]
+packages = ["src/autorios"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.pyinstaller]
 require-runtime-dependencies = true
-scriptname="src/autotrios/__main__.py"
-name="autotrios"
+scriptname="src/autorios/__main__.py"
+name="autorios"
 loglevel="DEBUG"
-add-data=["src/autotrios/data:autotrios/data"]
+add-data=["src/autorios/data:autorios/data"]
 flags=["--onedir"]
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/autotrios/_version.py"
+version-file = "src/autorios/_version.py"
 
 [tool.hatch.version]
 source="vcs"
 
 [project.scripts]
-autotrios = "autotrios:__main__"
-autotrios-gui= "autorios:gui"
+autorios = "autorios:__main__"
+autorios-gui= "autorios:gui"
 
 [project]
-name = "autotrios"
+name = "autorios"
 dynamic =["version"]
 authors = [
   { name="Jan Hinrichsen", email="j.hinrichsen95@gmail.com" },
