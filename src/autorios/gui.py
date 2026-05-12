@@ -42,7 +42,7 @@ from pydantic.dataclasses import dataclass
 from .protocol import MetaProtocol
 from .settings import get_settings,Settings
 from ._version import __version__
-from .block_user_input import InputBlocker
+#from .block_user_input import InputBlocker #not working with pyinstaller currently
 from .pyqtgui import show_info_messagebox,AutoTriosGui,show_error_messagebox,show_yesno_messagebox
 from .system_paths import USER_LOGFILE
 from .trios import TRIOS
@@ -106,7 +106,7 @@ class ExperimentThread(QThread):
     def __init__(self,
                  trios_app:TRIOS,
                  experiment_info:ExperimentInfo,
-                 input_blocker:InputBlocker=None):
+                 input_blocker:object=None):
         super().__init__()
         self.signals = ExperimentSignals()
         self._trios_app = trios_app
@@ -117,7 +117,8 @@ class ExperimentThread(QThread):
     def run(self):
         input_blocker = (self._input_blocker
                          if self._input_blocker is not None else nullcontext())
-        input_blocker.connect_on_interrupt(self._trios_app.stop_experiment)
+        if self._input_blocker is not None:
+            input_blocker.connect_on_interrupt(self._trios_app.stop_experiment)
         explog = ExperimentLogger(self._experiment_info)
         with input_blocker,explog:
             self.filepath_logfile = explog.filepath_logfile
@@ -140,7 +141,7 @@ class ExperimentThread(QThread):
         self._trios_app.stop_experiment()
         #self.wait()
         
-def run_gui(settings:Settings,dialog_default:DialogDefault):
+def run_gui(settings:Settings,dialog_default:DialogDefault|None):
     '''run autotrios'''
     logging.getLogger().addHandler(default_file_logger)
 
@@ -178,9 +179,9 @@ def run_gui(settings:Settings,dialog_default:DialogDefault):
                                "current experiment before starting a new one.")
             raise RuntimeError("run_experiment called while experiment still running")
         logger.info('running experiment %s',repr(experiment_info))
-        input_blocker = InputBlocker(timeout=20,show_window=True)
-        input_blocker.show()
-        experiment_thread = ExperimentThread(trios_app,experiment_info,input_blocker=input_blocker)
+        # input_blocker = InputBlocker(timeout=20,show_window=True)
+        # input_blocker.show()
+        experiment_thread = ExperimentThread(trios_app,experiment_info,input_blocker=None)
         experiment_thread.finished.connect(delete_experiment)
         experiment_thread.start()
         return experiment_thread
@@ -191,8 +192,8 @@ def run_gui(settings:Settings,dialog_default:DialogDefault):
         experiment_thread.stop()
         experiment_thread = None
    
-
-    dialog_default.validate_metaprotocol_name(metaprotocols)
+    if dialog_default is not None:
+        dialog_default.validate_metaprotocol_name(metaprotocols)
 
     if not metaprotocols:
         logger.error("no metaprotocol .yml files under: %s",settings.protocol_config_path)
