@@ -9,12 +9,12 @@
 #           "(-mTG(?P<mtgRatio>[0-9p\+]+))?"
 #           "(-(?P<process>(printed)|(molded)))?"
 #           "(-temp(?P<temp>[0-9\+]+))?",
-
+pattern: "ADA-GEL_R_{date}_{operator}_{fields}"
 name: ADA-GEL
 fields:
 -  B<batchId:int>
 -  S<specimenId:int>
--  <protocol:protocol>
+-  P<protocol:int>
 -  ADA<adaRatio:float>
 -  GEL<gelRatio:float>
 -  pattern: PH<algType:float>
