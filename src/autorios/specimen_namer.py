@@ -340,9 +340,20 @@ class FieldState:
     value: Any
 
     @classmethod
-    def from_dict(dct:dict[str,Any]):
+    def from_dict(cls,dct:dict[str,Any]):
         return FieldState(**dct)
     
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.date):
+            return "date_"+o.isoformat()
+        return json.JSONEncoder.default(self, o)
+
+def date_object_hook(obj):
+    if isinstance(obj,str) and obj.startswith("date_"):
+        return datetime.date.fromisoformat(obj)
+    return obj
+
 class NamingDialogState:
     """
     JSON-backed store that remembers the last selected pattern and the
@@ -364,14 +375,14 @@ class NamingDialogState:
         try:
             if os.path.exists(self._path):
                 with open(self._path, "r", encoding="utf-8") as fh:
-                    self._data = json.load(fh)
+                    self._data = json.load(fh,object_hook=date_object_hook)
         except Exception:
             self._data = {}
 
     def _save(self) -> None:
         try:
             with open(self._path, "w", encoding="utf-8") as fh:
-                json.dump(self._data, fh, indent=2)
+                json.dump(self._data, fh, indent=2,cls=DateTimeEncoder)
         except Exception as exc:
             print(f"[naming_dialog] Could not save state: {exc}")
 
@@ -394,7 +405,8 @@ class NamingDialogState:
         self._data.setdefault("field_values", {})[pattern_name] = values
         self._save()
 
-
+    def remove_field_values(self,pattern_name:str)->None:
+        self._data.pop(pattern_name,None)
 
 class FieldWidget(QWidget):
     """
@@ -517,8 +529,8 @@ class FieldWidget(QWidget):
             value = self._input.currentText()
         if isinstance(self._input,QDateEdit):
             value = self._input.date().toPython()
-        fieldtype = self.spec.field_type
-        return FieldState(active=self.is_active(), value=fieldtype(value))
+        #fieldtype = self.spec.field_type
+        return FieldState(active=self.is_active(), value=value)
 
     def set_state(self, state: FieldState) -> None:
         if not isinstance(state, FieldState):
@@ -719,7 +731,11 @@ class NamingDialog(QDialog):
 
         saved = list()
         if self._state is not None:
-            saved = self._state.get_field_values(pattern.name)
+            try:
+                saved = self._state.get_field_values(pattern.name)
+            except FieldStateError:
+                logger.exception("got error retrieving state")
+                self._state.remove_field_values(pattern.name)
 
         for spec in pattern.fields:
             fw = FieldWidget(spec, parent=self._fields_container)
