@@ -540,6 +540,7 @@ class AutoTriosGui(QWidget):
         try:
             self._experiment_thread = self._callback_start_experiment(experiment_info)
             self._experiment_thread.finished.connect(self._experiment_buttons_finished)
+            self._experiment_thread.signals.on_error.connect(lambda e: show_error_messagebox(str(e),"Error running experiment"))
             self._experiment_buttons_started()
         except Exception as e:
             if self._exception_as_messagebox:
