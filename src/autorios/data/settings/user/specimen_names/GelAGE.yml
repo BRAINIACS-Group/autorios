@@ -1,0 +1,17 @@
+
+name: GelAGE
+fields:
+-  B<batchId:int>
+-  S<specimenId:int>
+-  <protocol:protocol>
+-  GelAGE<gelAGERatio:float>
+-  G<GelAGEType:str>
+-  PEG<PEGRatio:float>
+-  C<cells:str>
+-  D<days_in_vitro:int>
+-  M<medium>
+-  pattern: <process:selection(printed|molded)>
+   optional: True
+   
+examples:
+-  B1-S1-P2a-GelAGE0p03-G2LH-PEG0p039-Cnone-D0-MPEM-molded

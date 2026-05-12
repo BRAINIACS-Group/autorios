@@ -1,0 +1,17 @@
+#"B(?P<batchId>[0-9p\+]+)"
+#           "-S(?P<specimenId>[0-9p\+]+)"
+#           "-P(?P<protocolId>[0-9p\+]+)(?P<protocolPart>[a-zp]+)"
+#           "-PEGQK(?P<pegqkRatio>[0-9p]+)"
+#           "-GT(?P<geltrex>[0-9p]+)",
+           
+name: PEGQK
+fields:
+-  B<batchId:int>
+-  S<specimenId:int>
+-  <protocol:protocol>
+-  PEGQK<pegqkRatio:float>
+-  GT<geltrex:float>
+   
+examples:
+-  B1-S2-P3-PEGQK0p0125-GT0p0
+-  B1-S3-P3-PEGQK0p0175-GT0p06
