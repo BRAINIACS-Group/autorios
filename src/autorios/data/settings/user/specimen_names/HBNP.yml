@@ -1,0 +1,15 @@
+name: HBNP
+fields:
+- B<BrainId:int>
+- S<SpecimenId:int>
+- R<Region>
+- <Protocol:protocol>  #special field type <protcolId><protocolPart>
+- PN<pathologynumber>  #String for now, might make this into a special field?
+- pattern:  F<fluid>
+  optional: True
+- pattern:  D<diameter:int>
+  optional: True
+examples:
+- B32-S1-RWM-P2-PN677p25-FACSF-D6
+- B20-P2-PNxxxxp24-FoACSF
+- B13-P2-PN650p24

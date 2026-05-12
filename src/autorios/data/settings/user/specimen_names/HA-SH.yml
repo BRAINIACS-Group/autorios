@@ -1,0 +1,22 @@
+name: HA-SH
+fields:
+-  B<batchId:int>
+-  S<specimenId:int>
+-  <protocol:protocol>
+-  HASH<hashRatio:float>
+-  <hashAtomMass:float>kDa
+-  PEGdiacryl<pegDiacrylRatio:float>
+-  <pegDiacrylAtomMass:float>kDa
+-  PEGdiallyl<pegDiallylRatio:float>
+-  <pegDiallylAtomMass:float>kDa
+-  C<cells:str>
+-  D<daysInVitro:int>
+-  M<medium:str>
+-  pattern: <process:selection(printed|molded)>
+   optional: True
+-  pattern: temp<temp:float>
+   optional: True
+   
+examples:
+-  B1-S3-P2-HASH0p005-410kDa-PEGdiacryl0p005-6kDa-PEGdiallyl0p01-6kDa-Cnone-D0-MDPBS-molded
+-  B1-S6-P2-HASH0p005-410kDa-PEGdiacryl0p005-6kDa-PEGdiallyl0p01-6kDa-CMSC-D3-MDMEM-printed-temp12
