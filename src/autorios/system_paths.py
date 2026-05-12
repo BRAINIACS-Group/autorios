@@ -20,10 +20,10 @@ import platformdirs
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_SETTINGS_DIR_PATH = Path(platformdirs.site_config_dir()) / "autotrios"
-USER_SETTINGS_DIR_PATH = Path(platformdirs.user_config_dir()) / "autotrios"
-USER_LOGFILE = Path(platformdirs.user_log_dir()) / "autotrios.log"
-USER_DATA_DIR = Path(platformdirs.user_data_dir())/"autotrios_data"
+SYSTEM_SETTINGS_DIR_PATH = Path(platformdirs.site_config_dir()) / "autorios"
+USER_SETTINGS_DIR_PATH = Path(platformdirs.user_config_dir()) / "autorios"
+USER_LOGFILE = Path(platformdirs.user_log_dir()) / "autorios.log"
+USER_DATA_DIR = Path(platformdirs.user_data_dir())/"autorios_data"
 
 SYSTEM_SETTINGS_FILE_PATH = SYSTEM_SETTINGS_DIR_PATH / "settings.yaml"
 USER_SETTINGS_FILE_PATH   = USER_SETTINGS_DIR_PATH / "settings.yaml"
