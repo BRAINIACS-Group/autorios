@@ -34,14 +34,18 @@ from .protocol import MetaProtocol
 from .experiment_info import ExperimentInfo
 from ._version import __version__
 from .utility import open_filexplorer
-from .system_paths import USER_SETTINGS_FILE_PATH,SYSTEM_SETTINGS_FILE_PATH
+from .system_paths import (
+    USER_SETTINGS_FILE_PATH,
+    SYSTEM_SETTINGS_FILE_PATH,
+    USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,
+    SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,
+    SPECIMEN_NAMER_STATE_FILE_PATH
+    )
 from .dialog_default import DialogDefault
+from .specimen_namer import get_name_from_dialog
 
-logger = logging.getLogger('autotrios')
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Helpers (stubs – replace with your real implementations)
-# ---------------------------------------------------------------------------
 
 def show_yesno_messagebox(question, title="Question")->bool:
     ret = QMessageBox.question(None,title,question,QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No)
@@ -75,22 +79,23 @@ def show_error_messagebox(message, title="Error")->None:
 
 STYLESHEET = """
 /* ── Global ─────────────────────────────────────────── */
+
 QDialog {
-    background-color: #0f1117;
-    color: #e2e8f0;
-    font-family: "Courier New", monospace;
+    background-color: #ffffff;
+    color: #000000;
+    /*font-family: "Courier New", monospace;*/
 }
 
 /* ── Section card ────────────────────────────────────── */
 QFrame#card {
-    background-color: #1a1d27;
+    /*background-color: #ffffff;*/
     border: 1px solid #2d3148;
     border-radius: 6px;
 }
 
 /* ── Field labels ────────────────────────────────────── */
 QLabel#field_label {
-    color: #64748b;
+    /*color: #555555;*/
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -99,9 +104,9 @@ QLabel#field_label {
 
 /* ── Value labels (directory path display) ───────────── */
 QLabel#value_label {
-    color: #38bdf8;
+    /*color: #555555;*/
     font-size: 11px;
-    background-color: #0d1520;
+    /*background-color: #0d1520;*/
     border: 1px solid #1e3a5f;
     border-radius: 4px;
     padding: 6px 10px;
@@ -109,47 +114,57 @@ QLabel#value_label {
 
 /* ── Header ──────────────────────────────────────────── */
 QLabel#header_title {
-    color: #f1f5f9;
+    /*color: #f1f5f9;*/
     font-size: 18px;
     font-weight: 700;
     letter-spacing: 3px;
 }
-/*
+
  QLabel#header_subtitle {
-     color: #475569;
+     /*color: #475569;*/
      font-size: 10px;
      letter-spacing: 4px;
  }
-*/
- 
-/* ── Line edits ──────────────────────────────────────── */
-QLineEdit {
-    background-color: #0d1117;
-    color: #e2e8f0;
+
+ /*-- SpinBox---------------------*/
+ QSpinBox {
+    /*color: #555555;*/
     border: 1px solid #2d3148;
     border-radius: 4px;
     padding: 8px 12px;
     font-size: 13px;
-    font-family: "Courier New", monospace;
+    /*font-family: "Courier New", monospace;*/
+    selection-background-color: #1e40af;
+ }
+ 
+/* ── Line edits ──────────────────────────────────────── */
+QLineEdit {
+    /*background-color: #0d1117;*/
+    color: #555555;
+    border: 1px solid #2d3148;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    /*font-family: "Courier New", monospace;*/
     selection-background-color: #1e40af;
 }
 QLineEdit:focus {
     border: 1px solid #3b82f6;
-    background-color: #0f1623;
+    /*background-color: #0f1623;*/
 }
 QLineEdit::placeholder {
-    color: #374151;
+    color: #555555;
 }
 
 /* ── Combo box ───────────────────────────────────────── */
 QComboBox {
-    background-color: #0d1117;
-    color: #e2e8f0;
+    /*background-color: #0d1117;*/
+    /*color: #555555;*/
     border: 1px solid #2d3148;
     border-radius: 4px;
     padding: 8px 12px;
     font-size: 13px;
-    font-family: "Courier New", monospace;
+    /*font-family: "Courier New", monospace;*/
     min-height: 20px;
 }
 QComboBox:focus {
@@ -159,6 +174,7 @@ QComboBox::drop-down {
     border: none;
     width: 28px;
 }
+/*
 QComboBox::down-arrow {
     image: none;
     border-left: 5px solid transparent;
@@ -168,23 +184,43 @@ QComboBox::down-arrow {
     height: 0;
     margin-right: 8px;
 }
+*/
+
 QComboBox QAbstractItemView {
-    background-color: #1a1d27;
-    color: #e2e8f0;
+    /*background-color: #1a1d27;*/
+    /*color: #555555;*/
     border: 1px solid #2d3148;
-    selection-background-color: #1e3a5f;
+    /*selection-background-color: #1e3a5f;*/
     outline: none;
 }
 
+
 /* ── Buttons – base ──────────────────────────────────── */
+
 QPushButton {
+    /*font-family: "Courier New", monospace;*/
     border-radius: 4px;
-    font-family: "Courier New", monospace;
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    /*font-weight: 700;*/
+    letter-spacing: 1px;
     padding: 10px 18px;
-    border: none;
+    /*border: None;*/
+    border: 1px solid #2d3148;
+}
+QPushButton:hover {
+    background-color: #a9a9a9;
+}
+
+/*specimen namer button*/
+QPushButton#specimen_name_btn {
+    background-color: transparent;
+    color: #475569;
+    border: 1px solid #2d3148;
+}
+QPushButton#specimen_name_btn:hover {
+    color: #94a3b8;
+    border-color: #475569;
+    background-color: #1a1d27;
 }
 
 /* Settings button */
@@ -212,9 +248,9 @@ QPushButton#settings_system_btn:hover {
 
 /* Directory button */
 QPushButton#dir_btn {
-    background-color: #1e293b;
-    color: #7dd3fc;
-    border: 1px solid #1e3a5f;
+    background-color: transparent;
+    color: #94a3b8;
+    border: 1px solid #2d3148;
     font-size: 10px;
     padding: 6px 14px;
 }
@@ -378,9 +414,19 @@ class AutoTriosGui(QWidget):
         fields_layout.setContentsMargins(20, 20, 20, 20)
         fields_layout.setSpacing(16)
 
-        fields_layout.addLayout(self._build_text_field(
+        #TODO putin separate function
+        sample_name_layout = QVBoxLayout()
+        sample_name_layout.setSpacing(6)
+        sample_name_layout.addLayout(self._build_text_field(
             "SAMPLE NAME", self.sample_name_edit, "e.g. sample_001"
         ))
+        specimen_name_btn = QPushButton("Naming Assistant")
+        specimen_name_btn.setObjectName("specimen_name_btn")
+        specimen_name_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        specimen_name_btn.clicked.connect(self._call_naming_assistant)
+        sample_name_layout.addWidget(specimen_name_btn)
+        fields_layout.addLayout(sample_name_layout)
+        
         fields_layout.addLayout(self._build_text_field(
             "OPERATOR NAME", self.operator_name_edit, "e.g. J. Smith"
         ))
@@ -398,6 +444,18 @@ class AutoTriosGui(QWidget):
 
         # ── Bottom bar ───────────────────────────────────────────────────
         root.addLayout(self._build_bottom_bar())
+
+    def _call_naming_assistant(self):
+        try:
+            specimen_name =get_name_from_dialog(
+                [USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH],
+                statefile=SPECIMEN_NAMER_STATE_FILE_PATH,
+                parent=self
+            )
+            self.sample_name_edit.setText(specimen_name)
+        except :
+            return
+
 
     def _build_header(self) -> QVBoxLayout:
         layout = QVBoxLayout()
