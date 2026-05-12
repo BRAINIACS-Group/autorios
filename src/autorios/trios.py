@@ -41,7 +41,7 @@ from .pyqtgui import (show_warning_messagebox,show_yesno_messagebox,
                       show_error_messagebox)
 from .experiment_info import ExperimentInfo
 from .device_settings import TriosDeviceSettings
-from .settings import Settings
+from .settings import Settings,SETTING_VALUE_NOT_SET
 from .specimen import Specimen
 from .utility import write_float_to_input,write_to_input,is_button
 from .datalogger import DataLogger
@@ -560,7 +560,7 @@ class TRIOS(MyApplication):
         if self._settings.idle_velocity is not None:
             self._set_idle_velocity(self._settings.idle_velocity)
 
-        if self._settings.idle_gap is not None:
+        if self._settings.idle_gap is not None and self._settings.idle_gap != SETTING_VALUE_NOT_SET :
             self.set_gap(self._settings.idle_gap)
 
     def set_gap(self,gap:float,ask_confirmation:bool=True):

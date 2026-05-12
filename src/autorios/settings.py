@@ -16,20 +16,33 @@ import logging
 from abc import ABC
 
 #from dataclasses import dataclass
-from typing import Union,List
+from typing import Union,List,Any
 from pathlib import Path
 from dataclasses import asdict, is_dataclass,fields
 
 #3rd party imports
 import yaml
+from pydantic import GetCoreSchemaHandler
 from pydantic.dataclasses import dataclass
+from pydantic_core import CoreSchema
 
 #local imports
 from .system_paths import (SYSTEM_SETTINGS_FILE_PATH,USER_SETTINGS_FILE_PATH,PROTOCOL_CONFIG_DIR_PATH)
 from .device_settings import TriosDeviceSettings
-from .dataclass_helpers import Updateable,DataclassBaseHelper
+from .dataclass_helpers import Updateable,core_schema
 
 logger = logging.getLogger(__name__)
+
+class SETTING_VALUE_NOT_SET_T(object):
+  @classmethod
+  def __get_pydantic_core_schema__(
+        cls,
+        source_type: Any,
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+    return core_schema.is_instance_schema(SETTING_VALUE_NOT_SET_T)
+
+SETTING_VALUE_NOT_SET = SETTING_VALUE_NOT_SET_T()
 
 def get_settings(
   system_settings_file:Union[str,Path]=SYSTEM_SETTINGS_FILE_PATH,
@@ -60,6 +73,7 @@ def get_settings_default()->Settings:
       ],
       datalogger_restart=True,
       idle_velocity=1e4,
+      idle_gap=SETTING_VALUE_NOT_SET,
       freqsweep_timeout=20*60,
       device_settings=TriosDeviceSettings()
    )
@@ -87,7 +101,7 @@ class Settings(Updateable):
   idle_velocity:Union[float,None] = None
   #rheometer gap to be set after calibration and after the end of each
   #experiment if confirmed by user
-  idle_gap:Union[float,None] = None
+  idle_gap:Union[float,None,SETTING_VALUE_NOT_SET_T] = None
   #how long to wait for the frequency sweep to finish before raising an error,
   # in seconds
   freqsweep_timeout:Union[int,None] = None

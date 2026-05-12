@@ -9,6 +9,6 @@
 #
 # -----------------------------------------------------------------------------
 
-from autotrios.gui import gui
+from autorios.gui import gui
 
 gui()

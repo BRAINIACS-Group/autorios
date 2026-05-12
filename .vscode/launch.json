@@ -16,7 +16,7 @@
             "name": "autotrios_debug",
             "type": "debugpy",
             "request": "launch",
-            "module": "autotrios",
+            "module": "autorios",
             "args": [
                 "--verbosity","DEBUG",
                 "-d", "sample_name=Tes.sämplöü  ..$§-~0Sample",
