@@ -116,6 +116,7 @@ class ExperimentThread(QThread):
             logger.info("logging to %s",str(self.filepath_logfile))
             try:
                 self._trios_app.run_experiment(self._experiment_info)
+                #time.sleep(1)
             except Exception as e:
                 logger.exception("Exception running experiment")
                 show_error_messagebox(f"An error occurred while running the"
