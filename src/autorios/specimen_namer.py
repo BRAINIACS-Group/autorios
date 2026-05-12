@@ -590,6 +590,7 @@ class NamingDialog(QDialog):
         self._patterns: list[PatternSpec] = []
         self._current: PatternSpec | None = None
         self._field_widgets: list[FieldWidget] = []
+        self._field_widgets_ready = False
 
         self.setWindowTitle("Sample Naming Assistant")
         self.setMinimumWidth(580)
@@ -730,21 +731,22 @@ class NamingDialog(QDialog):
         self._field_widgets.clear()
         while self._fields_layout.rowCount():
             self._fields_layout.removeRow(0)
+        self._field_widgets_ready = False
 
-        saved = list()
+        saved = dict()
         if self._state is not None:
-            try:
-                saved = self._state.get_field_values(pattern.name)
-            except FieldStateError:
-                logger.exception("got error retrieving state")
-                self._state.remove_field_values(pattern.name)
+            saved = self._state.get_field_values(pattern.name)
 
         for spec in pattern.fields:
             fw = FieldWidget(spec, parent=self._fields_container)
             fw.value_changed.connect(self._update_preview)
 
             if spec.name in saved:
-                fw.set_state(saved[spec.name])
+                try:
+                    fw.set_state(saved[spec.name])
+                except ValueError:
+                    logger.exception("got error retrieving state, removing pattern")
+                    self._state.remove_field_values(pattern.name)
 
             lbl_text = spec.name
             if spec.optional:
@@ -763,10 +765,12 @@ class NamingDialog(QDialog):
             self._fields_layout.addRow(label, fw)
             self._field_widgets.append(fw)
 
+        self._field_widgets_ready = True
         self._update_preview()
-
+    
     def _update_preview(self) -> None:
-        self._preview.setText(self._build_name())
+        if self._field_widgets_ready:
+            self._preview.setText(self._build_name())
 
     def _build_name(self) -> str:
         if self._current is None:
