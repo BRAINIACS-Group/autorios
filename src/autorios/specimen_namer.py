@@ -222,9 +222,10 @@ class FieldSpec(Generic[FieldTypeT]):
             fieldspec_kwargs["raw"] = raw_spec
         elif isinstance(raw_spec,dict):
             try:
-                fieldspec_kwargs["raw"] = raw_spec["pattern"]
+                fieldspec_kwargs["raw"] = raw_spec.pop("pattern")
             except KeyError as ke:
                 raise ValueError(f"Field spec must contain pattern: '{raw_spec}'") from ke
+            fieldspec_kwargs.update(**raw_spec)
 
         pattern = fieldspec_kwargs["raw"]
         m = FieldSpec.FIELDSPEC_RE.match(pattern)
@@ -491,7 +492,8 @@ class FieldWidget(QWidget):
         raise ValueError(f"unknown field type {t}")
 
     def _on_toggle(self, state: int) -> None:
-        self._input.setEnabled(state == Qt.Checked)
+        #logger.debug(f"set checkbox of field {self.spec.name} to {state== Qt.Checked}")
+        self._input.setEnabled(self._check.isChecked())
         self.value_changed.emit()
 
     # ── public API ─────────────────────────────────────────────────────────
@@ -547,7 +549,7 @@ class FieldWidget(QWidget):
             self._input.setDate(QDate.fromString(DateFieldType.DATEFORMAT))
        
         if self.spec.optional and self._check is not None:
-            self._check.setChecked(bool(state.get("active", False)))
+            self._check.setChecked(state.active)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -769,7 +771,7 @@ class NamingDialog(QDialog):
     def _build_name(self) -> str:
         if self._current is None:
             return ""
-        field_values = {fw.spec.name: fw.get_value() for fw in self._field_widgets}
+        field_values = {fw.spec.name: fw.get_value() if fw.is_active() else None for fw in self._field_widgets}
         name = self._current.pattern_from_field_values(field_values)
         return name
 
