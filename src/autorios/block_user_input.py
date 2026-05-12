@@ -182,6 +182,9 @@ class CountdownTimer(QThread):
                 self._time_signal._update_signal.emit(remaining)
             time.sleep(1)
             remaining = int(self.seconds - (time.time() - time_start))
+        if self.countdown_window is not None:
+            self._time_signal._close_signal.emit(True)
+
 
 class BlockerSignals(QObject):
     interrupted = Signal()

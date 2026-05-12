@@ -41,7 +41,7 @@ from .pyqtgui import (show_warning_messagebox,show_yesno_messagebox,
                       show_error_messagebox)
 from .experiment_info import ExperimentInfo
 from .device_settings import TriosDeviceSettings
-from .settings import Settings
+from .settings import Settings,SETTING_VALUE_NOT_SET
 from .specimen import Specimen
 from .utility import write_float_to_input,write_to_input,is_button
 from .datalogger import DataLogger
@@ -356,6 +356,8 @@ class TRIOS(MyApplication):
 
         logger.info('filling protocol step values')
         for step in protocol.steps:
+            self._check_for_stop_event()
+
             step_ctrl = self.window_main.child_window(title=step.label,
                 auto_id="LabelDisabledText", control_type="Text")
             step_top_parent =  step_ctrl.parent().parent().parent()
@@ -520,13 +522,16 @@ class TRIOS(MyApplication):
         self.window_main.set_focus() # brings the window to top
         self._focus_experiment_tab()
 
+        self._check_for_stop_event()
         #now run the protocol etc.
         height = self._get_gap_value()
         logger.info('found specimen height: %g',height)
         specimen = Specimen(height)
 
+        self._check_for_stop_event()
         self._set_geometry(specimen)
 
+        self._check_for_stop_event()
         self._input_experiment_names(experiment_info)
        
         experiment_settings = (
@@ -535,6 +540,7 @@ class TRIOS(MyApplication):
             )
 
         for n,protocol in enumerate(experiment_info.meta_protocol.protocols):
+            self._check_for_stop_event()
             protocol_settings = (
                 copy.deepcopy(experiment_settings)
                 .update(protocol.settings_update)
@@ -549,7 +555,9 @@ class TRIOS(MyApplication):
                 specimen,
                 filepath_datalogger=filepath_datalogger_inc)
             self._focus_experiment_tab()
-            
+
+        self._check_for_stop_event()
+
         #stop and kill the datalogger if it is still open
         if self.datalogger is not None:
             self.detach_datalogger()
@@ -557,10 +565,12 @@ class TRIOS(MyApplication):
         self._zero_gap_set = False
         self._calibrated = False
 
+        self._check_for_stop_event()
         if self._settings.idle_velocity is not None:
             self._set_idle_velocity(self._settings.idle_velocity)
 
-        if self._settings.idle_gap is not None:
+        self._check_for_stop_event()
+        if self._settings.idle_gap is not None and self._settings.idle_gap != SETTING_VALUE_NOT_SET :
             self.set_gap(self._settings.idle_gap)
 
     def set_gap(self,gap:float,ask_confirmation:bool=True):

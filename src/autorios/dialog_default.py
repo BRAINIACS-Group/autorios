@@ -11,6 +11,7 @@
 
 
 #STL imports
+from __future__ import annotations
 from pathlib import Path
 from typing import List,Tuple
 
@@ -47,7 +48,7 @@ class DialogDefault:
 
 def parse_dialog_default(dialog_default_option:list)->DialogDefault:
     if not dialog_default_option:
-        return dict()
+        return None
     def parse_key_value_option(option:str):
         if not "=" in option:
             raise ValueError(f"no = found in dialog_default option {dialog_default_option}")

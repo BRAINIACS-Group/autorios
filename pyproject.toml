@@ -15,6 +15,7 @@ name="autorios"
 loglevel="DEBUG"
 add-data=["src/autorios/data:autorios/data"]
 flags=["--onedir"]
+icon="resources/icon/autorios.ico"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/autorios/_version.py"

@@ -25,11 +25,10 @@ protocols :
   
   #Trios device settings
   settings:
-    device:
+    device_settings:
       velocity : 40
       fine_velocity : 40
 
- 
   steps:
     - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
@@ -38,7 +37,7 @@ protocols :
   has_frequency_sweep : False
   
   settings:
-    device:
+    device_settings:
       velocity : 100
       fine_velocity : 100
 

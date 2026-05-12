@@ -22,6 +22,7 @@ from typing import Any, Optional,Generic,TypeVar,ClassVar,Type
 from abc import ABC
 import datetime
 import logging
+from dataclasses import asdict
 
 #3rd party imports
 from pydantic.dataclasses import dataclass
@@ -142,6 +143,7 @@ class FieldSpec(Generic[FieldTypeT]):
     """Parsed representation of one field in a naming pattern."""
     name: str           # logical name, e.g. "batchId"
     field_type: Type
+    default: FieldTypeT|None = None
     prefix: str =""        # literal prefix, e.g. "B"
     optional: bool = False
     raw: str = ""       # original pattern fragment for debugging
@@ -155,6 +157,13 @@ class FieldSpec(Generic[FieldTypeT]):
         except ValueError as ve:
             raise ValueError(f"Could not convert '{value_str}' to {self.field_type}") from ve
 
+    def set_default(self,default_value:FieldTypeT)->None:
+        self.default = default_value
+
+    def get_default(self)->FieldTypeT:
+        #if self.default is not None:
+        return self.default
+    
     def print_value(self,value:FieldTypeT,)->str:
         if not isinstance(value,self.field_type):
             try:
@@ -173,7 +182,7 @@ class FieldSpec(Generic[FieldTypeT]):
         if issubclass(self.field_type, SelectionFieldTypeBase):
             return self.prefix + value.value
         if issubclass(self.field_type,DateFieldType):
-            return value.strftime(DateFieldType.DATEFORMAT)
+            return str(value)
         if isinstance(value,str):
             return value
         raise ValueError(f"Unsupported field type {self.field_type} for value {value}")
@@ -213,9 +222,10 @@ class FieldSpec(Generic[FieldTypeT]):
             fieldspec_kwargs["raw"] = raw_spec
         elif isinstance(raw_spec,dict):
             try:
-                fieldspec_kwargs["raw"] = raw_spec["pattern"]
+                fieldspec_kwargs["raw"] = raw_spec.pop("pattern")
             except KeyError as ke:
                 raise ValueError(f"Field spec must contain pattern: '{raw_spec}'") from ke
+            fieldspec_kwargs.update(**raw_spec)
 
         pattern = fieldspec_kwargs["raw"]
         m = FieldSpec.FIELDSPEC_RE.match(pattern)
@@ -241,17 +251,24 @@ class PatternSpec:
     source_file: Path = None
     field_concat_char:str="-"
 
+    SPECIAL_FIELDS: ClassVar[list[str]] = ["date","operator"]
+
     def pattern_from_field_values(self,field_values:dict[str,Any])->str:
         logger.debug("field values: %s",str(field_values))
         fmt_dict = dict()
-        date=field_values.pop("date",None)
-        if date is not None:
-            fmt_dict.update(date=date)
+        for special_var in self.SPECIAL_FIELDS:
+            var_val=field_values.pop(special_var,None)
+            if var_val is not None:
+                for f in self.fields:
+                    if f.name == special_var:
+                        var_val_str = f.print_value(var_val)
+                fmt_dict.update({special_var:var_val_str})
+
         field_patterns = []
         for field in self.fields:
             value =field_values.pop(field.name,None)
             if value is None:
-                if not field.optional and not field.name == "date":
+                if not field.optional and not field.name in self.SPECIAL_FIELDS:
                     raise ValueError(f"no value for non optional field {field.name} received")
                 continue
             field_patterns.append(field.value_to_pattern(value))
@@ -266,7 +283,7 @@ class PatternSpec:
         return filled_pattern
 
     @staticmethod
-    def from_yaml(filepath: Path) -> PatternSpec | None:
+    def from_yaml(filepath: Path,pattern_kwargs:dict[str,Any]=None) -> PatternSpec | None:
         """Parse a single YAML file into a PatternSpec, or None on error."""
 
         if not filepath.is_file():
@@ -284,11 +301,18 @@ class PatternSpec:
         field_specs: list[FieldSpec] = [FieldSpec.from_yaml_spec(item) for item in raw_fields]
 
         for field in field_specs:
-            if field.name == "date":
-                raise ValueError("reserved name date cannot be used for field names")
+            if field.name in ["date","operator"]:
+                raise ValueError(f"reserved name {field.name} cannot be used for field names")
 
         if "{date}" in pattern:
             field_specs.append(FieldSpec.from_yaml_spec("<date:date>"))
+
+        if "{operator}" in pattern:
+            field_specs.append(FieldSpec.from_yaml_spec("<operator:str>"))
+
+        for field in field_specs:
+            if field.name in pattern_kwargs.keys():
+                field.set_default(pattern_kwargs[field.name])
 
         kwargs = dict()
         if field_separator:= data.pop("field_separator",None) is not None:
@@ -297,7 +321,7 @@ class PatternSpec:
         return PatternSpec(name=name, pattern=pattern,
                         fields=field_specs, source_file=filepath,**kwargs)
 
-def load_patterns_from_folders(folders: list[Path|str]) -> list[PatternSpec]:
+def load_patterns_from_folders(folders: list[Path|str],pattern_kwargs:dict[str,Any]=None) -> list[PatternSpec]:
     """Return all valid PatternSpec objects found in *folder* (*.yaml / *.yml)."""
     folders = [Path(f) if isinstance(f,str) else f for f in folders ]
     for folder in folders:
@@ -306,10 +330,30 @@ def load_patterns_from_folders(folders: list[Path|str]) -> list[PatternSpec]:
     yaml_file_iter = itertools.chain.from_iterable(
         itertools.chain(f.glob("*.yaml"), f.glob("*.yml")) for f in folders)    
     patterns: list[PatternSpec] = [
-        PatternSpec.from_yaml(fp) for fp in  yaml_file_iter
+        PatternSpec.from_yaml(fp,pattern_kwargs) for fp in  yaml_file_iter
     ]
     return patterns
 
+
+@dataclass
+class FieldState:
+    active: bool
+    value: Any
+
+    @classmethod
+    def from_dict(cls,dct:dict[str,Any]):
+        return FieldState(**dct)
+    
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.date):
+            return "date_"+o.isoformat()
+        return json.JSONEncoder.default(self, o)
+
+def date_object_hook(obj):
+    if isinstance(obj,str) and obj.startswith("date_"):
+        return datetime.date.fromisoformat(obj)
+    return obj
 
 class NamingDialogState:
     """
@@ -332,14 +376,14 @@ class NamingDialogState:
         try:
             if os.path.exists(self._path):
                 with open(self._path, "r", encoding="utf-8") as fh:
-                    self._data = json.load(fh)
+                    self._data = json.load(fh,object_hook=date_object_hook)
         except Exception:
             self._data = {}
 
     def _save(self) -> None:
         try:
             with open(self._path, "w", encoding="utf-8") as fh:
-                json.dump(self._data, fh, indent=2)
+                json.dump(self._data, fh, indent=2,cls=DateTimeEncoder)
         except Exception as exc:
             print(f"[naming_dialog] Could not save state: {exc}")
 
@@ -352,18 +396,18 @@ class NamingDialogState:
         self._data["last_pattern"] = name
         self._save()
 
-    def get_field_values(self, pattern_name: str) -> dict[str, Any]:
-        return self._data.get("field_values", {}).get(pattern_name, {})
+    def get_field_values(self, pattern_name: str) -> dict[str, FieldState]:
+        field_value_dict = self._data.get("field_values", {}).get(pattern_name, {})
+        field_value_dict = {k:FieldState.from_dict(d) for k,d in field_value_dict.items()}
+        return field_value_dict
 
-    def set_field_values(self, pattern_name: str, values: dict[str, Any]) -> None:
+    def set_field_values(self, pattern_name: str, values: dict[str, FieldState]) -> None:
+        values = {k:asdict(fs) for k,fs in values.items()}
         self._data.setdefault("field_values", {})[pattern_name] = values
         self._save()
 
-
-@dataclass
-class FieldState:
-    active: bool
-    value: Any
+    def remove_field_values(self,pattern_name:str)->None:
+        self._data.pop(pattern_name,None)
 
 class FieldWidget(QWidget):
     """
@@ -402,26 +446,37 @@ class FieldWidget(QWidget):
 
     def _make_input(self) -> QWidget:
         t = self.spec.field_type
+        default = self.spec.get_default()
         if t is str:
             w = QLineEdit()
-            w.setText("UNSET")
+            if default is None:
+                w.setText("UNSET")
+            else:
+                w.setText(default)
             w.textChanged.connect(self.value_changed)
             return w
 
         if t is int:
             w = QSpinBox(value=0)
+            if default is not None:
+                w.setValue(default)
             w.setRange(0, 999_999)
             w.valueChanged.connect(self.value_changed)
             return w
         if issubclass(t,FloatFieldType):
             w = QLineEdit()
             w.setPlaceholderText("e.g. 0.039")
-            w.setText("0.0")
+            if default is None:
+                w.setText("0.0")
+            else:
+                w.setText(default)
             w.textChanged.connect(self.value_changed)
             return w
         if issubclass(t,SelectionFieldTypeBase):
             w = QComboBox()
             w.addItems(t.options())
+            if default is not None:
+                w.setCurrentText(default)
             w.currentIndexChanged.connect(self.value_changed)
             return w
         
@@ -437,7 +492,8 @@ class FieldWidget(QWidget):
         raise ValueError(f"unknown field type {t}")
 
     def _on_toggle(self, state: int) -> None:
-        self._input.setEnabled(state == Qt.Checked)
+        #logger.debug(f"set checkbox of field {self.spec.name} to {state== Qt.Checked}")
+        self._input.setEnabled(self._check.isChecked())
         self.value_changed.emit()
 
     # ── public API ─────────────────────────────────────────────────────────
@@ -475,8 +531,8 @@ class FieldWidget(QWidget):
             value = self._input.currentText()
         if isinstance(self._input,QDateEdit):
             value = self._input.date().toPython()
-        fieldtype = self.spec.field_type
-        return FieldState(active=self.is_active(), value=fieldtype(value))
+        #fieldtype = self.spec.field_type
+        return FieldState(active=self.is_active(), value=value)
 
     def set_state(self, state: FieldState) -> None:
         if not isinstance(state, FieldState):
@@ -493,7 +549,7 @@ class FieldWidget(QWidget):
             self._input.setDate(QDate.fromString(DateFieldType.DATEFORMAT))
        
         if self.spec.optional and self._check is not None:
-            self._check.setChecked(bool(state.get("active", False)))
+            self._check.setChecked(state.active)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -522,14 +578,19 @@ class NamingDialog(QDialog):
         patterns_folders: list[Path]|Path,
         statefile: Path|None = None,
         parent: QWidget | None = None,
+        pattern_kwargs:dict[str,Any] = None
     ) -> None:
         super().__init__(parent)
+
+        self._pattern_kwargs = pattern_kwargs
+
         self._folders = patterns_folders
         self._state = (NamingDialogState(statefile) 
                        if statefile is not None else None)
         self._patterns: list[PatternSpec] = []
         self._current: PatternSpec | None = None
         self._field_widgets: list[FieldWidget] = []
+        self._field_widgets_ready = False
 
         self.setWindowTitle("Sample Naming Assistant")
         self.setMinimumWidth(580)
@@ -630,7 +691,7 @@ class NamingDialog(QDialog):
     # ── pattern loading ────────────────────────────────────────────────────
 
     def _load_patterns(self) -> None:
-        self._patterns = load_patterns_from_folders(self._folders)
+        self._patterns = load_patterns_from_folders(self._folders,self._pattern_kwargs)
 
         self._pattern_combo.blockSignals(True)
         self._pattern_combo.clear()
@@ -670,8 +731,9 @@ class NamingDialog(QDialog):
         self._field_widgets.clear()
         while self._fields_layout.rowCount():
             self._fields_layout.removeRow(0)
+        self._field_widgets_ready = False
 
-        saved = list()
+        saved = dict()
         if self._state is not None:
             saved = self._state.get_field_values(pattern.name)
 
@@ -680,7 +742,11 @@ class NamingDialog(QDialog):
             fw.value_changed.connect(self._update_preview)
 
             if spec.name in saved:
-                fw.set_state(saved[spec.name])
+                try:
+                    fw.set_state(saved[spec.name])
+                except ValueError:
+                    logger.exception("got error retrieving state, removing pattern")
+                    self._state.remove_field_values(pattern.name)
 
             lbl_text = spec.name
             if spec.optional:
@@ -699,15 +765,17 @@ class NamingDialog(QDialog):
             self._fields_layout.addRow(label, fw)
             self._field_widgets.append(fw)
 
+        self._field_widgets_ready = True
         self._update_preview()
-
+    
     def _update_preview(self) -> None:
-        self._preview.setText(self._build_name())
+        if self._field_widgets_ready:
+            self._preview.setText(self._build_name())
 
     def _build_name(self) -> str:
         if self._current is None:
             return ""
-        field_values = {fw.spec.name: fw.get_value() for fw in self._field_widgets}
+        field_values = {fw.spec.name: fw.get_value() if fw.is_active() else None for fw in self._field_widgets}
         name = self._current.pattern_from_field_values(field_values)
         return name
 
@@ -737,11 +805,12 @@ def get_name_from_dialog(
     patterns_folders: list[Path]|Path,
     statefile: Path,
     parent: QWidget | None = None,
+    pattern_kwargs: dict[str,Any] = None
 ) -> tuple[str, bool]:
         """
         Open the dialog and return generated name
         """
-        dlg = NamingDialog(patterns_folders, statefile=statefile, parent=parent)
+        dlg = NamingDialog(patterns_folders, statefile=statefile, parent=parent,pattern_kwargs=pattern_kwargs)
         accepted = dlg.exec() == QDialog.Accepted
         if accepted:
             return dlg.get_generated_name()

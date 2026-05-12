@@ -42,7 +42,7 @@ from .system_paths import (
     SPECIMEN_NAMER_STATE_FILE_PATH
     )
 from .dialog_default import DialogDefault
-from .specimen_namer import get_name_from_dialog
+from .specimen_namer import get_name_from_dialog,NamingDialogCancelledError
 
 logger = logging.getLogger(__name__)
 
@@ -450,12 +450,17 @@ class AutoTriosGui(QWidget):
             specimen_name =get_name_from_dialog(
                 [USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH,SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH],
                 statefile=SPECIMEN_NAMER_STATE_FILE_PATH,
-                parent=self
+                parent=self,
+                pattern_kwargs={"operator":self.operator_name_edit.text()}
             )
             self.sample_name_edit.setText(specimen_name)
-        except :
+        except NamingDialogCancelledError:
             return
-
+        except Exception as e:
+            logger.exception("error calling specimen naming assistant")
+            show_error_messagebox(
+                f"Error caling specimen naming assistant:\n {str(e)}"
+            )
 
     def _build_header(self) -> QVBoxLayout:
         layout = QVBoxLayout()
@@ -598,6 +603,7 @@ class AutoTriosGui(QWidget):
         try:
             self._experiment_thread = self._callback_start_experiment(experiment_info)
             self._experiment_thread.finished.connect(self._experiment_buttons_finished)
+            self._experiment_thread.signals.on_error.connect(lambda e: show_error_messagebox(str(e),"Error running experiment"))
             self._experiment_buttons_started()
         except Exception as e:
             if self._exception_as_messagebox:

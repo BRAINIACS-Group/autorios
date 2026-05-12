@@ -1,11 +1,12 @@
 name: HBNP
+pattern: "HBNP_R_{date}_{operator}_{fields}"
 fields:
 - B<BrainId:int>
 - S<SpecimenId:int>
-- R<Region>
-- <Protocol:protocol>  #special field type <protcolId><protocolPart>
-- PN<pathologynumber>  #String for now, might make this into a special field?
-- pattern:  F<fluid>
+- R<Region:str>
+- P<Protocol:int>  #special field type <protcolId><protocolPart>
+- PN<pathologynumber:str>  #String for now, might make this into a special field?
+- pattern:  F<fluid:str>
   optional: True
 - pattern:  D<diameter:int>
   optional: True
