@@ -156,7 +156,7 @@ class MyApplication(ABC):
         '''
         try:
             cls.connect(window_name=window_name, paths=paths, backend=backend,
-                **kwargs)
+                        start_if_not_open=False,**kwargs)
             return True
         except ProcessNotFoundError:
             return False
