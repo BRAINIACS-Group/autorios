@@ -27,6 +27,17 @@
             "console": "integratedTerminal",
             "justMyCode": false
         },
+         {
+            "name": "autorios:i_test_datalogger",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/i_test_datalogger.py",
+            "console": "integratedTerminal",
+             "args": [
+                "\\\\home.rrze.uni-erlangen.de\\my04vule\\Documents\\autotrios_test\\testfile.txt"
+            ],
+            "justMyCode": false
+        },
         {
             "name": "Python: Debug Tests",
             "type": "debugpy",

@@ -12,7 +12,7 @@
 
 #STL imports
 import logging
-from pathlib import Path
+from pathlib import Path,WindowsPath
 from dataclasses import dataclass
 import os
 from typing import List
@@ -615,5 +615,5 @@ class AutoTriosGui(QWidget):
     def openDirectoryDialog(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
-            self.directory_label.setText(directory)
+            self.directory_label.setText(str(WindowsPath(directory)))
 
