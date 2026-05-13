@@ -119,10 +119,18 @@ class DataLogger(MyApplication):
         
         '''
         path = path.absolute()
+
+        if not path.parent.is_dir():
+            raise FileNotFoundError("Parent directory of datalogger"
+                                    f" file does not exist: {str(path.parent)}")
+        if path.is_dir():
+            raise FileNotFoundError("Given path is a directory, should be a file:"
+                                    f"{str(path)}")
+
         if not path.name.endswith(".txt"):
             path = path.with_name(path.name + ".txt")
         self._path = path
-        if path.is_file():
+        if path.exists():
             logger.warning('file %s already exists', str(path))
           
             if qt_is_running() and show_yesno_messagebox(question=f'File {path} already exists."\
