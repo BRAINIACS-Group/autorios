@@ -4,7 +4,7 @@ fields:
 - B<BrainId:int>
 - S<SpecimenId:int>
 - R<Region:str>
-- P<Protocol:int>  #special field type <protcolId><protocolPart>
+- P<Protocol:int>  #special field type <protocolId><protocolPart>
 - PN<pathologynumber:str>  #String for now, might make this into a special field?
 - pattern:  F<fluid:str>
   optional: True

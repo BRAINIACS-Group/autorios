@@ -32,8 +32,8 @@ import click
 #from experiment_info import get_experiment_info, ExperimentInfo
 #from protocol import Protocol_HBE_A,Protocol_HBE_B
 #from application import TRIOS,DataLogger
-from autotrios.trios import TRIOS
-from autotrios.settings import get_settings_default
+from autorios.trios import TRIOS
+from autorios.settings import get_settings_default
 
 logger = logging.getLogger(__name__)
 

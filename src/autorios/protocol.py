@@ -54,7 +54,7 @@ class Step:
        raise ValueError('eval string can not be empty for Velocity Step')
     if not self.eval_str or self.eval_str == "None":
        return
-    #check for error in the evaluation string
+    # check for error in the evaluation string
     self.test_eval()
 
   def eval(self,**eval_args)->float:
