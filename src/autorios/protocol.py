@@ -19,7 +19,7 @@ from pathlib import Path
 #from dataclasses import dataclass
 from pydantic.dataclasses import dataclass
 from typing import List
-from enum import Enum,auto
+from enum import Enum, auto
 import random
 from copy import deepcopy
 
@@ -37,42 +37,53 @@ class STEP_TYPE(Enum):
     VELOCITY = auto()
     WAIT_FOR_TEMPERATURE = auto()
     MOTOR_ROTATION = auto()
+    PRESHEAR_PROCEDURE = auto()
+    PRESHEAR_VALUE = auto()
+    PRESHEAR_DURATION = auto()
 
 @dataclass
 class Step:
-  label: str
-  type_: STEP_TYPE
-  eval_str: str = ''
+    label: str
+    type_: STEP_TYPE
+    eval_str: str = ''
 
-  def __post_init__(self) -> None:
-    '''sanitize and type conversions'''
-    # if isinstance(self.type_,str):
-    #   self.type_ = STEP_TYPE[self.type_.upper()]
-    if self.type_ == STEP_TYPE.GAP and not self.eval_str:
-       raise ValueError('eval string can not be empty for GAP Step')
-    if self.type_ == STEP_TYPE.VELOCITY and not self.eval_str:
-       raise ValueError('eval string can not be empty for Velocity Step')
-    if not self.eval_str or self.eval_str == "None":
-       return
-    # check for error in the evaluation string
-    self.test_eval()
+    def __post_init__(self) -> None:
+        '''sanitize and type conversions'''
+        # if isinstance(self.type_,str):
+        #   self.type_ = STEP_TYPE[self.type_.upper()]
+        if self.type_ == STEP_TYPE.GAP and not self.eval_str:
+            raise ValueError('eval string can not be empty for GAP Step')
+        if self.type_ == STEP_TYPE.VELOCITY and not self.eval_str:
+            raise ValueError('eval string can not be empty for Velocity Step')
+        if self.type_ == STEP_TYPE.MOTOR_ROTATION and not self.eval_str:
+            raise ValueError('eval string can not be empty for MOTOR_ROTATION Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_PROCEDURE and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_PROCEDURE Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_VALUE and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_VALUE Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_DURATION and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_DURATION Step')
+        if not self.eval_str or self.eval_str == "None":
+            return
+        # check for error in the evaluation string
+        self.test_eval()
 
-  def eval(self,**eval_args)->float:
-    ''''''
-    if not self.eval_str or self.eval_str == "None":
-       return self.eval_str
-    eval_str_filled = self.eval_str.format(**eval_args)
-    eval_str_res = eval_expr(eval_str_filled)
-    return eval_str_res
+    def eval(self,**eval_args)->float:
+        ''''''
+        if not self.eval_str or self.eval_str == "None":
+            return self.eval_str
+        eval_str_filled = self.eval_str.format(**eval_args)
+        eval_str_res = eval_expr(eval_str_filled)
+        return eval_str_res
 
-  def test_eval(self):
-    ''''''
-    try:
-        height_random = 4000+1000*random.random()
-        specimen = Specimen(height=height_random)
-        self.eval(specimen=specimen)
-    except Exception as exc:
-        raise ValueError(f'received exception evaluating {self.eval_str}') from exc
+    def test_eval(self):
+        ''''''
+        try:
+            height_random = 4000+1000*random.random()
+            specimen = Specimen(height=height_random)
+            self.eval(specimen=specimen)
+        except Exception as exc:
+            raise ValueError(f'received exception evaluating {self.eval_str}') from exc
 
 @dataclass
 class Protocol:
