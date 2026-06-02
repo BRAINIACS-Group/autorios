@@ -34,4 +34,18 @@ If you installed Autorios as a Python package, you can start it via:
 python -m autorios
 ```
 
+# Protocol Configuration
 
+Experiments are defined via protocol YAML files. Each protocol file can contain one or more procedure steps.
+
+## Step Types
+
+The following step types are supported:
+
+- **GAP**: Sets the gap (distance between rheometer geometries) to a specimen-dependent value (e.g., `["Step Label", "gap", "0.85*{specimen.height}"]`)
+- **VELOCITY**: Sets the compression velocity in µm/s (e.g., `["Step Label", "velocity", "40"]`)
+- **WAIT_FOR_TEMPERATURE**: Toggles the "Wait For Temperature" checkbox in the Environmental Control group (e.g., `["Step Label", "wait_for_temperature", None]`)
+- **MOTOR_ROTATION**: Superimposes motor rotation with a specified angle (e.g., `["Step Label", "motor_rotation", "45"]`)
+- **SOAK_TIME**: Sets the soak (equilibration) time in seconds (e.g., `["Step Label", "soak_time", "60"]`)
+
+All numeric steps support expressions using `{specimen.height}` for dynamic values based on specimen geometry.
