@@ -77,7 +77,7 @@ if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
         shutil.copytree(__DEFAULT_SYSTEM_SETINGS_DIR,SYSTEM_SETTINGS_DIR_PATH)
 
 if not USER_SETTINGS_DIR_PATH.is_dir():
-    if LEGACY_SYSTEM_SETTINGS_DIR_PATH.is_dir():
+    if LEGACY_USER_SETTINGS_DIR_PATH.is_dir():
         logger.info("found legacy user settings at %s, now moving to %s", LEGACY_USER_SETTINGS_DIR_PATH, USER_SETTINGS_DIR_PATH)
         shutil.copytree(LEGACY_USER_SETTINGS_DIR_PATH,USER_SETTINGS_DIR_PATH)
     else:
