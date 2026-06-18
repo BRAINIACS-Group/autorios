@@ -172,6 +172,14 @@ def run_gui(settings:Settings,dialog_default:DialogDefault|None):
         nonlocal experiment_thread
         experiment_thread = None
 
+    def handle_experiment_error(exc:Exception):
+        nonlocal experiment_thread
+        show_error_messagebox(f"Error running experiment: {str(exc)}\n"
+            "Application will close. Please restart autorios "
+            "for a new experiment.")
+        experiment_thread.wait()
+        sys.exit(1)
+
     def run_experiment(experiment_info:ExperimentInfo)->QThread:
         nonlocal experiment_thread
         if experiment_thread is not None:
@@ -183,6 +191,7 @@ def run_gui(settings:Settings,dialog_default:DialogDefault|None):
         # input_blocker.show()
         experiment_thread = ExperimentThread(trios_app,experiment_info,input_blocker=None)
         experiment_thread.finished.connect(delete_experiment)
+        experiment_thread.signals.on_error.connect(handle_experiment_error)
         experiment_thread.start()
         return experiment_thread
 
