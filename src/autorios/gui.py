@@ -177,7 +177,8 @@ def run_gui(settings:Settings,dialog_default:DialogDefault|None):
         show_error_messagebox(f"Error running experiment: {str(exc)}\n"
             "Application will close. Please restart autorios "
             "for a new experiment.")
-        experiment_thread.wait()
+        if experiment_thread is not None:
+            experiment_thread.wait()
         sys.exit(1)
 
     def run_experiment(experiment_info:ExperimentInfo)->QThread:
