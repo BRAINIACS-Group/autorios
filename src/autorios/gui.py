@@ -174,7 +174,7 @@ def run_gui(settings:Settings,dialog_default:DialogDefault|None):
 
     def handle_experiment_error(exc:Exception):
         nonlocal experiment_thread
-        show_error_messagebox(f"Error running experiment"
+        show_error_messagebox(f"Error running experiment. "
             "Application will close. Please restart autorios "
             "for a new experiment.")
         if experiment_thread is not None:
