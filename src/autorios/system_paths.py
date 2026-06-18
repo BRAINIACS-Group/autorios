@@ -71,7 +71,6 @@ if not SPECIMEN_NAMER_STATE_DIR_PATH.is_dir():
 if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
     if LEGACY_SYSTEM_SETTINGS_DIR_PATH.is_dir():
         logger.info("found legacy system settings at %s, now moving to %s", LEGACY_SYSTEM_SETTINGS_DIR_PATH, SYSTEM_SETTINGS_DIR_PATH)
-        shutil.move(LEGACY_SYSTEM_SETTINGS_DIR_PATH,SYSTEM_SETTINGS_DIR_PATH)
         shutil.copytree(LEGACY_SYSTEM_SETTINGS_DIR_PATH,SYSTEM_SETTINGS_DIR_PATH)
     else:
         logger.info("could not find system settings, now creating %s", SYSTEM_SETTINGS_DIR_PATH)
@@ -80,7 +79,6 @@ if not SYSTEM_SETTINGS_DIR_PATH.is_dir():
 if not USER_SETTINGS_DIR_PATH.is_dir():
     if LEGACY_SYSTEM_SETTINGS_DIR_PATH.is_dir():
         logger.info("found legacy user settings at %s, now moving to %s", LEGACY_USER_SETTINGS_DIR_PATH, USER_SETTINGS_DIR_PATH)
-        shutil.move(LEGACY_USER_SETTINGS_DIR_PATH,USER_SETTINGS_DIR_PATH)
         shutil.copytree(LEGACY_USER_SETTINGS_DIR_PATH,USER_SETTINGS_DIR_PATH)
     else:
         logger.info("could not find user settings, now creating %s", USER_SETTINGS_DIR_PATH)
