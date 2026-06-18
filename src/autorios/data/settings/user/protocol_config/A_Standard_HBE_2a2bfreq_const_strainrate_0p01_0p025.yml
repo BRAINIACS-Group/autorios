@@ -4,15 +4,18 @@
 #and change the values according to your protocol
 #Please give a distinctive and suitable name
 
-#Please pay attention to the indentation, "2 spaces"
+#Please pay attention to the identation, "2 spaces"
 
 #  key:value pair
 
 ---
-#local Yaml variables: You can use mathematical expression
-#and (currently) the specimen height
+#local Yaml variables
 height_tension :     &height_tension 1.15*{specimen.height}
 height_compression : &height_compression 0.85*{specimen.height}
+#use a strain rate of 1e-2 1/s
+velocity_cyclic:      &velocity_cyclic 0.01*{specimen.height}
+#use a strain rate of 2.5e-2 1/s
+velocity_relaxation : &velocity_relaxation 0.025*{specimen.height}
   
 protocols :
 
@@ -21,32 +24,39 @@ protocols :
   #or absolute 
   procedure_file_path : procedure_files/HBE_Protokoll2a.tprc
   # this will cause the datalogger to be started after the frequency has
-  # finished, only works if this is the first step
-  has_frequency_sweep : True
+  # fininshed, works currently only when this is the first step
+  has_frequency_sweep : true
   
   #Trios device settings
-  device_settings : 
-    #use a strain rate of 1e-2 1/s
-    velocity : 0.01*{specimen.height}
-    fine_velocity : 0.01*{specimen.height}
+  device_settings :
+    velocity :      *velocity_cyclic
+    fine_velocity : *velocity_cyclic
 
   steps:
     - ["1: Oscillation Frequency","wait_for_temperature",None]
     - ["2: Conditioning Sample Loading","gap", *height_compression]
+    - ["2: Conditioning Sample Loading","velocity", *velocity_cyclic]
     - ["3: Conditioning Sample Loading","gap", *height_tension]
+    - ["3: Conditioning Sample Loading","velocity", *velocity_cyclic]
     - ["4: Conditioning Sample Loading","gap", *height_compression]
+    - ["4: Conditioning Sample Loading","velocity", *velocity_cyclic]
     - ["5: Conditioning Sample Loading","gap", *height_tension]
+    - ["5: Conditioning Sample Loading","velocity", *velocity_cyclic]
     - ["6: Conditioning Sample Loading","gap", *height_compression]
+    - ["6: Conditioning Sample Loading","velocity", *velocity_cyclic]
     - ["7: Conditioning Sample Loading","gap", *height_tension]
+    - ["7: Conditioning Sample Loading","velocity", *velocity_cyclic]
 
 #protocol2
 - procedure_file_path : procedure_files/HBE_Protokoll2b.tprc
   has_frequency_sweep : False
   device_settings :
      #use a strain rate of 2.5e-2 1/s
-     velocity : 0.025*{specimen.height}
-     fine_velocity : 0.025*{specimen.height}
+    velocity : *velocity_relaxation
+    fine_velocity : *velocity_relaxation
 
   steps :
     - ["1: Conditioning Sample Loading","gap", *height_compression]
+    - ["1: Conditioning Sample Loading","velocity", *velocity_relaxation]
     - ["3: Conditioning Sample Loading","gap", *height_tension]
+    - ["3: Conditioning Sample Loading","velocity", *velocity_relaxation]
