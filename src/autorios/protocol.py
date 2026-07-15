@@ -37,6 +37,7 @@ class STEP_TYPE(Enum):
     VELOCITY = auto()
     WAIT_FOR_TEMPERATURE = auto()
     MOTOR_ROTATION = auto()
+    SOAK_TIME = auto()
 
 @dataclass
 class Step:
@@ -44,18 +45,28 @@ class Step:
   type_: STEP_TYPE
   eval_str: str = ''
 
-  def __post_init__(self) -> None:
-    '''sanitize and type conversions'''
-    # if isinstance(self.type_,str):
-    #   self.type_ = STEP_TYPE[self.type_.upper()]
-    if self.type_ == STEP_TYPE.GAP and not self.eval_str:
-       raise ValueError('eval string can not be empty for GAP Step')
-    if self.type_ == STEP_TYPE.VELOCITY and not self.eval_str:
-       raise ValueError('eval string can not be empty for Velocity Step')
-    if not self.eval_str or self.eval_str == "None":
-       return
-    # check for error in the evaluation string
-    self.test_eval()
+    def __post_init__(self) -> None:
+        '''sanitize and type conversions'''
+        # if isinstance(self.type_,str):
+        #   self.type_ = STEP_TYPE[self.type_.upper()]
+        if self.type_ == STEP_TYPE.GAP and not self.eval_str:
+            raise ValueError('eval string can not be empty for GAP Step')
+        if self.type_ == STEP_TYPE.VELOCITY and not self.eval_str:
+            raise ValueError('eval string can not be empty for Velocity Step')
+        if self.type_ == STEP_TYPE.MOTOR_ROTATION and not self.eval_str:
+            raise ValueError('eval string can not be empty for MOTOR_ROTATION Step')
+        if self.type_ == STEP_TYPE.SOAK_TIME and not self.eval_str:
+            raise ValueError('eval string can not be empty for SOAK_TIME Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_PROCEDURE and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_PROCEDURE Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_VALUE and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_VALUE Step')
+        if self.type_ == STEP_TYPE.PRESHEAR_DURATION and not self.eval_str:
+            raise ValueError('eval string can not be empty for PRESHEAR_DURATION Step')
+        if not self.eval_str or self.eval_str == "None":
+            return
+        # check for error in the evaluation string
+        self.test_eval()
 
   def eval(self,**eval_args)->float:
     ''''''
