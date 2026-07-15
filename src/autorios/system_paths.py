@@ -86,8 +86,8 @@ if not USER_SETTINGS_DIR_PATH.is_dir():
 
 if not SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH.is_dir():
     logger.info("could not find specimen name template dir, now creating %s",SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
-    (__DEFAULT_SYSTEM_SETINGS_DIR/"specimen_names").copy(SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
+    shutil.copytree(__DEFAULT_SYSTEM_SETINGS_DIR/"specimen_names",SYSTEM_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
 
 if not USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH.is_dir():
     logger.info("could not find specimen name template dir, now creating %s",USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
-    (__DEFAULT_USER_SETINGS_DIR/"specimen_names").copy(USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
+    shutil.copytree(__DEFAULT_USER_SETINGS_DIR/"specimen_names",USER_SPECIMEN_NAMES_TEMPLATE_DIR_PATH)
